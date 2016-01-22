@@ -179,10 +179,13 @@ class RuntimeAttributeSpec extends FlatSpec with Matchers with EitherValues {
 
   it should "accept a value that contains an expression that can't be statically evaluated (2)" in {
     val ns = NamespaceWithWorkflow.load(WorkflowWithMemoryExpression)
-    val runtime = ns.findTask("memory_expression").get.runtimeAttributes.evaluate((s:String) => WdlInteger(4), NoFunctions)
-    runtime("memory") shouldBe a[Success[_]]
-    runtime("memory").get shouldEqual WdlString("4 GB")
-    val badRuntime = ns.findTask("memory_expression").get.runtimeAttributes.evaluate((s:String) => WdlString("foobar"), NoFunctions)
+    val runtime = ns.findTask("memory_expression").get.runtimeAttributes
+
+    val goodRuntime = runtime.evaluate((s:String) => WdlInteger(4), NoFunctions)
+    goodRuntime("memory") shouldBe a[Success[_]]
+    goodRuntime("memory").get shouldEqual WdlString("4 GB")
+
+    val badRuntime = runtime.evaluate((s:String) => WdlString("foobar"), NoFunctions)
     badRuntime("memory") shouldBe a[Failure[_]]
   }
 }
