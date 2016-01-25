@@ -3,8 +3,8 @@ package wdl4s
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.WdlExpression.ScopedLookupFunction
 import wdl4s.expression.{NoFunctions, WdlFunctions, WdlStandardLibraryFunctionsType}
-import wdl4s.parser.WdlParser.{Ast, AstList, SyntaxError}
 import wdl4s.parser.MemoryUnit
+import wdl4s.parser.WdlParser.{Ast, AstList, SyntaxError}
 import wdl4s.types.{WdlIntegerType, WdlStringType}
 import wdl4s.util.TryUtil
 import wdl4s.values._
@@ -12,21 +12,18 @@ import wdl4s.values._
 import scala.collection.JavaConverters._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
-import scalaz.Scalaz._
-import scalaz.ValidationNel
 
 case class RuntimeAttributes(attrs: Map[String, WdlExpression]) {
   import RuntimeAttributes._
   def evaluate(lookup: ScopedLookupFunction, functions: WdlFunctions[WdlValue]): Map[String, Try[WdlValue]] = {
     attrs map { case (k, v) =>
-      val evaluated = v.evaluate(lookup, functions).flatMap(validateRuntimeValue(k, _))
-      k -> evaluated
+      k -> v.evaluate(lookup, functions).flatMap(validateRuntimeValue(k, _))
     }
   }
 
   private def validateRuntimeValue(key: String, value: WdlValue): Try[WdlValue] = {
     key match {
-      case "memory" => validationNelToTry(validateMemoryValue(value))
+      case "memory" => validateMemoryValue(value)
       case _ => Success(value)
     }
   }
@@ -60,55 +57,34 @@ object RuntimeAttributes {
     // .get below because lookup functions should throw exceptions if they could not lookup the variable
     def lookupType(n: String) = declarations.find(_.name == n).map(_.wdlType).get
     expression.evaluateType(lookupType, new WdlStandardLibraryFunctionsType) match {
-      case Success(wdlType) =>
-        if (!Seq(WdlIntegerType, WdlStringType).contains(wdlType)) {
-          Failure(new SyntaxError("blah"))
-        } else {
-          expression.evaluate(NoLookup, NoFunctions) match {
-            case Success(value) => validateMemoryValue(value) match {
-              case scalaz.Success(x) => Success(expression)
-              case scalaz.Failure(x) => Failure(new UnsupportedOperationException(x.list.mkString("\n")))
-            }
-            case Failure(ex) =>
-              // This just means that the expression isn't statically evaluatable
-              Success(expression)
-          }
-        }
+      case Success(wdlType) if !Seq(WdlIntegerType, WdlStringType).contains(wdlType) =>
+        Failure(new SyntaxError("blah"))
+      case Success(wdlType) => validateStaticMemoryExpression(expression)
       case Failure(ex) => Failure(ex)
     }
   }
 
-  private def validateMemoryValue(value: WdlValue): ValidationNel[String, WdlValue] = {
+  /** If an expression can be evaluated without any lookup function or WDL function implementations,
+    * Then validate that the static value is properly formatted.  If the expression cannot be statically
+    * evaluated at compile time, then defer the validation until runtime (i.e. return Success).
+    *
+    * For example, the expression `"8" + "GB"` can be statically evaluated to `"8GB"`, which can be
+    * determined to be correctly formatted at compile time.  However, the expression `x + "GB` cannot
+    * be statically evaluated because we may not have a value for `x` yet, so return Success(expression)
+    * and check the value when the expression can be evaluated.
+    */
+  private def validateStaticMemoryExpression(expression: WdlExpression): Try[WdlExpression] = {
+    expression.evaluate(NoLookup, NoFunctions) match {
+      case Success(value) => validateMemoryValue(value).map(_ => expression)
+      case Failure(ex) => Success(expression)
+    }
+  }
+
+  private def validateMemoryValue(value: WdlValue): Try[WdlValue] = {
     value match {
-      case i: WdlInteger => value.successNel
-      case s: WdlString => validateMemStringInGb(s.valueString)
-    }
-  }
-
-  private def validateMemStringInGb(mem: String): ValidationNel[String, WdlValue] = {
-    val memoryPattern = """(\d+)\s*(\w+)""".r
-    mem match {
-      case memoryPattern(amountString, unitString) =>
-        val amount = amountString.parseLong leftMap { _.getMessage } toValidationNel
-        val unit = validateMemoryUnit(unitString)
-        (amount |@| unit) { (a, u) =>
-          WdlString(new MemorySize(a, u).to(MemoryUnit.GB).toString)
-        }
-      case _ => s"$mem should be of the form X Unit where X is a number, e.g. 8 GB".failureNel
-    }
-  }
-
-  private def validateMemoryUnit(unit: String): ValidationNel[String, MemoryUnit] = {
-    MemoryUnit.values find { _.suffixes.contains(unit) } match {
-      case Some(s) => s.successNel
-      case None => s"$unit is an invalid memory unit".failureNel
-    }
-  }
-
-  private def validationNelToTry(nel: ValidationNel[String, WdlValue]): Try[WdlValue] = {
-    nel match {
-      case scalaz.Success(x) => scala.util.Success(x)
-      case scalaz.Failure(n) => scala.util.Failure(new UnsupportedOperationException(n.list.mkString("\n")))
+      case i: WdlInteger => Success(i)
+      case s: WdlString => MemorySize.parse(s.valueString).map(m => WdlString(m.to(MemoryUnit.GB).toString))
+      case other => Failure(new UnsupportedOperationException("Valid memory values are either strings (e.g. '8 GB') or integers"))
     }
   }
 }

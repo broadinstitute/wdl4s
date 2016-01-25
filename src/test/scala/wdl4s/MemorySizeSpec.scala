@@ -76,4 +76,35 @@ class MemorySizeSpec extends FlatSpec with Matchers with TryValues {
       memorySize.to(newUnit) shouldEqual result
     }
   }
+
+  it should "parse strings" in {
+    val memTable = Table(
+      ("unparsed", "memorySize"),
+      ("1000 B", MemorySize(1000, MemoryUnit.Bytes)),
+      ("100KB", MemorySize(100, MemoryUnit.KB)),
+      ("10.2MB", MemorySize(10.2, MemoryUnit.MB)),
+      ("10.2MiB", MemorySize(10.2, MemoryUnit.MiB)),
+      ("1.5 GB", MemorySize(1.5, MemoryUnit.GB))
+    )
+
+    forAll(memTable) { (unparsed, memorySize) =>
+      MemorySize.parse(unparsed).get shouldEqual memorySize
+    }
+  }
+
+  it should "stringify values" in {
+    val memTable = Table(
+      ("memorySize", "string"),
+      (MemorySize(1000, MemoryUnit.Bytes), "1000 B"),
+      (MemorySize(100, MemoryUnit.KB), "100 KB"),
+      (MemorySize(10.2, MemoryUnit.MB), "10.2 MB"),
+      (MemorySize(10.2, MemoryUnit.MiB), "10.2 MiB"),
+      (MemorySize(1.5, MemoryUnit.GB), "1.5 GB")
+    )
+
+    forAll(memTable) { (memorySize, string) =>
+      memorySize.toString shouldEqual string
+      MemorySize.parse(string).get shouldEqual memorySize
+    }
+  }
 }

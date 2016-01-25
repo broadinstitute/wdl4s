@@ -159,7 +159,7 @@ class RuntimeAttributeSpec extends FlatSpec with Matchers with EitherValues {
       NamespaceWithWorkflow.load(WorkflowWithMessedUpMemory)
     }
 
-    ex.getMessage should include ("should be of the form X Unit")
+    ex.getMessage should include ("should be of the form 'X Unit'")
   }
 
   it should "throw an exception if the static string contains an invalid memory unit" in {
