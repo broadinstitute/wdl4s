@@ -91,6 +91,11 @@ case class TypeEvaluator(override val lookup: String => WdlType, override val fu
         case (_, Failure(ex)) => Failure(ex)
         case (_, _) => Failure(new WdlExpressionException(s"Can't index ${a.toPrettyString}"))
       }
+    case a: Ast if a.isTernaryOperator =>
+      (evaluate(a.getAttribute("true")), evaluate(a.getAttribute("false"))) match {
+        case (Success(l), Success(r)) if l == r => Success(l)
+        case (_, _) => Failure(new WdlExpressionException(s"True and false paths of ternary operator do not evaluate to the same type"))
+      }
     case a: Ast if a.isFunctionCall =>
       val name = a.getAttribute("name").sourceString
       val params = a.params map evaluate

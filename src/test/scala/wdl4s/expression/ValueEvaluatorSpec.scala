@@ -170,7 +170,11 @@ class ValueEvaluatorSpec extends FlatSpec with Matchers {
     // Order of Operations
     ("1+2*3", WdlInteger(7)),
     ("1+2==3", WdlBoolean.True),
-    ("(1+2)*3", WdlInteger(9))
+    ("(1+2)*3", WdlInteger(9)),
+
+    // Ternary Operator
+    (""" if(true) "true_value" else "false_value" """, WdlString("true_value")),
+    (""" if(false) "true_value" else "false_value" """, WdlString("false_value"))
   )
 
   val badExpressions = Table(
