@@ -24,6 +24,7 @@ object WdlExpression {
     def isUnaryOperator: Boolean = UnaryOperators.contains(ast.getName)
     def functionName: String = ast.getAttribute("name").asInstanceOf[Terminal].getSourceString
     def isMemberAccess: Boolean = ast.getName == "MemberAccess"
+    def isTernaryOperator: Boolean = ast.getName == "Ternary"
     def isArrayLiteral: Boolean = ast.getName == "ArrayLiteral"
     def isMapLiteral: Boolean = ast.getName == "MapLiteral"
     def isObjectLiteral: Boolean = ast.getName == "ObjectLiteral"

@@ -124,6 +124,14 @@ case class ValueEvaluator(override val lookup: String => WdlValue, override val 
         val name = a.getAttribute("name").sourceString
         val params = a.params map evaluate
         functions.getFunction(name)(params)
+      case a: Ast if a.isTernaryOperator =>
+        evaluate(a.getAttribute("expr")) match {
+          case Success(v: WdlBoolean) if v == WdlBoolean.True =>
+            evaluate(a.getAttribute("true"))
+          case Success(v: WdlBoolean) if v == WdlBoolean.False =>
+            evaluate(a.getAttribute("false"))
+          case Failure(ex) => Failure(ex)
+        }
     }
   }
 }

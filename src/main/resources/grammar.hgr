@@ -25,6 +25,7 @@ grammar {
     r'output(?!{%_identifier_follow%})' -> output(:output)
     r'as(?!{%_identifier_follow%})' -> :as
     r'if(?!{%_identifier_follow%})' -> :if
+    r'else(?!{%_identifier_follow%})' -> :else
     r'while(?!{%_identifier_follow%})' -> :while
     r'runtime(?!{%_identifier_follow%})' -> :runtime
     r'scatter(?!{%_identifier_follow%})' -> :scatter @scatter
@@ -143,6 +144,8 @@ grammar {
       r'{%_identifier%}' -> :identifier
 
       # Expression tokens
+      r'if(?!{%_identifier_follow%})' -> :if
+      r'else(?!{%_identifier_follow%})' -> :else
       r':' -> :colon
       r',' -> :comma
       r'\.' -> :dot
@@ -308,6 +311,7 @@ grammar {
       (*:left) $e = :identifier <=> :lparen list($e, :comma) :rparen -> FunctionCall(name=$0, params=$2)
       (*:left) $e = :identifier <=> :lsquare $e :rsquare -> ArrayOrMapLookup(lhs=$0, rhs=$2)
       (*:left) $e = :identifier <=> :dot :identifier -> MemberAccess(lhs=$0, rhs=$2)
+      (*:left) $e = :if :lparen $e :rparen $e :else $e -> Ternary(expr=$2, true=$4, false=$6)
       # TODO: is there a better object literal syntax?
       (*:left) $e = :object :lbrace list($object_kv, :comma) :rbrace -> ObjectLiteral(map=$2)
       (*:left) $e = :lsquare list($e, :comma) :rsquare -> ArrayLiteral(values=$1)
