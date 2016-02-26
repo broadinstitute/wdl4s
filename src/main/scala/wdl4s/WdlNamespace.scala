@@ -14,7 +14,6 @@ import wdl4s.values._
 import scala.collection.JavaConverters._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
-import scalaz.Scalaz._
 
 /**
  * Define WdlNamespace as a sum type w/ two states - one containing a local workflow and one without.
@@ -85,25 +84,42 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
     } else {
       val errors = failures.values.collect { case f: Failure[_] => f.exception.getMessage }
       // .get because failures is guaranteed to be nonEmpty
+      import scalaz.Scalaz._
       Failure(new ValidationException("Workflow input processing failed.", errors.toList.toNel.get))
     }
   }
 
-  private def declarationLookupFunction(decl: ScopedDeclaration, inputs: Map[FullyQualifiedName, WdlValue]): String => WdlValue ={
-    def identifierLookup(string: String): WdlValue = {
+  private def declarationLookupFunction(decl: ScopedDeclaration,
+                                        inputs: Map[FullyQualifiedName, WdlValue],
+                                        wdlFunctions: WdlStandardLibraryFunctions)(string: String): WdlValue = {
 
-      /* This is a scope hierarchy to search for the variable `string`.  If `decl.scopeFqn` == "a.b.c"
-       * then `hierarchy` should be Seq("a.b.c", "a.b", "a")
-       */
-      val hierarchy = decl.scope.fullyQualifiedName.split("\\.").reverse.tails.toSeq.map {_.reverse.mkString(".")}
-
-      /* Attempt to resolve the string in each scope */
-      val attemptedValues = hierarchy.map {scope => inputs.get(s"$scope.$string")}
-      attemptedValues.flatten.headOption.getOrElse {
-        throw new WdlExpressionException(s"Could not find a value for $string")
-      }
+    /** The `string` parameter might be specified in the 'input' section of a call Declaration in WDL
+      *
+      * If it does, evaluate the left-hand side expression
+      *
+      * e.g. call my_task {input: some_var="foo"+"bar"}
+      *
+      * When evaluating 'some_var' (for example, instantiating the Tasks's command), we want to use the value
+      * of "foo"+"bar" as the value
+      */
+    val inputMappingLookup = decl.scope match {
+      case c: Call => c.inputMappings.get(string).flatMap(
+        _.evaluate(declarationLookupFunction(decl, inputs, wdlFunctions), wdlFunctions).toOption
+      ).toSeq
+      case _ => Seq()
     }
-    identifierLookup
+
+    /** This is a scope hierarchy to search for the variable `string`.  If `decl.scopeFqn` == "a.b.c"
+      * then `hierarchy` should be Seq("a.b.c", "a.b", "a")
+      */
+    val hierarchy = decl.scope.fullyQualifiedName.split("\\.").reverse.tails.toSeq.map {_.reverse.mkString(".")}
+
+    /* Attempt to resolve the string in each scope */
+    val attemptedValues = inputMappingLookup ++ hierarchy.flatMap { scope => inputs.get(s"$scope.$string") }
+
+    attemptedValues.headOption.getOrElse {
+      throw new WdlExpressionException(s"Could not find a value for $string")
+    }
   }
 
   /* Some declarations need a value from the user and some have an expression attached to them.
@@ -115,7 +131,7 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
       current.expression match {
         case Some(expr) =>
           val successfulAccumulated = accumulated.collect({ case (k, v) if v.isSuccess => k -> v.get })
-          val value = expr.evaluate(declarationLookupFunction(current, successfulAccumulated ++ userInputs), wdlFunctions)
+          val value = expr.evaluate(declarationLookupFunction(current, successfulAccumulated ++ userInputs, wdlFunctions), wdlFunctions)
           accumulated + (current.fullyQualifiedName -> value)
         case None => accumulated
       }
@@ -136,12 +152,12 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
 }
 
 /**
- * Main interface into the `wdl_scala` package.
+ * Main interface into the `wdl4s` package.
  *
- * Example usage:
+ * Example usage
  *
  * {{{
- * val namespace = WdlNamespace.process(new File("/path/to/file.wdl"))
+ * val namespace = WdlNamespace.load(new File("/path/to/file.wdl"))
  * binding.workflow.calls foreach { call =>
  *      println(call)
  * }
