@@ -1,5 +1,6 @@
 package wdl4s
 
+import better.files.File
 import org.scalatest.{FlatSpec, Matchers}
 
 class ThreeStepImportNamespaceSpec extends FlatSpec with Matchers {

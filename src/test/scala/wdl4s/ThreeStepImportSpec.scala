@@ -42,11 +42,11 @@ class ThreeStepImportSpec extends FlatSpec with Matchers {
     |import "wc"
     |
     |workflow three_step {
-    |  call ps
-    |  call cgrep {
+    |  call ps.ps
+    |  call cgrep.cgrep {
     |    input: in_file=ps.procs
     |  }
-    |  call wc {
+    |  call wc.wc {
     |    input: in_file=ps.procs
     |  }
     |}""".stripMargin
@@ -63,14 +63,14 @@ class ThreeStepImportSpec extends FlatSpec with Matchers {
   val namespace = WdlNamespaceWithWorkflow.load(workflowWdl, resolver _)
 
   "WDL file with imports" should "Have 3 tasks" in {
-    namespace.tasks.size shouldEqual 3
+    namespace.tasks.size shouldEqual 0
   }
 
   it should "Have 0 imported WdlNamespaces" in {
-    namespace.namespaces.size shouldEqual 0
+    namespace.namespaces.size shouldEqual 3
   }
   it should "Have tasks with the names 'ps', 'cgrep' and 'wc'" in {
-    namespace.tasks map {_.name} shouldEqual Seq("ps", "cgrep", "wc")
+    namespace.namespaces flatMap {_.tasks} map {_.name} shouldEqual Seq("ps", "cgrep", "wc")
   }
   it should "Throw an exception if the import resolver fails to resolve an import" in {
     def badResolver(s: String): String = {

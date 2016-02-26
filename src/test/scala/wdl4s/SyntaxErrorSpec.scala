@@ -1,5 +1,6 @@
 package wdl4s
 
+import better.files.File
 import wdl4s.parser.WdlParser.SyntaxError
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.prop.TableDrivenPropertyChecks._
@@ -52,8 +53,8 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         |import "cgrep"
         |
         |workflow three_step {
-        |  call ps
-        |  call cgrep {
+        |  call ps.ps
+        |  call cgrep.cgrep {
         |    input: BADin_file=ps.procs
         |  }
         |}
@@ -79,17 +80,17 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         |import "cgrep"
         |
         |workflow three_step {
-        |  call ps
-        |  call cgrepBAD {
+        |  call ps.ps
+        |  call cgrep.cgrepBAD {
         |    input: in_file=ps.procs
         |  }
         |}
       """.stripMargin
 
     val errors =
-      """ERROR: Call references a task (cgrepBAD) that doesn't exist (line 6, col 8)
+      """ERROR: Call references a task (cgrep.cgrepBAD) that doesn't exist (line 6, col 8)
         |
-        |  call cgrepBAD {
+        |  call cgrep.cgrepBAD {
         |       ^
       """.stripMargin
   }
@@ -101,8 +102,8 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         |import "cgrep"
         |
         |workflow three_step {
-        |  call ps
-        |  call cgrep {
+        |  call ps.ps
+        |  call cgrep.cgrep {
         |    input: in_file=ps.procs
         |  }
         |}
@@ -150,7 +151,7 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
   }
 
   case object WorkflowAndNamespaceNameCollision extends ErrorWdl {
-    val testString = "detect when a namespacex and a workflow have the same name"
+    val testString = "detect when a namespace and a workflow have the same name"
     val wdl =
       """import "ps" as ps
         |workflow ps {
@@ -204,8 +205,8 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       """import "ps"
         |import "cgrep"
         |workflow three_step {
-        |  call ps
-        |  call cgrep {
+        |  call ps.ps
+        |  call cgrep.cgrep {
         |    input: pattern=ps.BAD
         |  }
         |}
@@ -225,8 +226,8 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       """import "ps"
         |import "cgrep"
         |workflow three_step {
-        |  call ps
-        |  call cgrep {
+        |  call ps.ps
+        |  call cgrep.cgrep {
         |    input: pattern=psBAD.procs
         |  }
         |}
