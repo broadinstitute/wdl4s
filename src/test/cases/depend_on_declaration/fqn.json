@@ -1,0 +1,11 @@
+{
+  "a": "Task",
+  "b": "Task",
+  "b.ints": "Declaration",
+  "w": "Workflow",
+  "w.a0": "Call",
+  "w.a1": "Call",
+  "w.b": "Call",
+  "w.b.ints": "Declaration",
+  "w.ints": "Declaration"
+}
