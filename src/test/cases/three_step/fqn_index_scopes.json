@@ -1,0 +1,15 @@
+{
+  "cgrep": "Task",
+  "cgrep.in_file": "Declaration",
+  "cgrep.pattern": "Declaration",
+  "ps": "Task",
+  "three_step": "Workflow",
+  "three_step.cgrep": "Call",
+  "three_step.cgrep.in_file": "Declaration",
+  "three_step.cgrep.pattern": "Declaration",
+  "three_step.ps": "Call",
+  "three_step.wc": "Call",
+  "three_step.wc.in_file": "Declaration",
+  "wc": "Task",
+  "wc.in_file": "Declaration"
+}

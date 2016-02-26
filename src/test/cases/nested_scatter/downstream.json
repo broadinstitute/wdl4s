@@ -1,0 +1,20 @@
+{
+  "B.B_in": [],
+  "C.C_in": [],
+  "D.D_in": [],
+  "w.$scatter_0": ["w.$scatter_1", "w.$scatter_2", "w.B", "w.C", "w.E"],
+  "w.$scatter_1": ["w.G"],
+  "w.$scatter_2": ["w.H"],
+  "w.$scatter_3": ["w.F"],
+  "w.A": ["w.$scatter_0", "w.$scatter_3"],
+  "w.B": ["w.$scatter_1", "w.$scatter_2", "w.C", "w.D"],
+  "w.B.B_in": [],
+  "w.C": [],
+  "w.C.C_in": [],
+  "w.D": [],
+  "w.D.D_in": [],
+  "w.E": [],
+  "w.F": [],
+  "w.G": [],
+  "w.H": []
+}

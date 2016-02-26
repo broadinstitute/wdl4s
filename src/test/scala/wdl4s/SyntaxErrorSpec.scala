@@ -1,5 +1,6 @@
 package wdl4s
 
+import better.files.File
 import wdl4s.parser.WdlParser.SyntaxError
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.prop.TableDrivenPropertyChecks._
