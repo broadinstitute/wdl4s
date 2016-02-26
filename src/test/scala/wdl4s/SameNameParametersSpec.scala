@@ -6,7 +6,7 @@ import wdl4s.values.WdlString
 import org.scalatest.{FlatSpec, Matchers}
 
 class SameNameParametersSpec extends FlatSpec with Matchers {
-  val namespace1 = NamespaceWithWorkflow.load(
+  val namespace1 = WdlNamespaceWithWorkflow.load(
     """
        |task test {
        |  String x
@@ -22,6 +22,6 @@ class SameNameParametersSpec extends FlatSpec with Matchers {
   }
 
   it should "instantiate the command with duplicated parameter names properly" in {
-    task.instantiateCommand(Map("x" -> WdlString("foo")), NoFunctions).get shouldEqual "./script foo foo foo"
+    task.instantiateCommand(Map("test.x" -> WdlString("foo")), NoFunctions).get shouldEqual "./script foo foo foo"
   }
 }

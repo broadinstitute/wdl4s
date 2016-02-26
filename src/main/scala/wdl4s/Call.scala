@@ -2,17 +2,18 @@ package wdl4s
 
 import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.expression.WdlFunctions
-import wdl4s.values.WdlValue
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
-import scala.util.Try
+import wdl4s.util.StringUtil
+import wdl4s.values.WdlValue
+
 import scala.language.postfixOps
+import scala.util.{Success, Try}
 
 object Call {
   def apply(ast: Ast,
             namespaces: Seq[WdlNamespace],
             tasks: Seq[Task],
-            wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
-            parent: Option[Scope]): Call = {
+            wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Call = {
     val alias: Option[String] = ast.getAttribute("alias") match {
       case x: Terminal => Option(x.getSourceString)
       case _ => None
@@ -26,28 +27,7 @@ object Call {
 
     val callInputSectionMappings = processCallInput(ast, wdlSyntaxErrorFormatter)
 
-    callInputSectionMappings foreach { case (taskParamName, expression) =>
-      task.declarations find { decl => decl.name == taskParamName } getOrElse {
-        /*
-          FIXME-ish
-          It took me a while to figure out why this next part is necessary and it's kind of hokey.
-          All the syntax error formatting requires ASTs and this is a way to get the input's AST back.
-          Perhaps an intermediary object that contains the AST as well and then the normal Map in the Call?
-
-          FIXME: It'd be good to break this whole thing into smaller chunks
-         */
-        val callInput = AstTools.callInputSectionIOMappings(ast, wdlSyntaxErrorFormatter) find {
-          _.getAttribute("key").sourceString == taskParamName
-        } getOrElse {
-          throw new SyntaxError(s"Can't find call input: $taskParamName")
-        }
-        throw new SyntaxError(wdlSyntaxErrorFormatter.callReferencesBadTaskInput(callInput, task.ast))
-      }
-    }
-
-    val prerequisiteCallNames = callInputSectionMappings.values flatMap { _.prerequisiteCallNames } toSet
-
-    new Call(alias, taskName, task, prerequisiteCallNames, callInputSectionMappings, parent)
+    new Call(alias, task, callInputSectionMappings, ast)
   }
 
   private def processCallInput(ast: Ast,
@@ -73,17 +53,43 @@ object Call {
  *                      value of those inputs
  */
 case class Call(alias: Option[String],
-                taskFqn: FullyQualifiedName,
                 task: Task,
-                prerequisiteCallNames: Set[LocallyQualifiedName],
                 inputMappings: Map[String, WdlExpression],
-                parent: Option[Scope]) extends Scope {
-  val unqualifiedName: String = alias getOrElse taskFqn
+                ast: Ast) extends Scope with GraphNode with WorkflowScoped {
+  val unqualifiedName: String = alias getOrElse task.name
 
-  override lazy val prerequisiteScopes: Set[Scope] = {
-    val parent = this.parent.get // FIXME: In a world where Call knows it has a parent this wouldn't be icky
-    val parentPrereq = if (parent == this.rootWorkflow) Nil else Set(parent)
-    prerequisiteCalls ++ parentPrereq
+  lazy val upstream: Set[Scope with GraphNode] = {
+    val dependentNodes = for {
+      expr <- inputMappings.values
+      variable <- expr.variableReferences
+      node <- parent.flatMap(_.resolveVariable(variable.sourceString))
+    } yield node
+
+    val firstScatterOrIf = ancestry.collect({
+      case s: Scatter with GraphNode => s
+      case i: If with GraphNode => i
+    }).headOption
+
+    (dependentNodes ++ firstScatterOrIf.toSeq).toSet
+  }
+
+  lazy val downstream: Set[Scope with GraphNode] = {
+    def expressions(node: GraphNode): Iterable[WdlExpression] = node match {
+      case scatter: Scatter => Set(scatter.collection)
+      case call: Call => call.inputMappings.values
+      case ifStatement: If => Set(ifStatement.condition)
+      case declaration: Declaration => declaration.expression.toSet
+    }
+
+    for {
+      node <- namespace.descendants.collect({ case n: GraphNode => n }).filter(
+        _.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes
+      )
+      expression <- expressions(node)
+      variable <- expression.variableReferences
+      referencedNode = resolveVariable(variable.sourceString)
+      if referencedNode == Option(this)
+    } yield node
   }
 
   /**
@@ -92,24 +98,64 @@ case class Call(alias: Option[String],
    * are satisfied via the 'input' section of the Call definition.
    */
   def unsatisfiedInputs: Seq[WorkflowInput] = for {
-    i <- task.declarations if !inputMappings.contains(i.name) && i.expression.isEmpty
-  } yield WorkflowInput(s"$fullyQualifiedName.${i.name}", i.wdlType, i.postfixQuantifier)
+    i <- declarations if !inputMappings.contains(i.unqualifiedName) && i.expression.isEmpty
+  } yield WorkflowInput(i.fullyQualifiedName, i.wdlType, i.postfixQuantifier)
 
-  override def toString: String = s"[Call name=$unqualifiedName, task=$task]"
+  override def toString: String = s"[Call $fullyQualifiedName]"
 
   /**
    * Instantiate the abstract command line corresponding to this call using the specified inputs.
     *
    */
-  def instantiateCommandLine(inputs: CallInputs,
+  def instantiateCommandLine(inputs: WorkflowCoercedInputs,
                              functions: WdlFunctions[WdlValue],
-                             valueMapper: WdlValue => WdlValue = (v) => v): Try[String] =
-    task.instantiateCommand(inputs, functions, valueMapper)
+                             shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
+                             valueMapper: WdlValue => WdlValue = (v) => v): Try[String] = {
+    Try(StringUtil.normalize(task.commandTemplate.map(_.instantiate(this, inputs, functions, shards, valueMapper)).mkString("")))
+  }
 
-  /**
-    * @return Seq[ScopedDeclaration] which are scoped to this Call
-    */
-  def scopedDeclarations: Seq[ScopedDeclaration] = task.declarations.map(decl => ScopedDeclaration(this, decl))
+  override def lookupFunction(inputs: WorkflowCoercedInputs,
+                              wdlFunctions: WdlFunctions[WdlValue],
+                              shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
+                              relativeTo: Scope = this): String => WdlValue = {
+    def lookup(name: String): WdlValue = {
+      val inputMappingsWithMatchingName = Try(
+        inputMappings.getOrElse(name, throw new Exception(s"Could not find $name in input section of call $fullyQualifiedName"))
+      )
 
-  override def rootWorkflow: Workflow = parent map { _.rootWorkflow } getOrElse { throw new IllegalStateException("Call not in workflow") }
+      val declarationsWithMatchingName = Try(
+        declarations.find(_.unqualifiedName == name).getOrElse(throw new Exception(s"No declaration named $name for call $fullyQualifiedName"))
+      )
+
+      val inputMappingsLookup = for {
+        inputExpr <- inputMappingsWithMatchingName
+        parent <- Try(parent.getOrElse(throw new Exception(s"Call $unqualifiedName has no parent")))
+        evaluatedExpr <- inputExpr.evaluate(parent.lookupFunction(inputs, wdlFunctions, shards, relativeTo), wdlFunctions)
+      } yield evaluatedExpr
+
+      val declarationLookup = for {
+        declaration <- declarationsWithMatchingName
+        inputsLookup <- Try(inputs.getOrElse(declaration.fullyQualifiedName, throw new Exception(s"No input for ${declaration.fullyQualifiedName}")))
+      } yield inputsLookup
+
+      val declarationExprLookup = for {
+        declaration <- declarationsWithMatchingName
+        declarationExpr <- Try(declaration.expression.getOrElse(throw new Exception(s"No expression defined for declaration ${declaration.fullyQualifiedName}")))
+        evaluatedExpr <- declarationExpr.evaluate(lookupFunction(inputs, wdlFunctions, shards, relativeTo), wdlFunctions)
+      } yield evaluatedExpr
+
+      val taskParentResolution = for {
+        parent <- Try(task.parent.getOrElse(throw new Exception(s"Task ${task.unqualifiedName} has no parent")))
+        parentLookup <- Try(parent.lookupFunction(inputs, wdlFunctions, shards, relativeTo)(name))
+      } yield parentLookup
+
+      val resolutions = Seq(inputMappingsLookup, declarationLookup, declarationExprLookup, taskParentResolution)
+
+      resolutions.collect({ case s: Success[WdlValue] => s}).headOption match {
+        case Some(Success(value)) => value
+        case None => throw new VariableNotFoundException(name)
+      }
+    }
+    lookup
+  }
 }

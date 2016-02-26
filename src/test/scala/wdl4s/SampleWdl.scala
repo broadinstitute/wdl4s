@@ -140,18 +140,18 @@ object SampleWdl {
         |
         |workflow w {
         |  call A
-        |  scatter (item in A.A_out) {
+        |  scatter (item in A.A_out) { # scatter 0
         |    call B {input: B_in = item}
         |    call C {input: C_in = B.B_out}
         |    call E
-        |    scatter (itemB in B.B_out) {
-        |     call E as G
+        |    scatter (itemB in B.B_out) { # scatter 1
+        |      call E as G
         |    }
-        |    scatter (itemB in B.B_out) {
-        |     call E as H
+        |    scatter (itemB in B.B_out) { # scatter 2
+        |      call E as H
         |    }
         |  }
-        |  scatter (item in A.A_out) {
+        |  scatter (item in A.A_out) { # scatter 3
         |    call E as F
         |  }
         |  call D {input: D_in = B.B_out}

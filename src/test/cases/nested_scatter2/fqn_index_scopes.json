@@ -1,0 +1,14 @@
+{
+  "inner": "Task",
+  "inner.i": "Declaration",
+  "outer": "Task",
+  "outer.matrix": "Declaration",
+  "w": "Workflow",
+  "w.$scatter_0": "Scatter",
+  "w.$scatter_0.$scatter_1": "Scatter",
+  "w.$scatter_0.$scatter_1.inner": "Call",
+  "w.$scatter_0.$scatter_1.inner.i": "Declaration",
+  "w.array": "Declaration",
+  "w.outer": "Call",
+  "w.outer.matrix": "Declaration"
+}

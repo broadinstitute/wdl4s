@@ -1,6 +1,6 @@
 package wdl4s.examples
 
-import wdl4s.NamespaceWithWorkflow
+import wdl4s.WdlNamespaceWithWorkflow
 import wdl4s.expression.WdlFunctions
 import wdl4s.types.{WdlArrayType, WdlIntegerType}
 import wdl4s.values._
@@ -21,7 +21,7 @@ object ex7 {
       |  call a
       |}""".stripMargin
 
-    val ns = NamespaceWithWorkflow.load(wdl)
+    val ns = WdlNamespaceWithWorkflow.load(wdl)
     val inputs = Map(
       "prefix" -> WdlString("some_prefix"),
       "ints" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(1,2,3,4,5).map(WdlInteger(_)))

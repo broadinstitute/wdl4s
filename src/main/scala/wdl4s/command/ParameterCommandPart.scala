@@ -29,14 +29,30 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
   def attributesToString: String = if (attributes.nonEmpty) attributes.map({case (k,v) => s"$k=${WdlString(v).toWdlString}"}).mkString(" ") + " " else ""
   override def toString: String = "${" + s"$attributesToString${expression.toWdlString}" + "}"
 
-  override def instantiate(declarations: Seq[Declaration],
-                           parameters: Map[String, WdlValue],
+  override def instantiate(call: Call,
+                           parameters: WorkflowCoercedInputs,
                            functions: WdlFunctions[WdlValue],
-                           valueMapper: WdlValue => WdlValue = (v) => v): String = {
-    val value = expression.evaluate(WdlExpression.standardLookupFunction(parameters, declarations, functions), functions) match {
+                           shards: Map[Scatter, Int] = Map.empty[Scatter, Int] ,
+                           valueMapper: WdlValue => WdlValue): String = {
+    val lookup = call.lookupFunction(parameters, functions, shards)
+    _instantiate(call.declarations, lookup, functions, valueMapper)
+  }
+  override def instantiate(task: Task,
+                           parameters: CallInputs,
+                           functions: WdlFunctions[WdlValue],
+                           valueMapper: WdlValue => WdlValue): String = {
+    val lookup = task.lookupFunction(parameters, functions, Map.empty[Scatter, Int])
+    _instantiate(task.declarations, lookup, functions, valueMapper)
+  }
+
+  def _instantiate(declarations: Seq[Declaration],
+                   lookup: String => WdlValue,
+                   functions: WdlFunctions[WdlValue],
+                   valueMapper: WdlValue => WdlValue): String = {
+    val value = expression.evaluate(lookup, functions) match {
       case Success(v) => v
       case Failure(f) => f match {
-        case v: VariableNotFoundException => declarations.find(_.name == v.variable) match {
+        case v: VariableNotFoundException => declarations.find(_.unqualifiedName == v.variable) match {
           /* Allow an expression to fail evaluation if one of the variables that it requires is optional (the type has ? after it, e.g. String?) */
           case Some(d) if d.postfixQuantifier.contains("?") => if (attributes.contains("default")) WdlString(attributes.get("default").head) else WdlString("")
           case Some(d) => throw new UnsupportedOperationException(s"Parameter ${v.variable} is required, but no value is specified")
