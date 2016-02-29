@@ -127,7 +127,7 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
    * and return the value for storage in the symbol store
    */
   def staticDeclarationsRecursive(userInputs: WorkflowCoercedInputs, wdlFunctions: WdlStandardLibraryFunctions): Try[WorkflowCoercedInputs] = {
-    def evalDeclaration(accumulated: Map[String, Try[WdlValue]], current: ScopedDeclaration): Map[String, Try[WdlValue]] = {
+    def evalDeclaration(accumulated: Map[FullyQualifiedName, Try[WdlValue]], current: ScopedDeclaration): Map[FullyQualifiedName, Try[WdlValue]] = {
       current.expression match {
         case Some(expr) =>
           val successfulAccumulated = accumulated.collect({ case (k, v) if v.isSuccess => k -> v.get })
@@ -144,8 +144,7 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
   }
 
   /**
-   * Given a Fully-Qualified Name, return the Scope object that
-   * corresponds to this FQN.
+   * Given a Fully-Qualified Name, return the Scope object that corresponds to this FQN.
    */
   def resolve(fqn: FullyQualifiedName): Option[Scope] =
     (Seq(workflow) ++ workflow.calls ++ workflow.scatters).find(s => s.fullyQualifiedName == fqn || s.fullyQualifiedNameWithIndexScopes == fqn)

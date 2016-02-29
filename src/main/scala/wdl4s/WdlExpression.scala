@@ -107,8 +107,8 @@ object WdlExpression {
    *
    * This will allow the expression `y + "z"` to evaluate to the string "xyz"
    */
-  def standardLookupFunction(call: Call, parameters: Map[String, WdlValue], functions: WdlFunctions[WdlValue]): String => WdlValue = {
-    def resolveParameter(name: String): Try[WdlValue] = parameters.get(name) match {
+  def standardLookupFunction(call: Call, parameters: WorkflowCoercedInputs, functions: WdlFunctions[WdlValue]): String => WdlValue = {
+    def resolveParameter(name: String): Try[WdlValue] = parameters.get(s"${call.fullyQualifiedName}.$name") match {
       case Some(value) => Success(value)
       case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as an input parameter"))
     }
@@ -116,11 +116,22 @@ object WdlExpression {
       case Some(d) => d.expression.map(_.evaluate(lookup, functions)).getOrElse(Failure(new WdlExpressionException(s"Could not evaluate declaration: $d")))
       case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as a declaration"))
     }
+    def scopedLookupFunction(scope: Scope)(v: String): WdlValue = {
+      val x = scope.ancestry.map(s => s"${s.fullyQualifiedName}.$v").map(fqn => Try(lookup(fqn)))
+      /*scope.fullyQualifiedName.split("\\.").reverse.foldLeft(Seq.empty[String]) { (acc, cur) =>
+        acc match {
+          case s:Seq[String] if s.isEmpty => Seq(cur)
+          case s:Seq[String] => acc :+ s"${s.last}.$cur"
+        }
+      }.map(_.reverse)*/
+      WdlString("BAD VALUE")
+    }
     def resolveCallInput(name: String): Try[WdlValue] = call.inputMappings.get(name) match {
-      case Some(expr) => expr.evaluate(lookup, )
+      case Some(expr) => expr.evaluate(scopedLookupFunction(call), functions)
+      case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as a call input expression"))
     }
     def lookup(key: String): WdlValue = {
-      val attemptedResolution = Stream(resolveParameter _, resolveDeclaration(lookup) _) map { _(key) } find { _.isSuccess }
+      val attemptedResolution = Stream(resolveParameter _, resolveDeclaration(lookup) _, resolveCallInput _) map { _(key) } find { _.isSuccess }
       attemptedResolution.getOrElse(throw new VariableNotFoundException(key)).get
     }
     lookup

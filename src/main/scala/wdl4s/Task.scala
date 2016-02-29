@@ -7,6 +7,7 @@ import wdl4s.command.{CommandPart, ParameterCommandPart, StringCommandPart}
 import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctionsType, WdlFunctions}
 import wdl4s.parser.WdlParser._
 import wdl4s.types.{WdlIntegerType, WdlType}
+import wdl4s.util.StringUtil
 import wdl4s.values.WdlValue
 
 import scala.annotation.tailrec
@@ -15,7 +16,6 @@ import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 object Task {
-  val Ws = Pattern.compile("[\\ \\t]+")
 
   /** The function validateDeclaration() and the DeclarationAccumulator class are used
     * to accumulate errors and keep track of which Declarations/TaskOutputs have been examined.
@@ -229,64 +229,10 @@ case class Task(name: String,
   def instantiateCommand(parameters: CallInputs,
                          functions: WdlFunctions[WdlValue],
                          valueMapper: WdlValue => WdlValue = (v) => v): Try[String] = {
-    Try(normalize(commandTemplate.map(_.instantiate(declarations, parameters, functions, valueMapper)).mkString("")))
+    Try(StringUtil.normalize(commandTemplate.map(_.instantiate(this, parameters, functions, valueMapper)).mkString("")))
   }
 
-  def commandTemplateString: String = normalize(commandTemplate.map(_.toString).mkString)
-
-  /**
-   * 1) Remove all leading newline chars
-   * 2) Remove all trailing newline AND whitespace chars
-   * 3) Remove all *leading* whitespace that's common among every line in the input string
-   *
-   * For example, the input string:
-   *
-   * "
-   *   first line
-   *     second line
-   *   third line
-   *
-   * "
-   *
-   * Would be normalized to:
-   *
-   * "first line
-   *   second line
-   * third line"
-   *
-   * @param s String to process
-   * @return String which has common leading whitespace removed from each line
-   */
-  private def normalize(s: String): String = {
-    val trimmed = stripAll(s, "\r\n", "\r\n \t")
-    val parts = trimmed.split("[\\r\\n]+")
-    val indent = parts.map(leadingWhitespaceCount).min
-    parts.map(_.substring(indent)).mkString("\n")
-  }
-
-  private def leadingWhitespaceCount(s: String): Int = {
-    val matcher = Ws.matcher(s)
-    if (matcher.lookingAt) matcher.end else 0
-  }
-
-  private def stripAll(s: String, startChars: String, endChars: String): String = {
-    /* https://stackoverflow.com/questions/17995260/trimming-strings-in-scala */
-    @tailrec
-    def start(n: Int): String = {
-      if (n == s.length) ""
-      else if (startChars.indexOf(s.charAt(n)) < 0) end(n, s.length)
-      else start(1 + n)
-    }
-
-    @tailrec
-    def end(a: Int, n: Int): String = {
-      if (n <= a) s.substring(a, n)
-      else if (endChars.indexOf(s.charAt(n - 1)) < 0) s.substring(a, n)
-      else end(a, n - 1)
-    }
-
-    start(0)
-  }
+  def commandTemplateString: String = StringUtil.normalize(commandTemplate.map(_.toString).mkString)
 
   override def toString: String = s"[Task name=$name commandTemplate=$commandTemplate}]"
 }

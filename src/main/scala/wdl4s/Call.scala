@@ -2,6 +2,7 @@ package wdl4s
 
 import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.expression.WdlFunctions
+import wdl4s.util.StringUtil
 import wdl4s.values.WdlValue
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import scala.util.Try
@@ -101,10 +102,11 @@ case class Call(alias: Option[String],
    * Instantiate the abstract command line corresponding to this call using the specified inputs.
     *
    */
-  def instantiateCommandLine(inputs: CallInputs,
+  def instantiateCommandLine(inputs: WorkflowCoercedInputs,
                              functions: WdlFunctions[WdlValue],
-                             valueMapper: WdlValue => WdlValue = (v) => v): Try[String] =
-    task.instantiateCommand(inputs, functions, valueMapper)
+                             valueMapper: WdlValue => WdlValue = (v) => v): Try[String] = {
+    Try(StringUtil.normalize(task.commandTemplate.map(_.instantiate(this, inputs, functions, valueMapper)).mkString("")))
+  }
 
   /**
     * @return Seq[ScopedDeclaration] which are scoped to this Call

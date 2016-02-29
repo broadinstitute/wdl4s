@@ -29,11 +29,26 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
   def attributesToString: String = if (attributes.nonEmpty) attributes.map({case (k,v) => s"$k=${WdlString(v).toWdlString}"}).mkString(" ") + " " else ""
   override def toString: String = "${" + s"$attributesToString${expression.toWdlString}" + "}"
 
-  override def instantiate(declarations: Seq[Declaration],
-                           parameters: Map[String, WdlValue],
+  override def instantiate(call: Call,
+                           parameters: WorkflowCoercedInputs,
                            functions: WdlFunctions[WdlValue],
-                           valueMapper: WdlValue => WdlValue = (v) => v): String = {
-    val value = expression.evaluate(WdlExpression.standardLookupFunction(parameters, declarations, functions), functions) match {
+                           valueMapper: WdlValue => WdlValue): String = {
+    val lookup = WdlExpression.standardLookupFunction(call, parameters, functions)
+    _instantiate(call.task.declarations, lookup, functions, valueMapper)
+  }
+  override def instantiate(task: Task,
+                           parameters: CallInputs,
+                           functions: WdlFunctions[WdlValue],
+                           valueMapper: WdlValue => WdlValue): String = {
+    val lookup = WdlExpression.standardLookupFunction(task, parameters, functions)
+    _instantiate(task.declarations, lookup, functions, valueMapper)
+  }
+
+  def _instantiate(declarations: Seq[Declaration],
+                   lookup: String => WdlValue,
+                   functions: WdlFunctions[WdlValue],
+                   valueMapper: WdlValue => WdlValue): String = {
+    val value = expression.evaluate(lookup, functions) match {
       case Success(v) => v
       case Failure(f) => f match {
         case v: VariableNotFoundException => declarations.find(_.name == v.variable) match {

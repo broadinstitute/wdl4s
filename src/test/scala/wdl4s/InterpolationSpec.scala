@@ -35,17 +35,20 @@ class InterpolationSpec extends FlatSpec with Matchers {
       |}
     """.stripMargin
   val namespace = NamespaceWithWorkflow.load(wdl)
-  val test = namespace.workflow.calls find {_.unqualifiedName == "test"} getOrElse {
-    fail("call 'test' not found")
-  }
-  val test2 = namespace.workflow.calls find {_.unqualifiedName == "test2"} getOrElse {
-    fail("call 'test2' not found")
-  }
 
-  it should "foobar" in {
-    val testCmd = test.task.instantiateCommand(Map("eval_this" -> WdlString("${var}")), NoFunctions)
-    val test2Cmd = test2.task.instantiateCommand(Map(), NoFunctions)
+  /*it should "foobar" in {
+    val test = namespace.workflow.calls find {_.unqualifiedName == "test"} getOrElse {
+      fail("call 'test' not found")
+    }
+    val testCmd = test.instantiateCommandLine(Map("testWF.test.eval_this" -> WdlString("${var}")), NoFunctions)
     testCmd shouldEqual Try("echo 'inside inside inside'")
+  }*/
+
+  it should "foobar2" in {
+    val test2Call = namespace.workflow.findCallByName("test2") getOrElse {
+      fail("call 'test2' not found")
+    }
+    val test2Cmd = test2Call.instantiateCommandLine(Map(), NoFunctions)
     test2Cmd shouldEqual Try("echo 'outside inside inside'")
   }
 }
