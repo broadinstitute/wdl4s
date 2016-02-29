@@ -107,12 +107,31 @@ object WdlExpression {
    *
    * This will allow the expression `y + "z"` to evaluate to the string "xyz"
    */
-  def standardLookupFunction(parameters: Map[String, WdlValue], declarations: Seq[Declaration], functions: WdlFunctions[WdlValue]): String => WdlValue = {
+  def standardLookupFunction(call: Call, parameters: Map[String, WdlValue], functions: WdlFunctions[WdlValue]): String => WdlValue = {
     def resolveParameter(name: String): Try[WdlValue] = parameters.get(name) match {
       case Some(value) => Success(value)
       case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as an input parameter"))
     }
-    def resolveDeclaration(lookup: ScopedLookupFunction)(name: String) = declarations.find(_.name == name) match {
+    def resolveDeclaration(lookup: ScopedLookupFunction)(name: String): Try[WdlValue] = call.task.declarations.find(_.name == name) match {
+      case Some(d) => d.expression.map(_.evaluate(lookup, functions)).getOrElse(Failure(new WdlExpressionException(s"Could not evaluate declaration: $d")))
+      case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as a declaration"))
+    }
+    def resolveCallInput(name: String): Try[WdlValue] = call.inputMappings.get(name) match {
+      case Some(expr) => expr.evaluate(lookup, )
+    }
+    def lookup(key: String): WdlValue = {
+      val attemptedResolution = Stream(resolveParameter _, resolveDeclaration(lookup) _) map { _(key) } find { _.isSuccess }
+      attemptedResolution.getOrElse(throw new VariableNotFoundException(key)).get
+    }
+    lookup
+  }
+
+  def standardLookupFunction(task: Task, parameters: Map[String, WdlValue], functions: WdlFunctions[WdlValue]): String => WdlValue = {
+    def resolveParameter(name: String): Try[WdlValue] = parameters.get(name) match {
+      case Some(value) => Success(value)
+      case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as an input parameter"))
+    }
+    def resolveDeclaration(lookup: ScopedLookupFunction)(name: String) = task.declarations.find(_.name == name) match {
       case Some(d) => d.expression.map(_.evaluate(lookup, functions)).getOrElse(Failure(new WdlExpressionException(s"Could not evaluate declaration: $d")))
       case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as a declaration"))
     }
