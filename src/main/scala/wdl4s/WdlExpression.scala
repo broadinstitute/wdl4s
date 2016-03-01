@@ -118,6 +118,7 @@ object WdlExpression {
     }
     def scopedLookupFunction(scope: Scope)(v: String): WdlValue = {
       val x = scope.ancestry.map(s => s"${s.fullyQualifiedName}.$v").map(fqn => Try(lookup(fqn)))
+      call.ancestry
       /*scope.fullyQualifiedName.split("\\.").reverse.foldLeft(Seq.empty[String]) { (acc, cur) =>
         acc match {
           case s:Seq[String] if s.isEmpty => Seq(cur)

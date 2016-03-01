@@ -1,16 +1,13 @@
 package wdl4s
 
-import java.util.regex.Pattern
-
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.command.{CommandPart, ParameterCommandPart, StringCommandPart}
-import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctionsType, WdlFunctions}
+import wdl4s.expression.{NoFunctions, WdlFunctions, WdlStandardLibraryFunctionsType}
 import wdl4s.parser.WdlParser._
-import wdl4s.types.{WdlIntegerType, WdlType}
+import wdl4s.types.WdlType
 import wdl4s.util.StringUtil
 import wdl4s.values.WdlValue
 
-import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
@@ -191,8 +188,13 @@ case class Task(name: String,
                 meta: Map[String, String],
                 parameterMeta: Map[String, String],
                 outputs: Seq[TaskOutput],
-                ast: Ast) extends Executable {
-  import Task._
+                ast: Ast) extends Executable with Scope {
+
+  override def unqualifiedName: LocallyQualifiedName = name
+  override def appearsInFqn: Boolean = true
+  override def children: Seq[Scope] = Seq.empty[Scope]
+  override val prerequisiteScopes: Set[Scope] = Set.empty[Scope]
+  override val prerequisiteCallNames: Set[LocallyQualifiedName] = Set.empty[LocallyQualifiedName]
 
   /**
     * Given a map of task-local parameter names and WdlValues, create a command String.

@@ -21,7 +21,7 @@ object Scatter {
  * @param collection Wdl Expression corresponding to the collection this scatter is looping through
  * @param parent Parent of this scatter
  */
-case class Scatter(index: Int, item: String, collection: WdlExpression, parent: Option[Scope]) extends Scope {
+case class Scatter(index: Int, item: String, collection: WdlExpression, parent: Option[Scope]) extends Scope with Executable {
   val unqualifiedName = s"${Scatter.FQNIdentifier}_$index"
   override def appearsInFqn = false
   override val prerequisiteCallNames = collection.prerequisiteCallNames

@@ -1,3 +1,10 @@
 package wdl4s
 
-trait Executable
+/**
+  * e.g. Call, Scatter, Workflow
+  */
+trait Executable {
+  def upstream: Seq[Scope]
+  def downstream: Seq[Scope]
+  def workflow: Workflow
+}

@@ -18,7 +18,7 @@ object Workflow {
       case AstNodeName.Workflow =>
         generateWorkflowScopes(ast, namespaces, tasks, wdlSyntaxErrorFormatter)
       case nonWorkflowAst =>
-        throw new UnsupportedOperationException(s"Ast is not a 'Workflow Ast' but a '$nonWorkflowAst Ast'")
+        throw new UnsupportedOperationException(s"Expecting a 'Workflow AST' but got a '$nonWorkflowAst AST'")
     }
   }
 
@@ -38,7 +38,7 @@ object Workflow {
      * Retrieve the list of children ASTs from the AST body.
      * Return empty seq if body is null or is not a list.
      */
-    def getChildrenList(ast: Ast): Seq[Ast] = {
+    def getChildAsts(ast: Ast): Seq[Ast] = {
       val body = Option(ast.getAttribute("body")).filter(_.isInstanceOf[AstList]).map(_.astListAsVector)
       body match {
         case Some(asts) => asts collect { case node: Ast if Seq(AstNodeName.Call, AstNodeName.Scatter).contains(node.getName) => node }
@@ -53,7 +53,7 @@ object Workflow {
      */
     def setChildScopes(parentAst: Ast, parentScope: Scope): Unit = {
       parentScope.children = for {
-        child <- getChildrenList(parentAst)
+        child <- getChildAsts(parentAst)
         scope = generateScopeTree(child, namespaces, tasks, wdlSyntaxErrorFormatter, parentScope)
       } yield scope
     }
@@ -119,7 +119,6 @@ case class Workflow(unqualifiedName: String,
                     workflowOutputDecls: Seq[WorkflowOutputDeclaration]) extends Executable with Scope {
   override val prerequisiteScopes = Set.empty[Scope]
   override val prerequisiteCallNames = Set.empty[String]
-  override val parent: Option[Scope] = None
 
   /**
    * FQNs for all inputs to this workflow and their associated types and possible postfix quantifiers.

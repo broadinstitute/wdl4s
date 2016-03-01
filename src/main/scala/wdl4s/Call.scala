@@ -78,8 +78,16 @@ case class Call(alias: Option[String],
                 task: Task,
                 prerequisiteCallNames: Set[LocallyQualifiedName],
                 inputMappings: Map[String, WdlExpression],
-                parent: Option[Scope]) extends Scope {
+                parent: Option[Scope]) extends Scope with Executable {
   val unqualifiedName: String = alias getOrElse taskFqn
+
+  override def upstream: Seq[Scope] = {
+    ???
+  }
+
+  override def downstream: Seq[Scope] = {
+    ???
+  }
 
   override lazy val prerequisiteScopes: Set[Scope] = {
     val parent = this.parent.get // FIXME: In a world where Call knows it has a parent this wouldn't be icky

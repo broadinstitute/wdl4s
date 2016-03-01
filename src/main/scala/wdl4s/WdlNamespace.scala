@@ -20,30 +20,42 @@ import scala.util.{Failure, Success, Try}
  * The latter is a valid state for a WDL file, however only the former can be requested to be run, so
  * any constructs (e.g. WorkflowManagerActor) expecting to run a workflow should only take the `NamespaceWithWorkflow`
  */
-sealed trait WdlNamespace extends WdlValue {
+sealed trait WdlNamespace extends WdlValue with Scope {
   final val wdlType = WdlNamespaceType
 
-  def ast: Ast // FIXME: I think this is only used by the syntax highlighting, can it go away once we're built?
+  def ast: Ast
   def importedAs: Option[String] // Used when imported with `as` 
-  def imports: Seq[Import] // FIXME: Change to Set?
-  def namespaces: Seq[WdlNamespace] // FIXME: Change to Set? FIXME: Rename to importedNamespaces?
-  def tasks: Seq[Task] // FIXME: Change to Set?
+  def imports: Seq[Import]
+  def namespaces: Seq[WdlNamespace]
+  def tasks: Seq[Task]
+  def workflows: Seq[Workflow]
   def terminalMap: Map[Terminal, WdlSource]
 
   // Convenience method for findTask in the context of this namespace
   def findTask(name: String): Option[Task] = WdlNamespace.findTask(name, namespaces, tasks)
+
+  override def unqualifiedName: LocallyQualifiedName = "__main__"
+  override def appearsInFqn: Boolean = false
+  override val parent: Option[Scope] = None
+  override def children: Seq[Scope] = tasks ++ workflows
+  override val prerequisiteScopes: Set[Scope] = Set.empty[Scope]
+  override val prerequisiteCallNames: Set[LocallyQualifiedName] = Set.empty[LocallyQualifiedName]
 }
 
 /**
- * A valid Namespace which doesn't have a locally defined Workflow. This should pass any validity checking but is not
- * directly runnable by `WorkflowManagerActor`
+ * A valid Namespace which doesn't have a locally defined Workflow.
  */
 case class NamespaceWithoutWorkflow(importedAs: Option[String],
                                     imports: Seq[Import],
                                     namespaces: Seq[WdlNamespace],
                                     tasks: Seq[Task],
                                     terminalMap: Map[Terminal, WdlSource],
-                                    ast: Ast) extends WdlNamespace
+                                    ast: Ast) extends WdlNamespace {
+  val workflows = Seq.empty[Workflow]
+  tasks.foreach(x => x.parent = this)
+  workflows.foreach(x => x.parent = this)
+}
+
 /** Represents a WdlNamespace which has a local workflow, i.e. a directly runnable namespace */
 case class NamespaceWithWorkflow(importedAs: Option[String],
                                  workflow: Workflow,
@@ -53,6 +65,12 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
                                  terminalMap: Map[Terminal, WdlSource],
                                  wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
                                  ast: Ast) extends WdlNamespace {
+
+  // TODO: sfrazer: this is duplicated
+  val workflows = Seq(workflow)
+  tasks.foreach(x => x.parent = this)
+  workflows.foreach(x => x.parent = this)
+
   /**
    * Confirm all required inputs are present and attempt to coerce raw inputs to `WdlValue`s.
    * This can fail if required raw inputs are missing or if the values for a specified raw input
@@ -157,8 +175,8 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
  *
  * {{{
  * val namespace = WdlNamespace.load(new File("/path/to/file.wdl"))
- * binding.workflow.calls foreach { call =>
- *      println(call)
+ * namespace.workflow.calls foreach { call =>
+ *   println(call)
  * }
  * }}}
  */
@@ -207,7 +225,7 @@ object WdlNamespace {
    *
    * 1) Tasks do not have duplicate inputs
    * 2) Tasks in this namespace have unique names
-   * 3) Tasks and namespaces don't have overlapping names (FIXME: Likely has to do w/ DSDEEPB-726)
+   * 3) Tasks and namespaces don't have overlapping names
    */
   def apply(ast: Ast, source: WdlSource, importResolver: ImportResolver, namespace: Option[String]): WdlNamespace = {
     /**

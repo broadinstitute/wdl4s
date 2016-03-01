@@ -6,8 +6,8 @@ import org.scalatest.{FlatSpec, Matchers}
 class PrerequisiteScopesSpec extends FlatSpec with Matchers {
   val namespace = NamespaceWithWorkflow.load((new ScatterWdl).wdlSource())
   val workflow = namespace.workflow
-  val allCalls = workflow.collectAllCalls
-  val allScatters = workflow.collectAllScatters
+  val allCalls = workflow.calls
+  val allScatters = workflow.scatters
 
   def scopesByName(name: String) = workflow.callByName(name).get.prerequisiteScopes
 
