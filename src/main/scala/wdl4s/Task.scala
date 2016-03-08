@@ -26,9 +26,8 @@ object Task {
   def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Task = {
     val taskNameTerminal = ast.getAttribute("name").asInstanceOf[Terminal]
     val name = taskNameTerminal.sourceString
-    val declarations = ast.findAsts(AstNodeName.Declaration).map(Declaration(_, wdlSyntaxErrorFormatter))
     val commandAsts = ast.findAsts(AstNodeName.Command)
-    val runtimeAttributes = RuntimeAttributes(ast, declarations)
+    val runtimeAttributes = RuntimeAttributes(ast)
     val meta = wdlSectionToStringMap(ast, AstNodeName.Meta, wdlSyntaxErrorFormatter)
     val parameterMeta = wdlSectionToStringMap(ast, AstNodeName.ParameterMeta, wdlSyntaxErrorFormatter)
     val outputs = ast.findAsts(AstNodeName.Output) map { TaskOutput(_, wdlSyntaxErrorFormatter) }
@@ -39,7 +38,11 @@ object Task {
       case x: Ast => ParameterCommandPart(x, wdlSyntaxErrorFormatter)
     }
 
-    val variablesReferencedInCommand = for {
+    // TODO: sfrazer: move this validation a higher level, at the namespace level perhaps
+    // This is checking that the command only references valid declarations (this needs to be scoped)
+    // Also checks that the declarations ++ outputs have referential integrity
+
+    /*val variablesReferencedInCommand = for {
       param <- commandTemplate collect { case x: ParameterCommandPart => x }
       variable <- param.expression.variableReferences
     } yield variable
@@ -56,8 +59,9 @@ object Task {
       case x if x.nonEmpty => throw new SyntaxError(x.mkString(s"\n${"-" * 50}\n\n"))
       case _ =>
     }
+    */
 
-    Task(name, declarations, commandTemplate, runtimeAttributes, meta, parameterMeta, outputs, ast)
+    Task(name, commandTemplate, runtimeAttributes, meta, parameterMeta, outputs, ast)
   }
 
   /**
@@ -166,14 +170,13 @@ object Task {
     }
   }
 
-  def empty: Task = new Task("taskName", Seq.empty, Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, Seq.empty, null)
+  def empty: Task = new Task("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, Seq.empty, null)
 }
 
 /**
  * Represents a `task` declaration in a WDL file
  *
  * @param name Name of the task
- * @param declarations Any declarations (e.g. String something = "hello") defined in the task
  * @param commandTemplate Sequence of command pieces, essentially a parsed command template
  * @param runtimeAttributes 'runtime' section of a file
  * @param meta 'meta' section of a task
@@ -182,19 +185,15 @@ object Task {
  * @param ast The syntax tree from which this was built.
  */
 case class Task(name: String,
-                declarations: Seq[Declaration],
                 commandTemplate: Seq[CommandPart],
                 runtimeAttributes: RuntimeAttributes,
                 meta: Map[String, String],
                 parameterMeta: Map[String, String],
                 outputs: Seq[TaskOutput],
-                ast: Ast) extends Executable with Scope {
+                ast: Ast) extends Scope {
 
   override def unqualifiedName: LocallyQualifiedName = name
   override def appearsInFqn: Boolean = true
-  override def children: Seq[Scope] = Seq.empty[Scope]
-  override val prerequisiteScopes: Set[Scope] = Set.empty[Scope]
-  override val prerequisiteCallNames: Set[LocallyQualifiedName] = Set.empty[LocallyQualifiedName]
 
   /**
     * Given a map of task-local parameter names and WdlValues, create a command String.

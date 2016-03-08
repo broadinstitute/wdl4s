@@ -60,7 +60,7 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
     }
   }
 
-  val namespace = NamespaceWithWorkflow.load(workflowWdl, resolver _)
+  val namespace = WdlNamespaceWithWorkflow.load(workflowWdl, resolver _)
 
   "WDL file with imports" should "Have 0 tasks (3 tasks are in separate namespace)" in {
     namespace.tasks.size shouldEqual 0
@@ -73,7 +73,8 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
     namespace.namespaces flatMap {_.tasks} map {_.name} shouldEqual Seq("ps", "cgrep", "wc")
   }
   it should "Have 3 calls in the workflow, 2 of them aliased" in {
-    namespace.workflow.calls map {_.unqualifiedName} shouldEqual Seq("a1", "a2", "ns3.wc")
+    namespace.workflow.calls.map(_.fullyQualifiedName) shouldEqual Set("three_step.a1", "three_step.a2", "three_step.wc")
+    namespace.workflow.calls map(_.unqualifiedName) shouldEqual Set("a1", "a2", "wc")
   }
   it should "Throw an exception if the import resolver fails to resolve an import" in {
     def badResolver(s: String): String = {

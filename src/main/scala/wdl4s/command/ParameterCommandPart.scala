@@ -34,7 +34,7 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
                            functions: WdlFunctions[WdlValue],
                            valueMapper: WdlValue => WdlValue): String = {
     val lookup = WdlExpression.standardLookupFunction(call, parameters, functions)
-    _instantiate(call.task.declarations, lookup, functions, valueMapper)
+    _instantiate(call.declarations, lookup, functions, valueMapper)
   }
   override def instantiate(task: Task,
                            parameters: CallInputs,
@@ -44,14 +44,14 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
     _instantiate(task.declarations, lookup, functions, valueMapper)
   }
 
-  def _instantiate(declarations: Seq[Declaration],
+  def _instantiate(declarations: Seq[NewDeclaration],
                    lookup: String => WdlValue,
                    functions: WdlFunctions[WdlValue],
                    valueMapper: WdlValue => WdlValue): String = {
     val value = expression.evaluate(lookup, functions) match {
       case Success(v) => v
       case Failure(f) => f match {
-        case v: VariableNotFoundException => declarations.find(_.name == v.variable) match {
+        case v: VariableNotFoundException => declarations.find(_.unqualifiedName == v.variable) match {
           /* Allow an expression to fail evaluation if one of the variables that it requires is optional (the type has ? after it, e.g. String?) */
           case Some(d) if d.postfixQuantifier.contains("?") => if (attributes.contains("default")) WdlString(attributes.get("default").head) else WdlString("")
           case Some(d) => throw new UnsupportedOperationException(s"Parameter ${v.variable} is required, but no value is specified")

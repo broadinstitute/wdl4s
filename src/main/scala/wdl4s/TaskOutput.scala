@@ -18,6 +18,7 @@ object TaskOutput extends LazyLogging {
 }
 
 case class TaskOutput(name: String, wdlType: WdlType, requiredExpression: WdlExpression) extends Declaration {
+  override val unqualifiedName = name
   override val postfixQuantifier = None
   override val expression = Option(requiredExpression)
 }

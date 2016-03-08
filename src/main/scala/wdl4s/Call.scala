@@ -2,18 +2,18 @@ package wdl4s
 
 import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.expression.WdlFunctions
+import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.util.StringUtil
 import wdl4s.values.WdlValue
-import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
-import scala.util.Try
+
 import scala.language.postfixOps
+import scala.util.Try
 
 object Call {
   def apply(ast: Ast,
             namespaces: Seq[WdlNamespace],
             tasks: Seq[Task],
-            wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
-            parent: Option[Scope]): Call = {
+            wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Call = {
     val alias: Option[String] = ast.getAttribute("alias") match {
       case x: Terminal => Option(x.getSourceString)
       case _ => None
@@ -27,16 +27,9 @@ object Call {
 
     val callInputSectionMappings = processCallInput(ast, wdlSyntaxErrorFormatter)
 
-    callInputSectionMappings foreach { case (taskParamName, expression) =>
-      task.declarations find { decl => decl.name == taskParamName } getOrElse {
-        /*
-          FIXME-ish
-          It took me a while to figure out why this next part is necessary and it's kind of hokey.
-          All the syntax error formatting requires ASTs and this is a way to get the input's AST back.
-          Perhaps an intermediary object that contains the AST as well and then the normal Map in the Call?
-
-          FIXME: It'd be good to break this whole thing into smaller chunks
-         */
+    // TODO: sfrazer: add this syntax error back!
+    /*callInputSectionMappings foreach { case (taskParamName, expression) =>
+      task.declarations find { decl => decl.unqualifiedName == taskParamName } getOrElse {
         val callInput = AstTools.callInputSectionIOMappings(ast, wdlSyntaxErrorFormatter) find {
           _.getAttribute("key").sourceString == taskParamName
         } getOrElse {
@@ -44,11 +37,9 @@ object Call {
         }
         throw new SyntaxError(wdlSyntaxErrorFormatter.callReferencesBadTaskInput(callInput, task.ast))
       }
-    }
+    }*/
 
-    val prerequisiteCallNames = callInputSectionMappings.values flatMap { _.prerequisiteCallNames } toSet
-
-    new Call(alias, taskName, task, prerequisiteCallNames, callInputSectionMappings, parent)
+    new Call(alias, task, callInputSectionMappings)
   }
 
   private def processCallInput(ast: Ast,
@@ -74,25 +65,32 @@ object Call {
  *                      value of those inputs
  */
 case class Call(alias: Option[String],
-                taskFqn: FullyQualifiedName,
                 task: Task,
-                prerequisiteCallNames: Set[LocallyQualifiedName],
-                inputMappings: Map[String, WdlExpression],
-                parent: Option[Scope]) extends Scope with Executable {
-  val unqualifiedName: String = alias getOrElse taskFqn
+                inputMappings: Map[String, WdlExpression]) extends Scope with GraphNode {
+  val unqualifiedName: String = alias getOrElse task.name
 
-  override def upstream: Seq[Scope] = {
-    ???
+  lazy val upstream: Set[Scope with GraphNode] = {
+    val dependentNodes = for {
+      expr <- inputMappings.values
+      variable <- expr.variableReferences
+      node <- resolveVariable(variable.sourceString)
+    } yield node
+
+    val ancestorScatters = ancestry.collect({ case s: Scatter with GraphNode => s})
+
+    ( dependentNodes ++
+      dependentNodes.flatMap(_.upstream) ++
+      ancestorScatters ++
+      ancestorScatters.flatMap(_.upstream) ).toSet
   }
 
-  override def downstream: Seq[Scope] = {
-    ???
-  }
-
-  override lazy val prerequisiteScopes: Set[Scope] = {
-    val parent = this.parent.get // FIXME: In a world where Call knows it has a parent this wouldn't be icky
-    val parentPrereq = if (parent == this.rootWorkflow) Nil else Set(parent)
-    prerequisiteCalls ++ parentPrereq
+  lazy val downstream: Set[Scope with GraphNode] = {
+    for {
+      node <- namespace.descendants.collect({ case n: GraphNode => n }).filter(
+        _.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes
+      )
+      if node.upstream.contains(this)
+    } yield node
   }
 
   /**
@@ -101,8 +99,8 @@ case class Call(alias: Option[String],
    * are satisfied via the 'input' section of the Call definition.
    */
   def unsatisfiedInputs: Seq[WorkflowInput] = for {
-    i <- task.declarations if !inputMappings.contains(i.name) && i.expression.isEmpty
-  } yield WorkflowInput(s"$fullyQualifiedName.${i.name}", i.wdlType, i.postfixQuantifier)
+    i <- task.declarations if !inputMappings.contains(i.unqualifiedName) && i.expression.isEmpty
+  } yield WorkflowInput(s"$fullyQualifiedName.${i.unqualifiedName}", i.wdlType, i.postfixQuantifier)
 
   override def toString: String = s"[Call name=$unqualifiedName, task=$task]"
 
@@ -116,10 +114,5 @@ case class Call(alias: Option[String],
     Try(StringUtil.normalize(task.commandTemplate.map(_.instantiate(this, inputs, functions, valueMapper)).mkString("")))
   }
 
-  /**
-    * @return Seq[ScopedDeclaration] which are scoped to this Call
-    */
-  def scopedDeclarations: Seq[ScopedDeclaration] = task.declarations.map(decl => ScopedDeclaration(this, decl))
-
-  override def rootWorkflow: Workflow = parent map { _.rootWorkflow } getOrElse { throw new IllegalStateException("Call not in workflow") }
+  def workflow: Workflow = parent.map(_.asInstanceOf[Workflow]).getOrElse(throw new IllegalStateException("Grammar constraint violated: Call not in workflow"))
 }

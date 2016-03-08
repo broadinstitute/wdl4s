@@ -6,7 +6,7 @@ import wdl4s.values.WdlString
 import org.scalatest.{FlatSpec, Matchers}
 
 class SameNameParametersSpec extends FlatSpec with Matchers {
-  val namespace1 = NamespaceWithWorkflow.load(
+  val namespace1 = WdlNamespaceWithWorkflow.load(
     """
        |task test {
        |  String x

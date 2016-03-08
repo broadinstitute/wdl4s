@@ -3,18 +3,18 @@ package wdl4s
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedScatterSpec extends FlatSpec with Matchers {
-  val namespace = NamespaceWithWorkflow.load(SampleWdl.NestedScatterWdl.wdlSource())
+  val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.NestedScatterWdl.wdlSource())
 
   it should "Have four 'children' objects" in {
     namespace.workflow.children.size shouldEqual 4
   }
 
   it should "Have two 'direct Call descendents' objects" in {
-    Scope.collectCalls(namespace.workflow.children).size shouldEqual 2
+    namespace.workflow.children.collect({ case c: Call => c }).size shouldEqual 2
   }
 
   it should "Have two 'direct Scatter descendents' objects" in {
-    Scope.collectScatters(namespace.workflow.children).size shouldEqual 2
+    namespace.workflow.children.collect({ case s: Scatter => s }).size shouldEqual 2
   }
 
   it should "Have eight 'Call' objects" in {
@@ -26,14 +26,15 @@ class NestedScatterSpec extends FlatSpec with Matchers {
   }
 
   it should "Have 'Scatter' objects indexed properly" in {
-    namespace.workflow.scatters.head.index shouldEqual 0
-    namespace.workflow.scatters(1).index shouldEqual 3
-    namespace.workflow.scatters(2).index shouldEqual 1
-    namespace.workflow.scatters(3).index shouldEqual 2
+    val scatters = namespace.workflow.scatters
+    scatters.find(_.fullyQualifiedName  == "w.$scatter_0").map(_.index) shouldEqual Option(0)
+    scatters.find(_.fullyQualifiedName  == "w.$scatter_1").map(_.index) shouldEqual Option(1)
+    scatters.find(_.fullyQualifiedName  == "w.$scatter_2").map(_.index) shouldEqual Option(2)
+    scatters.find(_.fullyQualifiedName  == "w.$scatter_3").map(_.index) shouldEqual Option(3)
   }
 
   it should "Not appear in Calls FQNs" in {
-    val calls: Seq[Call] = namespace.workflow.calls
+    val calls = namespace.workflow.calls
     calls.find(_.fullyQualifiedName == "w.A") shouldBe defined
     calls.find(_.fullyQualifiedName == "w.B") shouldBe defined
     calls.find(_.fullyQualifiedName == "w.C") shouldBe defined

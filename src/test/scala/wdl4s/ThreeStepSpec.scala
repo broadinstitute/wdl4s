@@ -1,17 +1,16 @@
 package wdl4s
 
-import wdl4s._
-import wdl4s.expression.NoFunctions
-import wdl4s.types.{WdlFileType, WdlIntegerType, WdlStringType}
-import wdl4s.values.{WdlFile, WdlString}
 import org.scalatest.{FlatSpec, Matchers}
+import wdl4s.expression.NoFunctions
+import wdl4s.types.{WdlFileType, WdlIntegerType}
+import wdl4s.values.{WdlFile, WdlString}
 
 import scala.util.Failure
 
 class ThreeStepSpec extends FlatSpec with Matchers {
-  val namespace = NamespaceWithWorkflow.load(SampleWdl.ThreeStep.wdlSource())
+  val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.ThreeStep.wdlSource())
 
-  "Binding Namespace" should "Be able to coerce inputs" in {
+  "WdlNamespace" should "Be able to coerce inputs" in {
     namespace.coerceRawInputs(Map("three_step.cgrep.pattern" -> "abc")).get shouldEqual Map(
       "three_step.cgrep.pattern" -> WdlString("abc")
     )
@@ -27,7 +26,7 @@ class ThreeStepSpec extends FlatSpec with Matchers {
     namespace.workflow.fullyQualifiedName shouldEqual "three_step"
   }
   it should "Have no parent" in {
-    namespace.workflow.parent shouldEqual None
+    namespace.workflow.parent shouldEqual Option(namespace)
   }
   it should "Have three 'Call' objects" in {
     namespace.workflow.calls.size shouldEqual 3

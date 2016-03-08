@@ -143,8 +143,8 @@ object RuntimeAttributeSpec {
   }
 
 class RuntimeAttributeSpec extends FlatSpec with Matchers with EitherValues {
-  val NamespaceWithRuntime = NamespaceWithWorkflow.load(WorkflowWithRuntime)
-  val NamespaceWithoutRuntime = NamespaceWithWorkflow.load(WorkflowWithoutRuntime)
+  val NamespaceWithRuntime = WdlNamespaceWithWorkflow.load(WorkflowWithRuntime)
+  val NamespaceWithoutRuntime = WdlNamespaceWithWorkflow.load(WorkflowWithoutRuntime)
 
   "WDL file with runtime attributes" should "have attribute maps" in {
     NamespaceWithRuntime.tasks.forall(_.runtimeAttributes.attrs.nonEmpty) should be(true)
@@ -156,7 +156,7 @@ class RuntimeAttributeSpec extends FlatSpec with Matchers with EitherValues {
 
   "WDL file with a 'memory' runtime attribute" should "throw an exception if a malformed static string is specified" in {
     val ex = intercept[AggregatedException] {
-      NamespaceWithWorkflow.load(WorkflowWithMessedUpMemory)
+      WdlNamespaceWithWorkflow.load(WorkflowWithMessedUpMemory)
     }
 
     ex.getMessage should include ("should be of the form 'X Unit'")
@@ -164,21 +164,21 @@ class RuntimeAttributeSpec extends FlatSpec with Matchers with EitherValues {
 
   it should "throw an exception if the static string contains an invalid memory unit" in {
     val ex = intercept[AggregatedException] {
-      NamespaceWithWorkflow.load(WorkflowWithMessedUpMemoryUnit)
+      WdlNamespaceWithWorkflow.load(WorkflowWithMessedUpMemoryUnit)
     }
 
     ex.getMessage should include ("is an invalid memory unit")
   }
 
   it should "accept a value that contains an expression that can't be statically evaluated (1)" in {
-    val ns = NamespaceWithWorkflow.load(WorkflowWithMemoryExpressionAndStringInterpolation)
+    val ns = WdlNamespaceWithWorkflow.load(WorkflowWithMemoryExpressionAndStringInterpolation)
     val runtime = ns.findTask("memory_expression").get.runtimeAttributes.evaluate((s:String) => WdlInteger(10), NoFunctions)
     runtime("memory") shouldBe a[Success[_]]
     runtime("memory").get shouldEqual WdlString("10 GB")
   }
 
   it should "accept a value that contains an expression that can't be statically evaluated (2)" in {
-    val ns = NamespaceWithWorkflow.load(WorkflowWithMemoryExpression)
+    val ns = WdlNamespaceWithWorkflow.load(WorkflowWithMemoryExpression)
     val runtime = ns.findTask("memory_expression").get.runtimeAttributes
 
     val goodRuntime = runtime.evaluate((s:String) => WdlInteger(4), NoFunctions)

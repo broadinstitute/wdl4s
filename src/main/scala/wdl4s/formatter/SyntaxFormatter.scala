@@ -70,7 +70,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
     }
 
     val workflowDefinitions = namespace match {
-      case n: NamespaceWithWorkflow => namespaceDefinitions collect {case a: Ast if a.getName == "Workflow" => formatWorkflow(n.workflow)}
+      case n: WdlNamespaceWithWorkflow => namespaceDefinitions collect {case a: Ast if a.getName == "Workflow" => formatWorkflow(n.workflow)}
       case _ => Vector.empty[AstNode]
     }
     val definitions = taskDefinitions ++ workflowDefinitions
@@ -79,7 +79,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
   }
 
   private def formatImport(imp: Import): String = {
-    val namespace = imp.namespace.map{ns => s" as $ns"}.getOrElse("")
+    val namespace = imp.namespaceTerminal.map(ns => s" as ${ns.sourceString}").getOrElse("")
     s"${highlighter.keyword("import")} '${imp.uri}'$namespace"
   }
 
@@ -149,7 +149,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
 
   private def formatWorkflow(workflow: Workflow): String = {
     val declarations = workflow.declarations.map(formatDeclaration(_, 1))
-    val children = workflow.children.map(formatScope(_, 1))
+    val children = workflow.children.filter(c => !workflow.declarations.contains(c)).map(formatScope(_, 1))
     val outputs = formatWorkflowOutputs(workflow.workflowOutputDecls, 1)
     val sections = (declarations ++ children ++ Seq(outputs)).filter(_.nonEmpty)
     s"""${highlighter.keyword("workflow")} ${highlighter.name(workflow.unqualifiedName)} {
@@ -177,9 +177,9 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
 
   private def formatWorkflowOutputFqn(fqn: String) = fqn.replaceFirst("[a-zA-Z0-9]+\\.", "")
 
-  private def formatDeclaration(decl: Declaration, level: Int): String = {
+  private def formatDeclaration(decl: NewDeclaration, level: Int): String = {
     val expression = decl.expression.map(e => s" = ${e.toWdlString}").getOrElse("")
-    indent(s"${highlighter.wdlType(decl.wdlType)} ${highlighter.variable(decl.name)}$expression", level)
+    indent(s"${highlighter.wdlType(decl.wdlType)} ${highlighter.variable(decl.unqualifiedName)}$expression", level)
   }
 
   private def formatScope(scope: Scope, level: Int): String = scope match {
@@ -202,7 +202,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
   }
 
   private def formatScatter(scatter: Scatter, level: Int): String = {
-    val children = scatter.children.map(formatScope(_, 1))
+    val children = scatter.children.filterNot(c => c.isInstanceOf[Declaration]).map(formatScope(_, 1))
     indent(
       s"""${highlighter.keyword("scatter")} (${scatter.item} in ${scatter.collection.toString(highlighter)}) {
        |${children.mkString("\n")}

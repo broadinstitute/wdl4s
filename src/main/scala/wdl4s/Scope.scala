@@ -1,66 +1,14 @@
 package wdl4s
 
-import scala.annotation.tailrec
+import wdl4s.expression.WdlFunctions
+import wdl4s.values.{WdlArray, WdlValue}
+
 import scala.language.postfixOps
-
-object Scope {
-  /**
-   * Collect Calls from a Seq of Scopes.
-   * @param scopes scopes to loop through
-   * @return Scopes instances that are Calls
-   */
-  def collectCalls(scopes: Seq[Scope]): Seq[Call] = scopes collect { case s: Call => s }
-
-  /**
-   * Collect all Calls from the given scope.
-   * @param scopes scope to gather Calls from
-   * @param calls for recursivity. Should be passed Nil in most cases.
-   * @return all Calls inside the scope
-   */
-  @tailrec
-  def collectAllCalls(scopes: Seq[Scope], calls: Seq[Call]): Seq[Call] = scopes match {
-    case Nil => calls
-    case l => collectAllCalls(l.flatMap(_.children), calls ++ collectCalls(l))
-  }
-
-  /**
-   * Collect Scatters from a Seq of Scopes.
-   * @param scopes scopes to loop through
-   * @return Scopes instances that are Scatters
-   */
-  def collectScatters(scopes: Seq[Scope]): Seq[Scatter] = scopes collect { case s: Scatter => s }
-
-  /**
-   * Collect all Scatters from the given scope.
-   * @param scopes scope to gather Scatters from
-   * @param scatters for recursivity. Should be passed Nil in most cases.
-   * @return all Scatters inside the scope
-   */
-  @tailrec
-  def collectAllScatters(scopes: Seq[Scope], scatters: Seq[Scatter]): Seq[Scatter] = scopes match {
-    case Nil => scatters
-    case l => collectAllScatters(l.flatMap(_.children), scatters ++ collectScatters(l))
-  }
-
-  @tailrec
-  def fullyQualifiedNameBuilder(scope: Option[Scope], fqn: String, fullDisplay: Boolean, leaf: Boolean): String = {
-    scope match {
-      case Some(x: Scope) =>
-        fullyQualifiedNameBuilder(
-          x.parent,
-          (if (fullDisplay || x.appearsInFqn || leaf) s".${x.unqualifiedName}" else "") + fqn,
-          fullDisplay,
-          leaf = false)
-      case None => fqn.tail //Strip away the first "." of the name
-    }
-  }
-}
+import scala.util.{Success, Failure}
 
 trait Scope {
   def unqualifiedName: LocallyQualifiedName
   def appearsInFqn: Boolean = true
-  def prerequisiteScopes: Set[Scope]
-  def prerequisiteCallNames: Set[LocallyQualifiedName]
 
   def parent: Option[Scope] = _parent
   private var _parent: Option[Scope] = None
@@ -77,44 +25,126 @@ trait Scope {
     } else throw new UnsupportedOperationException("children is write-once")
   }
 
-  def fullyQualifiedName =
-    Scope.fullyQualifiedNameBuilder(Option(this), "", fullDisplay = false, leaf = true)
-
-  def fullyQualifiedNameWithIndexScopes =
-    Scope.fullyQualifiedNameBuilder(Option(this), "", fullDisplay = true, leaf = true)
-
-  /**
-   * Convenience method to collect Calls from within a scope.
-   * @return all calls contained in this scope (recursively)
-   */
-  private def collectAllCalls = Scope.collectAllCalls(Seq(this), Nil)
+  def namespace: WdlNamespace = _namespace
+  private var _namespace: WdlNamespace = null
+  def namespace_=[Child <: WdlNamespace](ns: WdlNamespace): Unit = {
+    if (Option(this._namespace).isEmpty) {
+      this._namespace = ns
+    } else throw new UnsupportedOperationException("namespace is write-once")
+  }
 
   /**
-   * Convenience method to collect Scatters from within a scope.
-   * @return all scatters contained in this scope (recursively)
-   */
-  private def collectAllScatters = Scope.collectAllScatters(Seq(this), Nil)
-
-  /**
-   * Calls and scatters are accessed frequently so this avoids traversing the whole children tree every time.
-   * Lazy because children are not provided at instantiation but rather later during tree building process.
-   * This prevents evaluation from being done before children have been set.
-   */
-  lazy val calls: Seq[Call] = collectAllCalls
-  lazy val scatters: Seq[Scatter] = collectAllScatters
-
-  def callByName(callName: String): Option[Call] = calls find { _.unqualifiedName == callName }
-
-  /**
-    * Walk the scope hierarchy until the root namespace and return each Scope along the way
+    * Returns Seq(parent, grandparent, great grandparent, ...)
     */
-  def ancestry: Seq[Scope] = parent match {
+  lazy val ancestry: Seq[Scope] = parent match {
     case Some(p) => Seq(p) ++ p.ancestry
     case None => Seq.empty[Scope]
   }
 
+  /**
+    * All children ++ children's children ++ etc.  This will return in depth-first order
+    */
+  lazy val descendants: Set[Scope] = (children ++ children.flatMap(_.descendants)).toSet
+
+  lazy val calls: Set[Call] = descendants.collect({ case c: Call => c })
+  lazy val scatters: Set[Scatter] = descendants.collect({ case s: Scatter => s })
+  lazy val declarations: Seq[NewDeclaration] = children.collect({ case d: NewDeclaration => d})
+
+  def fullyQualifiedName = {
+    (ancestry.reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
+  }
+
+  def fullyQualifiedNameWithIndexScopes = {
+    (Seq(this) ++ ancestry).reverse.map(_.unqualifiedName).filter(_.nonEmpty).mkString(".")
+  }
+
+  def callByName(callName: String): Option[Call] = calls.find(_.unqualifiedName == callName)
+
   def closestCommonAncestor(other: Scope): Option[Scope] = {
     val otherAncestry = other.ancestry
     ancestry find { otherAncestry.contains(_) }
+  }
+
+  /**
+    * Performs scope resolution starting from this scope and walking up the lexical hierarchy
+    * until it finds a GraphNode with the `name` as its unqualifiedName
+    */
+  def resolveVariable(name: String): Option[Scope with GraphNode] = {
+    val localLookup = children.collect({ case n: GraphNode => n }) find {
+      case s: Scatter => s.item == name
+      case n => n.unqualifiedName == name
+    }
+    localLookup match {
+      case scope: Some[_] => scope
+      case None => parent.flatMap(_.resolveVariable(name))
+    }
+  }
+
+  // TODO: sfrazer: move this somewhere, also... duplicate of VariableNotFoundException?
+  class VariableLookupException(message: String, cause: Throwable = null) extends Exception(message, cause)
+
+  /**
+    * This will return a lookup function for evaluating expressions which will traverse up the
+    * scope hierarchy to find a value for `name`.  An exception will be thrown if a value cannot
+    * be found for `name`
+    *
+    * @param scope The scope to start the variable resolution
+    * @param inputs All known values of FQNs
+    * @param shards For resolving specific shards of scatter blocks
+    * @param wdlFunctions Implementation of WDL functions for expression evaluation
+    * @return String => WdlValue lookup function rooted at `scope`
+    */
+  private def scopeLookupFunction(scope: Scope,
+                                  inputs: WorkflowCoercedInputs,
+                                  shards: Map[Scatter, Int],
+                                  wdlFunctions: WdlFunctions[WdlValue])(name: String): WdlValue = {
+    val callInputMappingLookup = scope match {
+      case call: Call =>
+        for {
+          expr <- call.inputMappings.get(name)
+          // .get so this intentionally throws an exception (lookup function always throws exception when lookup fails)
+          value = expr.evaluate(scopeLookupFunction(call.parent.get, inputs, shards, wdlFunctions), wdlFunctions).get
+        } yield value
+      case _ => None
+    }
+
+    val x = scope.resolveVariable(name)
+
+    val scopeResolvedValue = x match {
+      case Some(scatter: Scatter) =>
+        // This case will happen if `name` references a Scatter.item (i.e. `x` in expression scatter(x in y) {...})
+        val evaluatedCollection = scatter.collection.evaluate(scopeLookupFunction(scatter, inputs, shards, wdlFunctions), wdlFunctions)
+        val scatterShard = shards.get(scatter)
+
+        (evaluatedCollection, scatterShard) match {
+          case (Success(value: WdlArray), Some(shard)) if 0 <= shard && shard < value.value.size =>
+            value.value.lift(shard)
+          case (Success(value: WdlArray), Some(shard)) =>
+            throw new VariableLookupException(s"Scatter expression (${scatter.collection.toWdlString}) evaluated to an array of ${value.value.size} elements, but element ${shard} was requested.")
+          case (Success(value: WdlValue), _) =>
+            throw new VariableLookupException(s"Expected scatter expression (${scatter.collection.toWdlString}) to evaluate to an Array.  Instead, got a ${value}")
+          case (Failure(ex), _) =>
+            throw new VariableLookupException(s"Failed to evaluate scatter expression (${scatter.collection.toWdlString})", ex)
+          case (_, None) =>
+            throw new VariableLookupException(s"Could not find a shard for scatter block with expression (${scatter.collection.toWdlString})")
+        }
+      case Some(d: NewDeclaration) if d.expression.isDefined =>
+        // TODO: sfrazer: d.parent.get?
+        d.expression.get.evaluate(scopeLookupFunction(d.parent.get, inputs, shards, wdlFunctions), wdlFunctions) match {
+          case Success(value) => Option(value)
+          case Failure(ex) => throw new VariableLookupException(s"Could not evaluate expression for declaration '${d.toWdlString}'", ex)
+        }
+      case Some(s) => inputs.get(s.fullyQualifiedName)
+    }
+
+    if (callInputMappingLookup.isDefined) callInputMappingLookup.get
+    else if (scopeResolvedValue.isDefined) scopeResolvedValue.get
+    else throw new VariableLookupException(s"Could not find a value for $name from ${scope.fullyQualifiedName}")
+  }
+
+  def lookupFunction(inputs: WorkflowCoercedInputs,
+                     shards: Map[Scatter, Int],
+                     wdlFunctions: WdlFunctions[WdlValue]): String => WdlValue = {
+    scopeLookupFunction(this, inputs, shards, wdlFunctions)
   }
 }

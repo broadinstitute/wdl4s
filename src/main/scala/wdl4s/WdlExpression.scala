@@ -112,13 +112,14 @@ object WdlExpression {
       case Some(value) => Success(value)
       case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as an input parameter"))
     }
-    def resolveDeclaration(lookup: ScopedLookupFunction)(name: String): Try[WdlValue] = call.task.declarations.find(_.name == name) match {
+    def resolveDeclaration(lookup: ScopedLookupFunction)(name: String): Try[WdlValue] = call.task.declarations.find(_.unqualifiedName == name) match {
       case Some(d) => d.expression.map(_.evaluate(lookup, functions)).getOrElse(Failure(new WdlExpressionException(s"Could not evaluate declaration: $d")))
       case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as a declaration"))
     }
     def scopedLookupFunction(scope: Scope)(v: String): WdlValue = {
       val x = scope.ancestry.map(s => s"${s.fullyQualifiedName}.$v").map(fqn => Try(lookup(fqn)))
       call.ancestry
+      // TODO: sfrazer: what is this?
       /*scope.fullyQualifiedName.split("\\.").reverse.foldLeft(Seq.empty[String]) { (acc, cur) =>
         acc match {
           case s:Seq[String] if s.isEmpty => Seq(cur)
@@ -135,7 +136,7 @@ object WdlExpression {
       val attemptedResolution = Stream(resolveParameter _, resolveDeclaration(lookup) _, resolveCallInput _) map { _(key) } find { _.isSuccess }
       attemptedResolution.getOrElse(throw new VariableNotFoundException(key)).get
     }
-    lookup
+    call.lookupFunction(parameters, Map.empty[Scatter, Int], functions)
   }
 
   def standardLookupFunction(task: Task, parameters: Map[String, WdlValue], functions: WdlFunctions[WdlValue]): String => WdlValue = {
@@ -143,7 +144,7 @@ object WdlExpression {
       case Some(value) => Success(value)
       case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as an input parameter"))
     }
-    def resolveDeclaration(lookup: ScopedLookupFunction)(name: String) = task.declarations.find(_.name == name) match {
+    def resolveDeclaration(lookup: ScopedLookupFunction)(name: String) = task.declarations.find(_.unqualifiedName == name) match {
       case Some(d) => d.expression.map(_.evaluate(lookup, functions)).getOrElse(Failure(new WdlExpressionException(s"Could not evaluate declaration: $d")))
       case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as a declaration"))
     }
@@ -236,17 +237,11 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
 
   override def toWdlString: String = toString(NullSyntaxHighlighter)
 
-  def prerequisiteCallNames: Set[LocallyQualifiedName] = this.toMemberAccesses map { _.lhs }
-  def toMemberAccesses: Set[MemberAccess] = AstTools.findTopLevelMemberAccesses(ast) map { MemberAccess(_) } toSet
-  def variableReferences: Iterable[Terminal] = {
-    ast.findTerminalsWithTrail("identifier") flatMap { case (terminal, trail) =>
-      // function calls have 'identifier' terminals to represent the name of the function
-      if (trail.nonEmpty && trail.last.isInstanceOf[Ast] && trail.last.asInstanceOf[Ast].isFunctionCall)
-        None
-      else
-        Option(terminal)
-    }
+  def prerequisiteCallNames: Set[FullyQualifiedName] = {
+    this.topLevelMemberAccesses map { _.lhs }
   }
+  def topLevelMemberAccesses: Set[MemberAccess] = AstTools.findTopLevelMemberAccesses(ast) map { MemberAccess(_) } toSet
+  def variableReferences: Iterable[Terminal] = AstTools.findVariableReferences(ast)
 }
 
 case object NoLookup extends ScopedLookupFunction {

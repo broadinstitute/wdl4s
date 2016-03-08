@@ -4,7 +4,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FlatSpec, Matchers}
 
 class FqnResolverSpec extends FlatSpec with Matchers {
-  val namespace = NamespaceWithWorkflow.load(SampleWdl.NestedScatterWdl.wdlSource())
+  val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.NestedScatterWdl.wdlSource())
   val callFqns = Table(
     "fqn",
     "w.A",
