@@ -39,7 +39,4 @@ case class Scatter(index: Int, item: String, collection: WdlExpression) extends 
       if node.upstream.contains(this)
     } yield node
   }
-
-  // TODO: sfrazer: this is copied from Call, abstract into WorkflowScoped trait
-  def workflow: Workflow = parent.map(_.asInstanceOf[Workflow]).getOrElse(throw new IllegalStateException("Grammar constraint violated: Call not in workflow"))
 }

@@ -27,19 +27,7 @@ object Call {
 
     val callInputSectionMappings = processCallInput(ast, wdlSyntaxErrorFormatter)
 
-    // TODO: sfrazer: add this syntax error back!
-    /*callInputSectionMappings foreach { case (taskParamName, expression) =>
-      task.declarations find { decl => decl.unqualifiedName == taskParamName } getOrElse {
-        val callInput = AstTools.callInputSectionIOMappings(ast, wdlSyntaxErrorFormatter) find {
-          _.getAttribute("key").sourceString == taskParamName
-        } getOrElse {
-          throw new SyntaxError(s"Can't find call input: $taskParamName")
-        }
-        throw new SyntaxError(wdlSyntaxErrorFormatter.callReferencesBadTaskInput(callInput, task.ast))
-      }
-    }*/
-
-    new Call(alias, task, callInputSectionMappings)
+    new Call(alias, task, callInputSectionMappings, ast)
   }
 
   private def processCallInput(ast: Ast,
@@ -66,7 +54,8 @@ object Call {
  */
 case class Call(alias: Option[String],
                 task: Task,
-                inputMappings: Map[String, WdlExpression]) extends Scope with GraphNode {
+                inputMappings: Map[String, WdlExpression],
+                ast: Ast) extends Scope with GraphNode {
   val unqualifiedName: String = alias getOrElse task.name
 
   lazy val upstream: Set[Scope with GraphNode] = {

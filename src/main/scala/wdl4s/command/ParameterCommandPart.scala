@@ -33,14 +33,14 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
                            parameters: WorkflowCoercedInputs,
                            functions: WdlFunctions[WdlValue],
                            valueMapper: WdlValue => WdlValue): String = {
-    val lookup = WdlExpression.standardLookupFunction(call, parameters, functions)
+    val lookup = call.lookupFunction(parameters, functions, Map.empty[Scatter, Int])
     _instantiate(call.declarations, lookup, functions, valueMapper)
   }
   override def instantiate(task: Task,
                            parameters: CallInputs,
                            functions: WdlFunctions[WdlValue],
                            valueMapper: WdlValue => WdlValue): String = {
-    val lookup = WdlExpression.standardLookupFunction(task, parameters, functions)
+    val lookup = task.lookupFunction(parameters, functions, Map.empty[Scatter, Int])
     _instantiate(task.declarations, lookup, functions, valueMapper)
   }
 

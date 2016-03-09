@@ -10,6 +10,9 @@ trait Scope {
   def unqualifiedName: LocallyQualifiedName
   def appearsInFqn: Boolean = true
 
+  /**
+    * Parent scope
+    */
   def parent: Option[Scope] = _parent
   private var _parent: Option[Scope] = None
   def parent_=[Child <: Scope](scope: Scope): Unit = {
@@ -17,6 +20,9 @@ trait Scope {
     else throw new UnsupportedOperationException("parent is write-once")
   }
 
+  /**
+    * Child scopes, in the order that they appear in the source code
+    */
   def children: Seq[Scope] = _children
   private var _children: Seq[Scope] = Seq.empty
   def children_=[Child <: Scope](children: Seq[Child]): Unit = {
@@ -25,6 +31,9 @@ trait Scope {
     } else throw new UnsupportedOperationException("children is write-once")
   }
 
+  /**
+    * Containing namespace
+    */
   def namespace: WdlNamespace = _namespace
   private var _namespace: WdlNamespace = null
   def namespace_=[Child <: WdlNamespace](ns: WdlNamespace): Unit = {
@@ -34,7 +43,7 @@ trait Scope {
   }
 
   /**
-    * Returns Seq(parent, grandparent, great grandparent, ...)
+    * Seq(parent, grandparent, great grandparent, ..., WdlNamespace)
     */
   lazy val ancestry: Seq[Scope] = parent match {
     case Some(p) => Seq(p) ++ p.ancestry
@@ -48,6 +57,10 @@ trait Scope {
 
   lazy val calls: Set[Call] = descendants.collect({ case c: Call => c })
   lazy val scatters: Set[Scatter] = descendants.collect({ case s: Scatter => s })
+
+  /**
+    * Declarations within this Scope, in the order that they appear in source code
+    */
   lazy val declarations: Seq[NewDeclaration] = children.collect({ case d: NewDeclaration => d})
 
   def fullyQualifiedName = {
@@ -93,6 +106,8 @@ trait Scope {
     * @param shards For resolving specific shards of scatter blocks
     * @param wdlFunctions Implementation of WDL functions for expression evaluation
     * @return String => WdlValue lookup function rooted at `scope`
+    * @throws VariableNotFoundException => If no errors occurred, but also `name` didn't resolve to any value
+    * @throws VariableLookupException if anything else goes wrong in looking up a value for `name`
     */
   private def scopeLookupFunction(scope: Scope,
                                   inputs: WorkflowCoercedInputs,
@@ -108,9 +123,7 @@ trait Scope {
       case _ => None
     }
 
-    val x = scope.resolveVariable(name)
-
-    val scopeResolvedValue = x match {
+    val scopeResolvedValue = scope.resolveVariable(name) match {
       case Some(scatter: Scatter) =>
         // This case will happen if `name` references a Scatter.item (i.e. `x` in expression scatter(x in y) {...})
         val evaluatedCollection = scatter.collection.evaluate(scopeLookupFunction(scatter, inputs, shards, wdlFunctions), wdlFunctions)
@@ -134,17 +147,20 @@ trait Scope {
           case Success(value) => Option(value)
           case Failure(ex) => throw new VariableLookupException(s"Could not evaluate expression for declaration '${d.toWdlString}'", ex)
         }
-      case Some(s) => inputs.get(s.fullyQualifiedName)
+      case Some(s) => this match {
+        case t: Task => inputs.get(s.unqualifiedName)
+        case _ => inputs.get(s.fullyQualifiedName)
+      }
     }
 
     if (callInputMappingLookup.isDefined) callInputMappingLookup.get
     else if (scopeResolvedValue.isDefined) scopeResolvedValue.get
-    else throw new VariableLookupException(s"Could not find a value for $name from ${scope.fullyQualifiedName}")
+    else throw new VariableNotFoundException(name)
   }
 
   def lookupFunction(inputs: WorkflowCoercedInputs,
-                     shards: Map[Scatter, Int],
-                     wdlFunctions: WdlFunctions[WdlValue]): String => WdlValue = {
+                     wdlFunctions: WdlFunctions[WdlValue],
+                     shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): String => WdlValue = {
     scopeLookupFunction(this, inputs, shards, wdlFunctions)
   }
 }

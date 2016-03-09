@@ -44,10 +44,10 @@ class ThreeStepImportNamespaceSpec extends FlatSpec with Matchers {
     |workflow three_step {
     |  call ns1.ps
     |  call ns2.cgrep {
-    |    input: in_file=ns1.ps.procs
+    |    input: in_file=ps.procs
     |  }
     |  call ns3.wc {
-    |    input: in_file=ns1.ps.procs
+    |    input: in_file=ps.procs
     |  }
     |}""".stripMargin
 

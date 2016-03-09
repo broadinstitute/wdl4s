@@ -21,7 +21,6 @@ import scala.util.{Failure, Success, Try}
   */
 sealed trait WdlNamespace extends WdlValue with Scope {
   final val wdlType = WdlNamespaceType
-
   def ast: Ast
   def importedAs: Option[String] // Used when imported with `as`
   def imports: Seq[Import]
@@ -29,17 +28,16 @@ sealed trait WdlNamespace extends WdlValue with Scope {
   def tasks: Seq[Task]
   def workflows: Seq[Workflow]
   def terminalMap: Map[Terminal, WdlSource]
-
   def findTask(name: String): Option[Task] = tasks.find(_.name == name)
   override def unqualifiedName: LocallyQualifiedName = importedAs.getOrElse("")
-  override def appearsInFqn: Boolean = false
+  override def appearsInFqn: Boolean = importedAs.isDefined
   def resolve(fqn: FullyQualifiedName): Option[Scope] = {
     descendants.find(d => d.fullyQualifiedName == fqn || d.fullyQualifiedNameWithIndexScopes == fqn)
   }
 }
 
 /**
- * A valid Namespace which doesn't have a locally defined Workflow.
+ * A WdlNamespace which doesn't have a locally defined Workflow.
  */
 case class WdlNamespaceWithoutWorkflow(importedAs: Option[String],
                                        imports: Seq[Import],
@@ -50,7 +48,9 @@ case class WdlNamespaceWithoutWorkflow(importedAs: Option[String],
   val workflows = Seq.empty[Workflow]
 }
 
-/** Represents a WdlNamespace which has a local workflow, i.e. a directly runnable namespace */
+/**
+  * A WdlNamespace which has exactly one workflow defined.
+  */
 case class WdlNamespaceWithWorkflow(importedAs: Option[String],
                                     workflow: Workflow,
                                     imports: Seq[Import],
@@ -63,10 +63,10 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
   override def toString: String = s"[WdlNamespace importedAs=$importedAs]"
 
   /**
-   * Confirm all required inputs are present and attempt to coerce raw inputs to `WdlValue`s.
-   * This can fail if required raw inputs are missing or if the values for a specified raw input
-   * cannot be coerced to the target type of the input as specified in the namespace.
-   */
+    * Confirm all required inputs are present and attempt to coerce raw inputs to `WdlValue`s.
+    * This can fail if required raw inputs are missing or if the values for a specified raw input
+    * cannot be coerced to the target type of the input as specified in the namespace.
+    */
   def coerceRawInputs(rawInputs: WorkflowRawInputs): Try[WorkflowCoercedInputs] = {
     def coerceRawInput(input: WorkflowInput): Try[Option[WdlValue]] = input.fqn match {
       case _ if rawInputs.contains(input.fqn) =>
@@ -98,16 +98,17 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
     }
   }
 
-  /* Some declarations need a value from the user and some have an expression attached to them.
-   * For the declarations that have an expression attached to it already, evaluate the expression
-   * and return the value for storage in the symbol store
-   */
+  /**
+    * Some declarations need a value from the user and some have an expression attached to them.
+    * For the declarations that have an expression attached to it already, evaluate the expression
+    * and return the value for storage in the symbol store
+    */
   def staticDeclarationsRecursive(userInputs: WorkflowCoercedInputs, wdlFunctions: WdlStandardLibraryFunctions): Try[WorkflowCoercedInputs] = {
     def evalDeclaration(accumulated: Map[FullyQualifiedName, Try[WdlValue]], current: NewDeclaration): Map[FullyQualifiedName, Try[WdlValue]] = {
       current.expression match {
         case Some(expr) =>
           val successfulAccumulated = accumulated.collect({ case (k, v) if v.isSuccess => k -> v.get })
-          val value = expr.evaluate(current.lookupFunction(successfulAccumulated ++ userInputs, Map.empty[Scatter, Int], wdlFunctions), wdlFunctions)
+          val value = expr.evaluate(current.lookupFunction(successfulAccumulated ++ userInputs, wdlFunctions, Map.empty[Scatter, Int]), wdlFunctions)
           accumulated + (current.fullyQualifiedName -> value)
         case None => accumulated
       }
@@ -140,17 +141,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
  * }}}
  */
 object WdlNamespace {
-  /**
-   * Given a pointer to a WDL file, parse the text and build Workflow and Task
-   * objects.
-   *
-   * @param wdlFile The file to parse/process
-   * @return WdlBinding object with the parsed results
-   * @throws WdlParser.SyntaxError if there was a problem parsing the source code
-   * @throws UnsupportedOperationException if an error occurred constructing the
-   *                                       Workflow and Task objects
-   *
-   */
+
   def load(wdlFile: File): WdlNamespace = {
     load(readFile(wdlFile), wdlFile.toString, localImportResolver, None)
   }
@@ -183,13 +174,6 @@ object WdlNamespace {
     WdlNamespace(AstTools.getAst(wdlSource, resource), wdlSource, importResolver, importedAs, root=false)
   }
 
-  /**
-   * Validates the following things about the AST:
-   *
-   * 1) Tasks do not have duplicate inputs
-   * 2) Tasks in this namespace have unique names
-   * 3) Tasks and namespaces don't have overlapping names
-   */
   def apply(ast: Ast, source: WdlSource, importResolver: ImportResolver, namespaceName: Option[String], root: Boolean = false): WdlNamespace = {
     val imports = ast.getAttribute("imports").astListAsVector.map(Import(_))
 
@@ -312,10 +296,12 @@ object WdlNamespace {
 
     if (namespaceName.isDefined || root) {
       def descendants(scope: Scope): Seq[Scope] = {
-        scope.children ++ scope.children flatMap {
+        val children = scope.children
+        val childDescendants = scope.children.flatMap({
           case n: WdlNamespace => Seq.empty
           case s => descendants(s)
-        }
+        })
+        children ++ childDescendants
       }
 
       tasks foreach { task =>
@@ -326,6 +312,51 @@ object WdlNamespace {
       namespace.children.foreach(_.parent = namespace)
       descendants(namespace).foreach(_.namespace = namespace)
     }
+
+    def validateCallInputSection(call: Call): Seq[SyntaxError] = {
+      val callInputSections = AstTools.callInputSectionIOMappings(call.ast, wdlSyntaxErrorFormatter)
+
+      val invalidCallInputReferences = callInputSections flatMap { ast =>
+        val lhs = ast.getAttribute("key").sourceString
+        val rhs = ast.getAttribute("value")
+        call.declarations.find(_.unqualifiedName == lhs) match {
+          case Some(decl) => None
+          case None => Option(new SyntaxError(wdlSyntaxErrorFormatter.callReferencesBadTaskInput(ast, call.task.ast)))
+        }
+      }
+
+      /**
+        * Ensures that the lhs corresponds to a call and the rhs corresponds to one of its outputs. We're only checking
+        * top level MemberAccess ASTs because the sub-ASTs don't make sense w/o the context of the parent. For example
+        * if we have "input: var=ns.ns1.my_task" it does not make sense to validate "ns1.my_task" by itself as it only
+        * makes sense to validate that "ns.ns1.my_task" as a whole is coherent
+        *
+        * Run for its side effect (i.e. Exception) but we were previously using a Try and immediately calling .get on it
+        * so it's the same thing
+        */
+
+      val invalidMemberAccesses = callInputSections flatMap { ast =>
+        ast.getAttribute("value").findTopLevelMemberAccesses flatMap { memberAccessAst =>
+          val memberAccess = MemberAccess(memberAccessAst)
+          call.resolveVariable(memberAccess.lhs) match {
+            case Some(c: Call) if c.task.outputs.exists(_.name == memberAccess.rhs) => None
+            case Some(c: Call) =>
+              Option(new SyntaxError(wdlSyntaxErrorFormatter.memberAccessReferencesBadTaskInput(memberAccessAst)))
+            case None =>
+              Option(new SyntaxError(wdlSyntaxErrorFormatter.undefinedMemberAccess(memberAccessAst)))
+          }
+        }
+      }
+
+      invalidMemberAccesses ++ invalidCallInputReferences
+    }
+
+    val callInputSectionErrors = namespace.descendants.collect({ case c: Call => c }).flatMap(validateCallInputSection)
+    callInputSectionErrors match {
+      case s: Set[SyntaxError] if s.nonEmpty => throw s.head
+      case _ =>
+    }
+
     namespace
   }
 
@@ -357,6 +388,7 @@ object WdlNamespaceWithWorkflow {
   def load(wdlSource: WdlSource, importResolver: ImportResolver): WdlNamespaceWithWorkflow = {
     WdlNamespaceWithWorkflow.from(WdlNamespace.load(wdlSource, importResolver))
   }
+
   /**
    * Used to safely cast a WdlNamespace to a NamespaceWithWorkflow. Throws an IllegalArgumentException if another
    * form of WdlNamespace is passed to it
@@ -368,52 +400,9 @@ object WdlNamespaceWithWorkflow {
     }
   }
 
-  /**
-   * Validates:
-   * 1) All `Call` blocks reference tasks that exist
-   * 2) All `Call` inputs reference actual variables on the corresponding task
-   * 3) Calls do not reference the same task input more than once
-   * 4) `Call` input expressions (right-hand side) should only use the MemberAccess
-   * syntax (e.g: x.y) on WdlObjects (which include other `Call` invocations)
-   * 5) `Call` input expressions (right-hand side) should only reference identifiers
-   * that will resolve when evaluated
-   */
   def apply(ast: Ast, workflow: Workflow, namespace: Option[String], imports: Seq[Import],
             namespaces: Seq[WdlNamespace], tasks: Seq[Task], terminalMap: Map[Terminal, WdlSource],
             wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): WdlNamespaceWithWorkflow = {
-
-    // Make sure that all MemberAccess ASTs refer to valid calls and those have valid output names
-   for {
-      call <- workflow.calls
-      (name, expression) <- call.inputMappings
-      memberAccessAst <- expression.ast.findTopLevelMemberAccesses()
-    } validateMemberAccessAst(memberAccessAst, workflow, wdlSyntaxErrorFormatter)
-
     new WdlNamespaceWithWorkflow(namespace, workflow, imports, namespaces, tasks, terminalMap, wdlSyntaxErrorFormatter, ast)
-  }
-
-  /**
-    * TODO: sfrazer: re-add this algorithm ... probably just a namespace.resolve()
-   * Ensures that the lhs corresponds to a call and the rhs corresponds to one of its outputs. We're only checking
-   * top level MemberAccess ASTs because the sub-ASTs don't make sense w/o the context of the parent. For example
-   * if we have "input: var=ns.ns1.my_task" it does not make sense to validate "ns1.my_task" by itself as it only
-   * makes sense to validate that "ns.ns1.my_task" as a whole is coherent
-   *
-   * Run for its side effect (i.e. Exception) but we were previously using a Try and immediately calling .get on it
-   * so it's the same thing
-   */
-  def validateMemberAccessAst(memberAccessAst: Ast,
-                              workflow: Workflow,
-                              errorFormatter: WdlSyntaxErrorFormatter): Unit = {
-    /*val memberAccess = MemberAccess(memberAccessAst)
-    val call = workflow.calls find { _.unqualifiedName == memberAccess.lhs }
-
-    call match {
-      case Some(c) if c.task.outputs.exists(_.name == memberAccess.rhs) => ()
-      case Some(c) =>
-        throw new SyntaxError(errorFormatter.memberAccessReferencesBadTaskInput(memberAccessAst))
-      case None =>
-        throw new SyntaxError(errorFormatter.undefinedMemberAccess(memberAccessAst))
-    }*/
   }
 }

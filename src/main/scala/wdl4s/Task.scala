@@ -1,6 +1,7 @@
 package wdl4s
 
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
+import wdl4s.WdlExpression.ScopedLookupFunction
 import wdl4s.command.{CommandPart, ParameterCommandPart, StringCommandPart}
 import wdl4s.expression.{NoFunctions, WdlFunctions, WdlStandardLibraryFunctionsType}
 import wdl4s.parser.WdlParser._
@@ -192,8 +193,7 @@ case class Task(name: String,
                 outputs: Seq[TaskOutput],
                 ast: Ast) extends Scope {
 
-  override def unqualifiedName: LocallyQualifiedName = name
-  override def appearsInFqn: Boolean = true
+  override val unqualifiedName: LocallyQualifiedName = name
 
   /**
     * Given a map of task-local parameter names and WdlValues, create a command String.
