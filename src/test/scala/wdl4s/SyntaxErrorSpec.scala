@@ -2,6 +2,8 @@ package wdl4s
 
 import wdl4s.parser.WdlParser.SyntaxError
 import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.prop.TableDrivenPropertyChecks._
+import org.scalatest.prop.Tables.Table
 import wdl4s.util.StringUtil
 
 class SyntaxErrorSpec extends FlatSpec with Matchers {
@@ -45,11 +47,13 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
   }
 
   trait ErrorWdl {
+    def testString: String
     def wdl: WdlSource
     def errors: String
   }
 
   case object CallReferencesBadInput extends ErrorWdl {
+    val testString = "detect when call input section references an input that doesn't exist on the corresponding task"
     val wdl =
       """import "ps"
         |import "cgrep"
@@ -63,12 +67,12 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       """.stripMargin
 
     val errors =
-      """ERROR: Call references an input on task 'cgrep' that doesn't exist (line 6, col 12)
+      """ERROR: Call references an input on task 'cgrep' that doesn't exist (line 7, col 12)
         |
         |    input: BADin_file=ps.procs
         |           ^
         |
-        |Task defined here (line 7, col 6):
+        |Task defined here (line 2, col 6):
         |
         |task cgrep {
         |     ^
@@ -76,9 +80,10 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
   }
 
   case object CallReferencesBadTask extends ErrorWdl {
+    val testString = "detect when call references a task that doesn't exist"
     val wdl =
       """import "ps"
-        |import "cgrep
+        |import "cgrep"
         |
         |workflow three_step {
         |  call ps
@@ -88,10 +93,99 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         |}
       """.stripMargin
 
-    val errors = ""
+    val errors =
+      """ERROR: Call references a task (cgrepBAD) that doesn't exist (line 6, col 8)
+        |
+        |  call cgrepBAD {
+        |       ^
+      """.stripMargin
+  }
+
+  case object MultipleWorkflows extends ErrorWdl {
+    val testString = "detect when multiple workflows are defined"
+    val wdl =
+      """import "ps"
+        |import "cgrep"
+        |
+        |workflow three_step {
+        |  call ps
+        |  call cgrep {
+        |    input: in_file=ps.procs
+        |  }
+        |}
+        |workflow BAD {}
+      """.stripMargin
+
+    val errors =
+      """ERROR: Only one workflow definition allowed, found 2 workflows:
+        |
+        |Prior workflow definition (line 4 col 10):
+        |
+        |workflow three_step {
+        |         ^
+        |
+        |Prior workflow definition (line 10 col 10):
+        |
+        |workflow BAD {}
+        |         ^
+      """.stripMargin
+  }
+
+  case object Template extends ErrorWdl {
+    val testString = "detect when "
+    val wdl =
+      """
+        |
+      """.stripMargin
+
+    val errors =
+      """
+        |
+      """.stripMargin
+  }
+
+  case object TaskAndNamespaceNameCollision extends ErrorWdl {
+    val testString = "detect when a task and a namespace have the same name"
+    val wdl =
+      """import "ps" as ps
+        |task ps {command {ps}}
+        |workflow three_step {
+        |  call ps
+        |}
+      """.stripMargin
+
+    val errors =
+      """ERROR: Task and namespace have the same name:
+        |
+        |Task defined here (line 2, col 6):
+        |
+        |task ps {command {ps}}
+        |     ^
+        |
+        |Import statement defined here (line 1, col 16):
+        |
+        |import "ps" as ps
+        |               ^
+      """.stripMargin
+  }
+
+  case object WorkflowAndNamespaceNameCollision extends ErrorWdl {
+    val testString = "detect when a namespace and a workflow have the same name"
+    val wdl =
+      """import "ps" as ps
+        |workflow ps {
+        |  call ps
+        |}
+      """.stripMargin
+
+    val errors =
+      """
+        |
+      """.stripMargin
   }
 
   case object TypeMismatch1 extends ErrorWdl {
+    val testString = "detect when a call output has a type mismatch"
     val wdl =
       """task a {
         |  command { ./script }
@@ -115,7 +209,7 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
 
   def normalizeErrorMessage(msg: String) = StringUtil.stripAll(msg, " \t\n\r", " \t\n\r")
 
-  def expectError(wdl: ErrorWdl) = {
+  def expectErrorNew(wdl: ErrorWdl) = {
     try {
       WdlNamespace.load(wdl.wdl, resolver _)
       fail("Expecting a SyntaxError")
@@ -125,52 +219,22 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         normalizeErrorMessage(e.getMessage) shouldEqual normalizeErrorMessage(wdl.errors)
     }
   }
+  val syntaxErrorWdlTable = Table(
+    ("errorWdl"),
+    /*(CallReferencesBadInput),
+    (CallReferencesBadTask),
+    (TypeMismatch1),
+    (MultipleWorkflows),
+    (TaskAndNamespaceNameCollision),*/
+    (WorkflowAndNamespaceNameCollision)
+  )
 
-  "WDL syntax checker" should "detect error when call references bad input" in {
-    expectError(CallReferencesBadInput)
+  forAll(syntaxErrorWdlTable) { (errorWdl) =>
+    it should errorWdl.testString in {
+      expectErrorNew(errorWdl)
+    }
   }
 
-  it should "detect error when call references bad task" in {
-    expectError(CallReferencesBadTask)
-  }
-
-  it should "detect error when more than one workflow is defined" in {
-    expectError("""
-        |task ps {
-        |  command {
-        |    ps
-        |  }
-        |  output {
-        |    File procs = stdout()
-        |  }
-        |}
-        |task cgrep {
-        |  File in_file
-        |  String pattern
-        |  command {
-        |    grep '${pattern}' ${in_file} | wc -l
-        |  }
-        |  output {
-        |    Int count = read_int(stdout())
-        |  }
-        |}
-        |workflow three_step {
-        |  call ps
-        |  call cgrep {
-        |    input: in_file=ps.procs
-        |  }
-        |}
-        |workflow BAD {}""".stripMargin)
-  }
-  it should "detect error when namespace and task have the same name" in {
-    expectError("""
-        |import "ps" as ps
-        |task ps {command {ps}}
-        |workflow three_step {
-        |  call ps
-        |}
-        |""".stripMargin)
-  }
   it should "detect error when namespace and workflow have the same name" in {
     expectError("""
         |import "ps" as ps
@@ -263,9 +327,6 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         |  Map[Int] i
         |}
       """.stripMargin)
-  }
-  it should "detect when task output section declares an output with incompatible types" in {
-    expectError(TypeMismatch1)
   }
   it should "detect when task output section declares an output with incompatible types 2" in {
     expectError(

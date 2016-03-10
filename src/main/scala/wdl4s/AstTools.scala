@@ -33,6 +33,13 @@ object AstTools {
         case _ => Map.empty[Terminal, Seq[AstNode]]
       }
     }
+    def findFirstTerminal: Option[Terminal] = {
+      astNode match {
+        case l: AstList => l.astListAsVector.flatMap(_.findFirstTerminal).headOption
+        case a: Ast => a.getAttributes.asScala.toMap.flatMap({ case (k, v) => v.findFirstTerminal }).headOption
+        case t: Terminal => Option(t)
+      }
+    }
     def findTopLevelMemberAccesses(): Iterable[Ast] = AstTools.findTopLevelMemberAccesses(astNode)
     def sourceString: String = astNode.asInstanceOf[Terminal].getSourceString
     def astListAsVector(): Seq[AstNode] = astNode.asInstanceOf[AstList].asScala.toVector

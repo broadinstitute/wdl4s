@@ -124,7 +124,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
 
   def workflowAndNamespaceHaveSameName(workflowAst: Ast, namespace: Terminal): String = {
     val workflowName = workflowAst.getAttribute("name").asInstanceOf[Terminal]
-    s"""ERROR: Task and namespace have the same name:
+    s"""ERROR: Workflow and namespace have the same name:
      |
      |Task defined here (line ${workflowName.getLine}, col ${workflowName.getColumn}):
      |
@@ -133,6 +133,19 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
      |Import statement defined here (line ${namespace.getLine}, col ${namespace.getColumn}):
      |
      |${pointToSource(namespace)}
+     """.stripMargin
+  }
+
+  def twoSiblingScopesHaveTheSameName(firstScopeType: String, firstScopeName: Terminal, secondScopeType: String, secondScopeName: Terminal): String = {
+    s"""ERROR: Sibling nodes have conflicting names:
+       |
+       |$firstScopeName defined here (line ${firstScopeName.getLine}, col ${firstScopeName.getColumn}):
+       |
+       |${pointToSource(firstScopeName)}
+       |
+       |$secondScopeName statement defined here (line ${secondScopeName.getLine}, col ${secondScopeName.getColumn}):
+       |
+       |${pointToSource(secondScopeName)}
      """.stripMargin
   }
 

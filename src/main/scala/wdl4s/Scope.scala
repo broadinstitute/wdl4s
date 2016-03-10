@@ -1,6 +1,7 @@
 package wdl4s
 
 import wdl4s.expression.WdlFunctions
+import wdl4s.parser.WdlParser.Ast
 import wdl4s.values.{WdlArray, WdlValue}
 
 import scala.language.postfixOps
@@ -9,6 +10,7 @@ import scala.util.{Success, Failure}
 trait Scope {
   def unqualifiedName: LocallyQualifiedName
   def appearsInFqn: Boolean = true
+  def ast: Ast
 
   /**
     * Parent scope
