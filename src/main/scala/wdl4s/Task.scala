@@ -15,15 +15,6 @@ import scala.util.{Failure, Success, Try}
 
 object Task {
 
-  /** The function validateDeclaration() and the DeclarationAccumulator class are used
-    * to accumulate errors and keep track of which Declarations/TaskOutputs have been examined.
-    *
-    * We're using this approach instead of a scalaz ValidationNel because we still want to
-    * accumulate Declarations even if there was an error with that particular
-    * Declaration
-    */
-  case class DeclarationAccumulator(errors: Seq[String] = Seq.empty, declarations: Seq[Declaration] = Seq.empty)
-
   def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Task = {
     val taskNameTerminal = ast.getAttribute("name").asInstanceOf[Terminal]
     val name = taskNameTerminal.sourceString
@@ -63,92 +54,6 @@ object Task {
     */
 
     Task(name, commandTemplate, runtimeAttributes, meta, parameterMeta, outputs, ast)
-  }
-
-  /**
-    * Ensures that the current declaration doesn't have a name conflict with another declaration
-    * and that the expression for the current declaration only has valid variable references in it
-    *
-    * @param accumulated The declarations that come lexically before 'current' as well
-    *                    as the accumulated errors up until this point
-    * @param current The declaration being validated
-    */
-  private def validateDeclaration(taskAst: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter)
-                                 (accumulated: DeclarationAccumulator, current: Declaration): DeclarationAccumulator = {
-    val variableReferences = for (expr <- current.expression.toIterable; variable <- expr.variableReferences) yield variable
-    val declarationAstsWithSameName = taskAst.findAsts(AstNodeName.Declaration) collect {
-      case a: Ast if a.getAttribute("name").sourceString == current.name => a
-    }
-    val taskOutputAstsWithSameName = taskAst.findAsts(AstNodeName.Output) collect {
-      case a: Ast if a.getAttribute("var").sourceString == current.name => a
-    }
-
-    val declNameTerminals = declarationAstsWithSameName.map(_.getAttribute("name").asInstanceOf[Terminal]) ++
-                            taskOutputAstsWithSameName.map(_.getAttribute("var").asInstanceOf[Terminal])
-
-    val duplicateDeclarationError = declNameTerminals match {
-      case terminals if terminals.size > 1 => Option(wdlSyntaxErrorFormatter.variableDeclaredMultipleTimes(terminals(0), terminals(1)))
-      case _ => None
-    }
-
-    val invalidVariableReferenceErrors = variableReferences flatMap { variable =>
-      if (!accumulated.declarations.map(_.name).contains(variable.getSourceString)) {
-        // .head below because we are assuming if you have a Declaration object that it must have come from a Declaration AST
-        Option(wdlSyntaxErrorFormatter.declarationContainsInvalidVariableReference(
-          declarationAstsWithSameName.head.getAttribute("name").asInstanceOf[Terminal],
-          variable
-        ))
-      } else {
-        None
-      }
-    }
-
-    val typeErrors = (invalidVariableReferenceErrors, current.expression) match {
-      case (Nil, Some(expr)) => typeCheckExpression(
-        expr, current.wdlType, accumulated.declarations, declNameTerminals.head, wdlSyntaxErrorFormatter
-      )
-      case _ => None
-    }
-
-    DeclarationAccumulator(
-      accumulated.errors ++ duplicateDeclarationError.toSeq ++ invalidVariableReferenceErrors.toSeq ++ typeErrors.toSeq,
-      accumulated.declarations :+ current
-    )
-  }
-
-  /** Validates that `expr`, which is assumed to come from a Declaration, is compatible with
-    * `expectedType`.  If not, a string error message will be returned.
-    *
-    * @param expr Expression to be validated
-    * @param expectedType The type ascription of the declaration
-    * @param priorDeclarations Declarations that come lexically before
-    * @param declNameTerminal The Terminal that represents the name of the variable in the
-    *                         declaration that `expr` comes from.
-    * @param wdlSyntaxErrorFormatter A syntax error formatter in case an error was found.
-    * @return Some(String) if an error occurred where the String is the error message, otherwise None
-    */
-  private def typeCheckExpression(expr: WdlExpression, expectedType: WdlType, priorDeclarations: Seq[Declaration],
-                                  declNameTerminal: Terminal, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Option[String] = {
-
-    // .get below because lookup functions should throw exceptions if they could not lookup the variable
-    def lookupType(n: String) = priorDeclarations.find(_.name == n).map(_.wdlType).get
-
-    expr.evaluateType(lookupType, new WdlStandardLibraryFunctionsType) match {
-      case Success(expressionWdlType) if !expectedType.isCoerceableFrom(expressionWdlType) =>
-        Option(wdlSyntaxErrorFormatter.taskOutputExpressionTypeDoesNotMatchDeclaredType(
-          declNameTerminal, expressionWdlType, expectedType
-        ))
-      case Success(wdlType) =>
-        expr.evaluate((s: String) => throw new Throwable("not implemented"), NoFunctions) match {
-          case Success(value) if expectedType.coerceRawValue(value).isFailure =>
-            Option(wdlSyntaxErrorFormatter.declarationExpressionNotCoerceableToTargetType(
-              declNameTerminal, expectedType
-            ))
-          case _ => None
-        }
-      case Failure(ex) =>
-        Option(wdlSyntaxErrorFormatter.failedToDetermineTypeOfDeclaration(declNameTerminal))
-    }
   }
 
   private def wdlSectionToStringMap(taskAst: Ast, node: String, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Map[String, String] = {

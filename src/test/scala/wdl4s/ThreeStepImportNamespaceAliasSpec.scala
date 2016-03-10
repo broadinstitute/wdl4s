@@ -226,6 +226,30 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
     }
   }
 
+  it should "compute namespace" in {
+    val namespaceTable = Table(
+      ("node", "namespace"),
+      (callA1, namespace),
+      (callA2, namespace),
+      (callWc, namespace),
+      (namespace.workflow, namespace),
+      (namespace, namespace),
+      (ns1, ns1),
+      (ns2, ns2),
+      (ns3, ns3),
+      (declCallCgrepInfile, namespace),
+      (declCallCgrepPattern, namespace),
+      (declCallWcInfile, namespace),
+      (declTaskCgrepInfile, ns2),
+      (declTaskCgrepPattern, ns2),
+      (declTaskWcInfile, ns3)
+    )
+
+    forAll(namespaceTable) { (node, namespace) =>
+      node.namespace shouldEqual namespace
+    }
+  }
+
   it should "have 4 children in the root namespace: 1 workflow, 3 namespaces" in {
     namespace.children.toSet shouldEqual Set(ns1, ns2, ns3, namespace.workflow)
   }

@@ -2,6 +2,7 @@ package wdl4s
 
 import wdl4s.parser.WdlParser.SyntaxError
 import org.scalatest.{FlatSpec, Matchers}
+import wdl4s.util.StringUtil
 
 class SyntaxErrorSpec extends FlatSpec with Matchers {
   val psTaskWdl = """
@@ -43,61 +44,96 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
     }
   }
 
+  trait ErrorWdl {
+    def wdl: WdlSource
+    def errors: String
+  }
+
+  case object CallReferencesBadInput extends ErrorWdl {
+    val wdl =
+      """import "ps"
+        |import "cgrep"
+        |
+        |workflow three_step {
+        |  call ps
+        |  call cgrep {
+        |    input: BADin_file=ps.procs
+        |  }
+        |}
+      """.stripMargin
+
+    val errors =
+      """ERROR: Call references an input on task 'cgrep' that doesn't exist (line 6, col 12)
+        |
+        |    input: BADin_file=ps.procs
+        |           ^
+        |
+        |Task defined here (line 7, col 6):
+        |
+        |task cgrep {
+        |     ^
+      """.stripMargin
+  }
+
+  case object CallReferencesBadTask extends ErrorWdl {
+    val wdl =
+      """import "ps"
+        |import "cgrep
+        |
+        |workflow three_step {
+        |  call ps
+        |  call cgrepBAD {
+        |    input: in_file=ps.procs
+        |  }
+        |}
+      """.stripMargin
+
+    val errors = ""
+  }
+
+  case object TypeMismatch1 extends ErrorWdl {
+    val wdl =
+      """task a {
+        |  command { ./script }
+        |  output {
+        |    Array[String] x = "bad value"
+        |  }
+        |}
+        |
+        |workflow w {
+        |  call a
+        |}
+      """.stripMargin
+
+    val errors =
+      """ERROR: x is declared as a String but the expression evaluates to a Array[String]:
+        |
+        |    Array[String] x = "bad value"
+        |                  ^
+      """.stripMargin
+  }
+
+  def normalizeErrorMessage(msg: String) = StringUtil.stripAll(msg, " \t\n\r", " \t\n\r")
+
+  def expectError(wdl: ErrorWdl) = {
+    try {
+      WdlNamespace.load(wdl.wdl, resolver _)
+      fail("Expecting a SyntaxError")
+    } catch {
+      case e: SyntaxError =>
+        println(e.getMessage)
+        normalizeErrorMessage(e.getMessage) shouldEqual normalizeErrorMessage(wdl.errors)
+    }
+  }
+
   "WDL syntax checker" should "detect error when call references bad input" in {
-    expectError("""
-      |task ps {
-      |  command {
-      |    ps
-      |  }
-      |  output {
-      |    File procs = stdout()
-      |  }
-      |}
-      |task cgrep {
-      |  String pattern
-      |  File in_file
-      |  command {
-      |    grep '${pattern}' ${in_file} | wc -l
-      |  }
-      |  output {
-      |    Int count = read_int(stdout())
-      |  }
-      |}
-      |workflow three_step {
-      |  call ps
-      |  call cgrep {
-      |    input: BADin_file=ps.procs
-      |  }
-      |}""".stripMargin)
+    expectError(CallReferencesBadInput)
   }
 
   it should "detect error when call references bad task" in {
-    expectError("""
-      |task ps {
-      |  command {
-      |    ps
-      |  }
-      |  output {
-      |    File procs = stdout()
-      |  }
-      |}
-      |task cgrep {
-      |  String pattern
-      |  File in_file
-      |  command {
-      |    grep '${pattern}' ${in_file} | wc -l
-      |  }
-      |  output {
-      |    Int count = read_int(stdout())
-      |  }
-      |}
-      |workflow three_step {
-      |  call ps
-      |  call cgrepBAD {
-      |    input: in_file=ps.procs
-      |  }
-      |}""".stripMargin)
+    expectError(CallReferencesBadTask)
   }
+
   it should "detect error when more than one workflow is defined" in {
     expectError("""
         |task ps {
@@ -229,18 +265,7 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       """.stripMargin)
   }
   it should "detect when task output section declares an output with incompatible types" in {
-    expectError(
-      """task a {
-        |  command { ./script }
-        |  output {
-        |    Array[String] x = "bad value"
-        |  }
-        |}
-        |
-        |workflow w {
-        |  call a
-        |}
-      """.stripMargin)
+    expectError(TypeMismatch1)
   }
   it should "detect when task output section declares an output with incompatible types 2" in {
     expectError(

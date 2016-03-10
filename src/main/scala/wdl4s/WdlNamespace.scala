@@ -3,7 +3,8 @@ package wdl4s
 import java.io.File
 
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode, EnhancedAstSeq}
-import wdl4s.expression.{WdlFunctions, WdlStandardLibraryFunctions}
+import wdl4s.command.ParameterCommandPart
+import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctionsType, WdlFunctions, WdlStandardLibraryFunctions}
 import wdl4s.parser.WdlParser
 import wdl4s.parser.WdlParser._
 import wdl4s.types._
@@ -21,24 +22,38 @@ import scala.util.{Failure, Success, Try}
   */
 sealed trait WdlNamespace extends WdlValue with Scope {
   final val wdlType = WdlNamespaceType
+
   def ast: Ast
-  def importedAs: Option[String] // Used when imported with `as`
+
+  def importedAs: Option[String]
+
+  // Used when imported with `as`
   def imports: Seq[Import]
+
   def namespaces: Seq[WdlNamespace]
+
   def tasks: Seq[Task]
+
   def workflows: Seq[Workflow]
+
   def terminalMap: Map[Terminal, WdlSource]
+
   def findTask(name: String): Option[Task] = tasks.find(_.name == name)
+
   override def unqualifiedName: LocallyQualifiedName = importedAs.getOrElse("")
+
   override def appearsInFqn: Boolean = importedAs.isDefined
+
+  override def namespace: WdlNamespace = this
+
   def resolve(fqn: FullyQualifiedName): Option[Scope] = {
     descendants.find(d => d.fullyQualifiedName == fqn || d.fullyQualifiedNameWithIndexScopes == fqn)
   }
 }
 
 /**
- * A WdlNamespace which doesn't have a locally defined Workflow.
- */
+  * A WdlNamespace which doesn't have a locally defined Workflow.
+  */
 case class WdlNamespaceWithoutWorkflow(importedAs: Option[String],
                                        imports: Seq[Import],
                                        namespaces: Seq[WdlNamespace],
@@ -60,6 +75,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
                                     wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
                                     ast: Ast) extends WdlNamespace {
   val workflows = Seq(workflow)
+
   override def toString: String = s"[WdlNamespace importedAs=$importedAs]"
 
   /**
@@ -129,17 +145,17 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
 }
 
 /**
- * Main interface into the `wdl4s` package.
- *
- * Example usage
- *
- * {{{
- * val namespace = WdlNamespace.load(new File("/path/to/file.wdl"))
- * namespace.workflow.calls foreach { call =>
- *   println(call)
- * }
- * }}}
- */
+  * Main interface into the `wdl4s` package.
+  *
+  * Example usage
+  *
+  * {{{
+  * val namespace = WdlNamespace.load(new File("/path/to/file.wdl"))
+  * namespace.workflow.calls foreach { call =>
+  *   println(call)
+  * }
+  * }}}
+  */
 object WdlNamespace {
 
   def load(wdlFile: File): WdlNamespace = {
@@ -167,11 +183,11 @@ object WdlNamespace {
   }
 
   private def load(wdlSource: WdlSource, resource: String, importResolver: ImportResolver, importedAs: Option[String]): WdlNamespace = {
-    WdlNamespace(AstTools.getAst(wdlSource, resource), wdlSource, importResolver, importedAs, root=true)
+    WdlNamespace(AstTools.getAst(wdlSource, resource), wdlSource, importResolver, importedAs, root = true)
   }
 
   private def loadChild(wdlSource: WdlSource, resource: String, importResolver: ImportResolver, importedAs: Option[String]): WdlNamespace = {
-    WdlNamespace(AstTools.getAst(wdlSource, resource), wdlSource, importResolver, importedAs, root=false)
+    WdlNamespace(AstTools.getAst(wdlSource, resource), wdlSource, importResolver, importedAs, root = false)
   }
 
   def apply(ast: Ast, source: WdlSource, importResolver: ImportResolver, namespaceName: Option[String], root: Boolean = false): WdlNamespace = {
@@ -196,24 +212,24 @@ object WdlNamespace {
     val wdlSyntaxErrorFormatter = new WdlSyntaxErrorFormatter(combinedTerminalMap)
 
     /**
-     * All imported `task` definitions for `import` statements without a namespace (i.e. no `as` clause)
-     * These tasks are considered to be in this current namespace
-     */
+      * All imported `task` definitions for `import` statements without a namespace (i.e. no `as` clause)
+      * These tasks are considered to be in this current namespace
+      */
     val importedTasks: Seq[Task] = namespacesWithoutNames.flatMap(_.tasks)
 
     /**
-     * All `task` definitions defined in the WDL file (i.e. not imported)
-     */
+      * All `task` definitions defined in the WDL file (i.e. not imported)
+      */
     val localTasks: Seq[Task] = ast.findAsts(AstNodeName.Task).map(Task(_, wdlSyntaxErrorFormatter))
 
     /**
-     * All `task` definitions, including local and imported ones
-     */
+      * All `task` definitions, including local and imported ones
+      */
     val tasks: Seq[Task] = localTasks ++ importedTasks
 
     /**
-     * Ensure that no namespace names collide with task names.
-     */
+      * Ensure that no namespace names collide with task names.
+      */
     for {
       i <- imports
       namespaceTerminal <- i.namespaceTerminal
@@ -286,7 +302,7 @@ object WdlNamespace {
 
     // TODO: sfrazer: verify that no a declaration and a call don't have the same name in the same scope!!
 
-    val children = tasks ++ namespacesWithNames ++ getChildren(ast, scope=None)
+    val children = tasks ++ namespacesWithNames ++ getChildren(ast, scope = None)
 
     val namespace = children.collect({ case w: Workflow => w }) match {
       case Nil => WdlNamespaceWithoutWorkflow(namespaceName, imports, namespacesWithNames, tasks, terminalMap, ast)
@@ -313,46 +329,31 @@ object WdlNamespace {
       descendants(namespace).foreach(_.namespace = namespace)
     }
 
-    def validateCallInputSection(call: Call): Seq[SyntaxError] = {
-      val callInputSections = AstTools.callInputSectionIOMappings(call.ast, wdlSyntaxErrorFormatter)
+    /** SYNTAX CHECKS */
 
-      val invalidCallInputReferences = callInputSections flatMap { ast =>
-        val lhs = ast.getAttribute("key").sourceString
-        val rhs = ast.getAttribute("value")
-        call.declarations.find(_.unqualifiedName == lhs) match {
-          case Some(decl) => None
-          case None => Option(new SyntaxError(wdlSyntaxErrorFormatter.callReferencesBadTaskInput(ast, call.task.ast)))
-        }
+    val callInputSectionErrors = namespace.descendants.collect({ case c: Call => c }).flatMap(
+      validateCallInputSection(_, wdlSyntaxErrorFormatter)
+    )
+
+    val declarationErrors = namespace.descendants flatMap { scope =>
+      val decls = scope match {
+        case t: Task => t.declarations ++ t.outputs
+        case s => s.declarations
       }
 
-      /**
-        * Ensures that the lhs corresponds to a call and the rhs corresponds to one of its outputs. We're only checking
-        * top level MemberAccess ASTs because the sub-ASTs don't make sense w/o the context of the parent. For example
-        * if we have "input: var=ns.ns1.my_task" it does not make sense to validate "ns1.my_task" by itself as it only
-        * makes sense to validate that "ns.ns1.my_task" as a whole is coherent
-        *
-        * Run for its side effect (i.e. Exception) but we were previously using a Try and immediately calling .get on it
-        * so it's the same thing
-        */
-
-      val invalidMemberAccesses = callInputSections flatMap { ast =>
-        ast.getAttribute("value").findTopLevelMemberAccesses flatMap { memberAccessAst =>
-          val memberAccess = MemberAccess(memberAccessAst)
-          call.resolveVariable(memberAccess.lhs) match {
-            case Some(c: Call) if c.task.outputs.exists(_.name == memberAccess.rhs) => None
-            case Some(c: Call) =>
-              Option(new SyntaxError(wdlSyntaxErrorFormatter.memberAccessReferencesBadTaskInput(memberAccessAst)))
-            case None =>
-              Option(new SyntaxError(wdlSyntaxErrorFormatter.undefinedMemberAccess(memberAccessAst)))
-          }
-        }
-      }
-
-      invalidMemberAccesses ++ invalidCallInputReferences
+      val accumulator = decls.foldLeft(DeclarationAccumulator())(validateDeclaration(wdlSyntaxErrorFormatter))
+      accumulator.errors.map(new SyntaxError(_))
     }
 
-    val callInputSectionErrors = namespace.descendants.collect({ case c: Call => c }).flatMap(validateCallInputSection)
-    callInputSectionErrors match {
+    val taskCommandReferenceErrors = for {
+      task <- namespace.tasks
+      param <- task.commandTemplate.collect({ case p: ParameterCommandPart => p })
+      variable <- param.expression.variableReferences
+      if !task.declarations.map(_.name).contains(variable.getSourceString)
+    } yield new SyntaxError(wdlSyntaxErrorFormatter.commandExpressionContainsInvalidVariableReference(task.ast.getAttribute("name").asInstanceOf[Terminal], variable))
+
+    // TODO: sfrazer: what to do?
+    declarationErrors ++ callInputSectionErrors ++ taskCommandReferenceErrors match {
       case s: Set[SyntaxError] if s.nonEmpty => throw s.head
       case _ =>
     }
@@ -360,10 +361,135 @@ object WdlNamespace {
     namespace
   }
 
+
+  /** The function validateDeclaration() and the DeclarationAccumulator class are used
+    * to accumulate errors and keep track of which Declarations/TaskOutputs have been examined.
+    *
+    * We're using this approach instead of a scalaz ValidationNel because we still want to
+    * accumulate Declarations even if there was an error with that particular
+    * Declaration
+    */
+  case class DeclarationAccumulator(errors: Seq[String] = Seq.empty, declarations: Seq[Declaration] = Seq.empty)
+
   /**
-   * Given a name, a collection of WdlNamespaces and a collection of Tasks will attempt to find a Task
-   * with that name within the WdlNamespaces
-   */
+    * Ensures that the current declaration doesn't have a name conflict with another declaration
+    * and that the expression for the current declaration only has valid variable references in it
+    *
+    * @param accumulated The declarations that come lexically before 'current' as well
+    *                    as the accumulated errors up until this point
+    * @param current     The declaration being validated
+    */
+  private def validateDeclaration(wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter)
+                                 (accumulated: DeclarationAccumulator, current: Declaration): DeclarationAccumulator = {
+
+    // FIXME: the grammar file is inconsistent about what attribute name to use for declarations.
+    // FIXME: most declarations use the 'name' attribute, but task outputs use 'var'
+    def declarationName(declarationAst: Ast): Terminal = Seq("name", "var").flatMap(s => Option(declarationAst.getAttribute(s))).head.asInstanceOf[Terminal]
+    val currentDeclarationName = declarationName(current.ast)
+
+    val duplicateDeclarationError = accumulated.declarations.find(_.unqualifiedName == current.unqualifiedName) map { duplicate =>
+      wdlSyntaxErrorFormatter.variableDeclaredMultipleTimes(
+        declarationName(duplicate.ast),
+        currentDeclarationName
+      )
+    }
+
+    val invalidVariableReferenceErrors = for {
+      expr <- current.expression.toIterable
+      variable <- expr.variableReferences
+      if !accumulated.declarations.map(_.name).contains(variable.getSourceString)
+    } yield wdlSyntaxErrorFormatter.declarationContainsInvalidVariableReference(currentDeclarationName, variable)
+
+    val typeErrors = (invalidVariableReferenceErrors, current.expression) match {
+      case (Nil, Some(expr)) => typeCheckExpression(
+        expr, current.wdlType, accumulated.declarations, currentDeclarationName, wdlSyntaxErrorFormatter
+      )
+      case _ => None
+    }
+
+    DeclarationAccumulator(
+      accumulated.errors ++ duplicateDeclarationError.toSeq ++ invalidVariableReferenceErrors.toSeq ++ typeErrors.toSeq,
+      accumulated.declarations :+ current
+    )
+  }
+
+  /** Validates that `expr`, which is assumed to come from a Declaration, is compatible with
+    * `expectedType`.  If not, a string error message will be returned.
+    *
+    * @param expr                    Expression to be validated
+    * @param expectedType            The type ascription of the declaration
+    * @param priorDeclarations       Declarations that come lexically before
+    * @param declNameTerminal        The Terminal that represents the name of the variable in the
+    *                                declaration that `expr` comes from.
+    * @param wdlSyntaxErrorFormatter A syntax error formatter in case an error was found.
+    * @return Some(String) if an error occurred where the String is the error message, otherwise None
+    */
+  private def typeCheckExpression(expr: WdlExpression, expectedType: WdlType, priorDeclarations: Seq[Declaration],
+                                  declNameTerminal: Terminal, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Option[String] = {
+
+    // .get below because lookup functions should throw exceptions if they could not lookup the variable
+    def lookupType(n: String) = priorDeclarations.find(_.name == n).map(_.wdlType).get
+
+    expr.evaluateType(lookupType, new WdlStandardLibraryFunctionsType) match {
+      case Success(expressionWdlType) if !expectedType.isCoerceableFrom(expressionWdlType) =>
+        Option(wdlSyntaxErrorFormatter.taskOutputExpressionTypeDoesNotMatchDeclaredType(
+          declNameTerminal, expressionWdlType, expectedType
+        ))
+      case Success(wdlType) =>
+        expr.evaluate((s: String) => throw new Throwable("not implemented"), NoFunctions) match {
+          case Success(value) if expectedType.coerceRawValue(value).isFailure =>
+            Option(wdlSyntaxErrorFormatter.declarationExpressionNotCoerceableToTargetType(
+              declNameTerminal, expectedType
+            ))
+          case _ => None
+        }
+      case Failure(ex) =>
+        Option(wdlSyntaxErrorFormatter.failedToDetermineTypeOfDeclaration(declNameTerminal))
+    }
+  }
+
+  private def validateCallInputSection(call: Call, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Seq[SyntaxError] = {
+    val callInputSections = AstTools.callInputSectionIOMappings(call.ast, wdlSyntaxErrorFormatter)
+
+    val invalidCallInputReferences = callInputSections flatMap { ast =>
+      val lhs = ast.getAttribute("key").sourceString
+      val rhs = ast.getAttribute("value")
+      call.declarations.find(_.unqualifiedName == lhs) match {
+        case Some(decl) => None
+        case None => Option(new SyntaxError(wdlSyntaxErrorFormatter.callReferencesBadTaskInput(ast, call.task.ast)))
+      }
+    }
+
+    /**
+      * Ensures that the lhs corresponds to a call and the rhs corresponds to one of its outputs. We're only checking
+      * top level MemberAccess ASTs because the sub-ASTs don't make sense w/o the context of the parent. For example
+      * if we have "input: var=ns.ns1.my_task" it does not make sense to validate "ns1.my_task" by itself as it only
+      * makes sense to validate that "ns.ns1.my_task" as a whole is coherent
+      *
+      * Run for its side effect (i.e. Exception) but we were previously using a Try and immediately calling .get on it
+      * so it's the same thing
+      */
+
+    val invalidMemberAccesses = callInputSections flatMap { ast =>
+      ast.getAttribute("value").findTopLevelMemberAccesses flatMap { memberAccessAst =>
+        val memberAccess = MemberAccess(memberAccessAst)
+        call.resolveVariable(memberAccess.lhs) match {
+          case Some(c: Call) if c.task.outputs.exists(_.name == memberAccess.rhs) => None
+          case Some(c: Call) =>
+            Option(new SyntaxError(wdlSyntaxErrorFormatter.memberAccessReferencesBadTaskInput(memberAccessAst)))
+          case None =>
+            Option(new SyntaxError(wdlSyntaxErrorFormatter.undefinedMemberAccess(memberAccessAst)))
+        }
+      }
+    }
+
+    invalidMemberAccesses ++ invalidCallInputReferences
+  }
+
+  /**
+    * Given a name, a collection of WdlNamespaces and a collection of Tasks will attempt to find a Task
+    * with that name within the WdlNamespaces
+    */
   def findTask(name: String, namespaces: Seq[WdlNamespace], tasks: Seq[Task]): Option[Task] = {
     if (name.contains(".")) {
       val parts = name.split("\\.", 2)
@@ -375,24 +501,26 @@ object WdlNamespace {
        * a.findTasks("b.c") would call a.b.findTasks("c")
        * a.b.findTasks("c") would return the task named "c" in the "b" namespace
        */
-      namespaces.find(_.importedAs.contains(parts(0))) flatMap { x => findTask(parts(1), x.namespaces, x.tasks)}
+      namespaces.find(_.importedAs.contains(parts(0))) flatMap { x => findTask(parts(1), x.namespaces, x.tasks) }
     } else tasks.find(_.name == name)
   }
 
   private def localImportResolver(path: String): WdlSource = readFile(new File(path))
+
   private def readFile(wdlFile: File): WdlSource = wdlFile.slurp
 }
 
 object WdlNamespaceWithWorkflow {
   def load(wdlSource: WdlSource): WdlNamespaceWithWorkflow = from(WdlNamespace.load(wdlSource))
+
   def load(wdlSource: WdlSource, importResolver: ImportResolver): WdlNamespaceWithWorkflow = {
     WdlNamespaceWithWorkflow.from(WdlNamespace.load(wdlSource, importResolver))
   }
 
   /**
-   * Used to safely cast a WdlNamespace to a NamespaceWithWorkflow. Throws an IllegalArgumentException if another
-   * form of WdlNamespace is passed to it
-   */
+    * Used to safely cast a WdlNamespace to a NamespaceWithWorkflow. Throws an IllegalArgumentException if another
+    * form of WdlNamespace is passed to it
+    */
   private def from(namespace: WdlNamespace): WdlNamespaceWithWorkflow = {
     namespace match {
       case n: WdlNamespaceWithWorkflow => n

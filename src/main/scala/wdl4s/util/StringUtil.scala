@@ -42,7 +42,7 @@ object StringUtil {
     if (matcher.lookingAt) matcher.end else 0
   }
 
-  private def stripAll(s: String, startChars: String, endChars: String): String = {
+  def stripAll(s: String, startChars: String, endChars: String): String = {
     /* https://stackoverflow.com/questions/17995260/trimming-strings-in-scala */
     @tailrec
     def start(n: Int): String = {

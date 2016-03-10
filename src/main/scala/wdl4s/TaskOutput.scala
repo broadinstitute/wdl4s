@@ -13,11 +13,11 @@ object TaskOutput extends LazyLogging {
     val wdlType = ast.getAttribute("type").wdlType(syntaxErrorFormatter)
     val name = ast.getAttribute("var").sourceString
     val expression = WdlExpression(ast.getAttribute("expression"))
-    TaskOutput(name, wdlType, expression)
+    TaskOutput(name, wdlType, expression, ast)
   }
 }
 
-case class TaskOutput(name: String, wdlType: WdlType, requiredExpression: WdlExpression) extends Declaration {
+case class TaskOutput(name: String, wdlType: WdlType, requiredExpression: WdlExpression, ast: Ast) extends Declaration {
   override val unqualifiedName = name
   override val postfixQuantifier = None
   override val expression = Option(requiredExpression)
