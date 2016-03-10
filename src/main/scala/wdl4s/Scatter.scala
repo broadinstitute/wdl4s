@@ -11,7 +11,7 @@ object Scatter {
    */
   def apply(ast: Ast, index: Int): Scatter = {
     val item = ast.getAttribute("item").asInstanceOf[Terminal].getSourceString
-    new Scatter(index, item, WdlExpression(ast.getAttribute("collection")))
+    new Scatter(index, item, WdlExpression(ast.getAttribute("collection")), ast)
   }
 }
 
@@ -21,7 +21,7 @@ object Scatter {
  * @param item Item which this block is scattering over
  * @param collection Wdl Expression corresponding to the collection this scatter is looping through
  */
-case class Scatter(index: Int, item: String, collection: WdlExpression) extends Scope with GraphNode {
+case class Scatter(index: Int, item: String, collection: WdlExpression, ast: Ast) extends Scope with GraphNode {
   val unqualifiedName = s"${Scatter.FQNIdentifier}_$index"
   override def appearsInFqn = false
 

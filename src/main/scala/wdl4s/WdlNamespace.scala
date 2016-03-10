@@ -4,8 +4,7 @@ import java.io.File
 
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode, EnhancedAstSeq}
 import wdl4s.command.ParameterCommandPart
-import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctionsType, WdlFunctions, WdlStandardLibraryFunctions}
-import wdl4s.parser.WdlParser
+import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStandardLibraryFunctionsType}
 import wdl4s.parser.WdlParser._
 import wdl4s.types._
 import wdl4s.util.FileUtil.EnhancedFile
@@ -272,31 +271,31 @@ object WdlNamespace {
     /**
       * Ensure that no namespace names collide with task names.
       */
-    for {
+    /*for {
       i <- imports
       namespaceTerminal <- i.namespaceTerminal
       task <- findTask(namespaceTerminal.sourceString, namespaces, tasks)
     } yield {
       throw new SyntaxError(wdlSyntaxErrorFormatter.taskAndNamespaceHaveSameName(task.ast, namespaceTerminal))
-    }
+    }*/
 
     /**
       * Ensure that no namespace names collide with workflow names
       */
-    for {
+    /*for {
       workflowAst <- ast.findAsts(AstNodeName.Workflow)
       i <- imports
       namespaceTerminal <- i.namespaceTerminal
       if namespaceTerminal.sourceString == workflowAst.getAttribute("name").sourceString
     } yield {
       throw new SyntaxError(wdlSyntaxErrorFormatter.workflowAndNamespaceHaveSameName(workflowAst, namespaceTerminal))
-    }
+    }*/
 
     /** Detect duplicated task names */
-    val dupeTaskAstsByName = tasks.map(_.ast).duplicatesByName
+    /*val dupeTaskAstsByName = tasks.map(_.ast).duplicatesByName
     if (dupeTaskAstsByName.nonEmpty) {
       throw new SyntaxError(wdlSyntaxErrorFormatter.duplicateTask(dupeTaskAstsByName))
-    }
+    }*/
 
     // TODO: sfrazer: verify that no a declaration and a call don't have the same name in the same scope!!
 
@@ -352,17 +351,20 @@ object WdlNamespace {
       accumulator.errors.map(new SyntaxError(_))
     }
 
-    case class ScopeAccumulator(accumulated: Seq[Scope] = Seq.empty, errors: Seq[String] = Seq.empty)
-    def scopeTerminal(scope: Scope): Terminal = {
+    def scopeNameAndTerminal(scope: Scope): (String, Terminal) = {
       scope match {
-        case
+        case ns: WdlNamespace => ("Namespace", imports.find(_.namespaceName == ns.importedAs).get.namespaceTerminal.get)
+        case s: Scope => (s.getClass.getSimpleName, s.ast.findFirstTerminal.get)
       }
     }
-    val accumulatedErrors = namespace.descendants map { scope =>
+    case class ScopeAccumulator(accumulated: Seq[Scope] = Seq.empty, errors: Seq[String] = Seq.empty)
+    val accumulatedErrors = (namespace.descendants + namespace).filter(_.namespace == namespace) map { scope =>
       scope.children.foldLeft(ScopeAccumulator()) { (acc, cur) =>
         val possibleError = acc.accumulated.find(_.unqualifiedName == cur.unqualifiedName) map { duplicate =>
+            val (dupName, dupTerminal) = scopeNameAndTerminal(duplicate)
+            val (curName, curTerminal) = scopeNameAndTerminal(cur)
             wdlSyntaxErrorFormatter.twoSiblingScopesHaveTheSameName(
-              duplicate.getClass.getSimpleName, null, cur.getClass.getSimpleName, null
+              dupName, dupTerminal, curName, curTerminal
             )
         }
         ScopeAccumulator(acc.accumulated :+ cur, acc.errors ++ possibleError.toSeq)

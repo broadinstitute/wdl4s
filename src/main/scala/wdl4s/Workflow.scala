@@ -29,12 +29,13 @@ object Workflow {
       case _ =>
     }
 
-    new Workflow(name, workflowOutputsDecls)
+    new Workflow(name, workflowOutputsDecls, ast)
   }
 }
 
 case class Workflow(unqualifiedName: String,
-                    workflowOutputDecls: Seq[WorkflowOutputDeclaration]) extends Scope {
+                    workflowOutputDecls: Seq[WorkflowOutputDeclaration],
+                    ast: Ast) extends Scope {
 
   /**
    * FQNs for all inputs to this workflow and their associated types and possible postfix quantifiers.

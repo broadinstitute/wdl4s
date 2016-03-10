@@ -34,7 +34,7 @@ object AstTools {
       }
     }
     def findFirstTerminal: Option[Terminal] = {
-      astNode match {
+      Option(astNode) flatMap {
         case l: AstList => l.astListAsVector.flatMap(_.findFirstTerminal).headOption
         case a: Ast => a.getAttributes.asScala.toMap.flatMap({ case (k, v) => v.findFirstTerminal }).headOption
         case t: Terminal => Option(t)

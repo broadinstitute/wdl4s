@@ -23,7 +23,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
     val expectedTokens = expected.asScala.map(_.string).mkString(", ")
     s"""ERROR: Unexpected symbol (line ${actual.getLine}, col ${actual.getColumn}) when parsing '$method'.
         |
-        |Expected $expectedTokens, got ${actual.toPrettyString}.
+        |Expected $expectedTokens, got ${actual.getSourceString}.
         |
         |${pointToSource(actual)}
         |
@@ -139,11 +139,11 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
   def twoSiblingScopesHaveTheSameName(firstScopeType: String, firstScopeName: Terminal, secondScopeType: String, secondScopeName: Terminal): String = {
     s"""ERROR: Sibling nodes have conflicting names:
        |
-       |$firstScopeName defined here (line ${firstScopeName.getLine}, col ${firstScopeName.getColumn}):
+       |$firstScopeType defined here (line ${firstScopeName.getLine}, col ${firstScopeName.getColumn}):
        |
        |${pointToSource(firstScopeName)}
        |
-       |$secondScopeName statement defined here (line ${secondScopeName.getLine}, col ${secondScopeName.getColumn}):
+       |$secondScopeType statement defined here (line ${secondScopeName.getLine}, col ${secondScopeName.getColumn}):
        |
        |${pointToSource(secondScopeName)}
      """.stripMargin
