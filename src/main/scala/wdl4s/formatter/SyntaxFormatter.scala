@@ -59,11 +59,11 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
     }
 
     /*
-     TODO/FIXME: If 'definitions' is really a function of `namespace` then `WdlNamespace should have a func which
+     TODO/FIXME: If 'body' is really a function of `namespace` then `WdlNamespace` should have a func which
      does the first part, and `NamespaceWithWorkflow` override it, call super and then adds on the second part
     */
 
-    val namespaceDefinitions = namespace.ast.getAttribute("definitions").asInstanceOf[AstList].asScala.toVector
+    val namespaceDefinitions = namespace.ast.getAttribute("body").asInstanceOf[AstList].asScala.toVector
 
     val taskDefinitions = namespaceDefinitions collect { case a: Ast if a.getName == "Task" =>
       formatTask(namespace.findTask(a.getAttribute("name").sourceString).getOrElse(throw new UnsupportedOperationException("Shouldn't happen")))

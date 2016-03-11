@@ -194,12 +194,12 @@ object WdlNamespace {
       imp <- imports if imp.namespaceName.isEmpty
       source = importResolver(imp.uri)
       ast = AstTools.getAst(source, imp.uri)
-      scopeAst <- ast.getAttribute("definitions").astListAsVector.collect({ case a: Ast => a })
+      scopeAst <- ast.getAttribute("body").astListAsVector.collect({ case a: Ast => a })
     } yield ast -> source
 
     val topLevelScopeAsts = for {
       namespaceAst <- nonNamespacedImports.map(_._1) :+ ast
-      scopeAst <- namespaceAst.getAttribute("definitions").astListAsVector.collect({ case a: Ast => a })
+      scopeAst <- namespaceAst.getAttribute("body").astListAsVector.collect({ case a: Ast => a })
     } yield scopeAst
 
     /**
@@ -257,10 +257,8 @@ object WdlNamespace {
             // TODO: sfrazer: uh oh... syntax error
             case None => Seq.empty[Scope]
           }
-        case AstNodeName.Workflow | AstNodeName.Scatter | AstNodeName.If =>
+        case AstNodeName.Workflow | AstNodeName.Scatter | AstNodeName.If | AstNodeName.Namespace =>
           getScopeAsts(scopeAst, "body").map(getScope(_, scope))
-        case AstNodeName.Namespace =>
-          getScopeAsts(scopeAst, "definitions").map(getScope(_, scope))
       }
     }
 

@@ -143,7 +143,7 @@ object AstTools {
     val Scatter = "Scatter"
     val Meta = "Meta"
     val ParameterMeta = "ParameterMeta"
-    val Namespace = "Document" // TODO: rename this in the grammar
+    val Namespace = "Namespace" // TODO: rename this in the grammar
     val If = "If"
   }
 
