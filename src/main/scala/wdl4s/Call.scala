@@ -7,7 +7,7 @@ import wdl4s.util.StringUtil
 import wdl4s.values.WdlValue
 
 import scala.language.postfixOps
-import scala.util.Try
+import scala.util.{Try, Success, Failure}
 
 object Call {
   def apply(ast: Ast,
@@ -101,6 +101,53 @@ case class Call(alias: Option[String],
                              functions: WdlFunctions[WdlValue],
                              valueMapper: WdlValue => WdlValue = (v) => v): Try[String] = {
     Try(StringUtil.normalize(task.commandTemplate.map(_.instantiate(this, inputs, functions, valueMapper)).mkString("")))
+  }
+
+  override def lookupFunction(inputs: WorkflowCoercedInputs,
+                              wdlFunctions: WdlFunctions[WdlValue],
+                              shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): String => WdlValue = {
+    def lookup(name: String): WdlValue = {
+      // unsafe .gets in this function because the contract with String => WdlValue lookup functions
+      // is that it throws an exception if it fails lookup
+
+      val inputMappingsWithMatchingName = Try(
+        inputMappings.getOrElse(name, throw new Exception(s"Could not find $name in input section of call $fullyQualifiedName"))
+      )
+
+      val declarationsWithMatchingName = Try(
+        declarations.find(_.unqualifiedName == name).getOrElse(throw new Exception(s"No declaration named $name for call $fullyQualifiedName"))
+      )
+
+      val inputMappingsLookup = for {
+        inputExpr <- inputMappingsWithMatchingName
+        parent <- Try(parent.getOrElse(throw new Exception(s"Call $unqualifiedName has no parent")))
+        evaluatedExpr <- inputExpr.evaluate(parent.lookupFunction(inputs, wdlFunctions, shards), wdlFunctions)
+      } yield evaluatedExpr
+
+      val declarationLookup = for {
+        declaration <- declarationsWithMatchingName
+        inputsLookup <- Try(inputs.getOrElse(declaration.fullyQualifiedName, throw new Exception(s"No input for ${declaration.fullyQualifiedName}")))
+      } yield inputsLookup
+
+      val declarationExprLookup = for {
+        declaration <- declarationsWithMatchingName
+        declarationExpr <- Try(declaration.expression.getOrElse(throw new Exception(s"No expression defined for declaration ${declaration.fullyQualifiedName}")))
+        evaluatedExpr <- declarationExpr.evaluate(lookupFunction(inputs, wdlFunctions, shards), wdlFunctions)
+      } yield evaluatedExpr
+
+      val taskParentResolution = for {
+        parent <- Try(task.parent.getOrElse(throw new Exception(s"Task ${task.unqualifiedName} has no parent")))
+        parentLookup <- Try(parent.lookupFunction(inputs, wdlFunctions, shards)(name))
+      } yield parentLookup
+
+      val resolutions = Seq(inputMappingsLookup, declarationLookup, declarationExprLookup, taskParentResolution)
+
+      resolutions.collect({ case s: Success[WdlValue] => s}).headOption match {
+        case Some(Success(value)) => value
+        case None => throw new VariableNotFoundException(name)
+      }
+    }
+    lookup
   }
 
   def workflow: Workflow = parent.map(_.asInstanceOf[Workflow]).getOrElse(throw new IllegalStateException("Grammar constraint violated: Call not in workflow"))
