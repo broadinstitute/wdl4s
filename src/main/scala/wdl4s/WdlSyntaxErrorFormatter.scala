@@ -299,4 +299,13 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
         |${pointToSource(second)}
      """.stripMargin
   }
+
+  def memoryRuntimeAttributeInvalid(expressionStart: Terminal) = {
+    s"""ERROR: 'memory' runtime attribute should have the format "size unit" (e.g. "8 GB").
+        |
+        |Expression starts here (line ${expressionStart.getLine}, col ${expressionStart.getColumn}):
+        |
+        |${pointToSource(expressionStart)}
+     """.stripMargin
+  }
 }

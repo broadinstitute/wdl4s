@@ -107,9 +107,6 @@ case class Call(alias: Option[String],
                               wdlFunctions: WdlFunctions[WdlValue],
                               shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): String => WdlValue = {
     def lookup(name: String): WdlValue = {
-      // unsafe .gets in this function because the contract with String => WdlValue lookup functions
-      // is that it throws an exception if it fails lookup
-
       val inputMappingsWithMatchingName = Try(
         inputMappings.getOrElse(name, throw new Exception(s"Could not find $name in input section of call $fullyQualifiedName"))
       )

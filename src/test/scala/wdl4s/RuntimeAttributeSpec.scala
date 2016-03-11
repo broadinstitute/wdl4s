@@ -1,5 +1,7 @@
 package wdl4s
 
+import wdl4s.parser.WdlParser.SyntaxError
+
 import scala.util.{Failure, Success}
 import org.scalatest.{EitherValues, Matchers, FlatSpec}
 import RuntimeAttributeSpec._
@@ -155,19 +157,19 @@ class RuntimeAttributeSpec extends FlatSpec with Matchers with EitherValues {
   }
 
   "WDL file with a 'memory' runtime attribute" should "throw an exception if a malformed static string is specified" in {
-    val ex = intercept[AggregatedException] {
+    val ex = intercept[SyntaxError] {
       WdlNamespaceWithWorkflow.load(WorkflowWithMessedUpMemory)
     }
 
-    ex.getMessage should include ("should be of the form 'X Unit'")
+    ex.getMessage should include ("ERROR: 'memory' runtime attribute should have the format \"size unit\" (e.g. \"8 GB\")")
   }
 
   it should "throw an exception if the static string contains an invalid memory unit" in {
-    val ex = intercept[AggregatedException] {
+    val ex = intercept[SyntaxError] {
       WdlNamespaceWithWorkflow.load(WorkflowWithMessedUpMemoryUnit)
     }
 
-    ex.getMessage should include ("is an invalid memory unit")
+    ex.getMessage should include ("ERROR: 'memory' runtime attribute should have the format \"size unit\" (e.g. \"8 GB\")")
   }
 
   it should "accept a value that contains an expression that can't be statically evaluated (1)" in {

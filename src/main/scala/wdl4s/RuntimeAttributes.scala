@@ -16,7 +16,14 @@ import scala.util.{Failure, Success, Try}
 case class RuntimeAttributes(attrs: Map[String, WdlExpression], ast: Ast) {
   def evaluate(lookup: ScopedLookupFunction, functions: WdlFunctions[WdlValue]): Map[String, Try[WdlValue]] = {
     attrs map { case (k, v) =>
-      k -> v.evaluate(lookup, functions)
+      k -> v.evaluate(lookup, functions).flatMap(validateRuntimeValue(k, _))
+    }
+  }
+
+  private def validateRuntimeValue(key: String, value: WdlValue): Try[WdlValue] = {
+    key match {
+      case "memory" => RuntimeAttributes.validateMemoryValue(value).map(m => WdlString(m.toString))
+      case _ => Success(value)
     }
   }
 }
@@ -31,6 +38,14 @@ object RuntimeAttributes {
       case None => Map.empty[String, WdlExpression]
     }
     RuntimeAttributes(kvPairs, ast)
+  }
+
+  def validateMemoryValue(value: WdlValue): Try[MemorySize] = {
+    value match {
+      case i: WdlInteger => Success(MemorySize(i.value.toDouble, MemoryUnit.Bytes))
+      case s: WdlString => MemorySize.parse(s.valueString).map(m => m.to(MemoryUnit.GB))
+      case other => Failure(new UnsupportedOperationException("Valid memory values are either strings (e.g. '8 GB') or integers"))
+    }
   }
 
   private def processRuntimeAttribute(ast: Ast): (String, WdlExpression) = {

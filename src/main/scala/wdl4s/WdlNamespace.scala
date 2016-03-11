@@ -354,17 +354,16 @@ object WdlNamespace {
 
     /*****************/
 
-    val runtimeAttributes = namespace.tasks map { task =>
-      task.runtimeAttributes.attrs.get("memory") map { memoryAttribute =>
-        val memoryKeyTerminal = task.runtimeAttributes.ast.getAttribute("map").astListAsVector.map(_.asInstanceOf[Ast]).find(
-          _.getAttribute("key").sourceString == "memory"
-        ).get
-        memoryKeyTerminal
-      }
-    }
+    val runtimeAttributes = for {
+      call <- namespace.calls
+      memoryExpression <- call.task.runtimeAttributes.attrs.get("memory")
+      value = memoryExpression.evaluate(call.lookupFunction(Map.empty[String, WdlValue], NoFunctions), NoFunctions)
+      if value.isSuccess && value.flatMap(v => RuntimeAttributes.validateMemoryValue(v)).isFailure
+    } yield new SyntaxError(wdlSyntaxErrorFormatter.memoryRuntimeAttributeInvalid(memoryExpression.ast.findFirstTerminal.get))
+
 
     // TODO: sfrazer: what to do?
-    declarationErrors ++ callInputSectionErrors ++ taskCommandReferenceErrors ++ duplicateSiblingScopeNameErrors match {
+    declarationErrors ++ callInputSectionErrors ++ taskCommandReferenceErrors ++ duplicateSiblingScopeNameErrors ++ runtimeAttributes match {
       case s: Set[SyntaxError] if s.nonEmpty => throw s.head
       case _ =>
     }
