@@ -88,6 +88,7 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
   it should "have 3 imported WdlNamespaces with names ns1, ns2, and ns3" in {
     namespace.namespaces.map(_.importedAs.get).toSet shouldEqual Set("ns1", "ns2", "ns3")
   }
+
   it should "have 3 imported WdlNamespaces with tasks 'ps', 'cgrep', and 'wc'" in {
     namespace.namespaces.flatMap(_.tasks) shouldEqual Seq(taskPs, taskCgrep, taskWc)
     ns1.tasks shouldEqual Seq(taskPs)
@@ -248,15 +249,6 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
     forAll(namespaceTable) { (node, namespace) =>
       node.namespace shouldEqual namespace
     }
-  }
-
-  it should "have 4 children in the root namespace: 1 workflow, 3 namespaces" in {
-    namespace.children.toSet shouldEqual Set(ns1, ns2, ns3, namespace.workflow)
-  }
-
-  it should "have 3 calls in the workflow, 2 of them aliased" in {
-    namespace.workflow.calls.map(_.fullyQualifiedName) shouldEqual Set("three_step.a1", "three_step.a2", "three_step.wc")
-    namespace.workflow.calls map(_.unqualifiedName) shouldEqual Set("a1", "a2", "wc")
   }
 
   it should "throw an exception if the import resolver fails to resolve an import" in {

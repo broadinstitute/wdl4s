@@ -19,46 +19,27 @@ import wdl4s.parser.WdlParser.{Ast, AstNode}
   *
   * Both the definition of test_file and wf_string are declarations
   */
-trait Declaration extends Scope {
+trait DeclarationInterface extends Scope with GraphNode {
   def wdlType: WdlType
   def postfixQuantifier: Option[String]
-  def name: String
   def expression: Option[WdlExpression]
   def ast: Ast
+
   def asTaskInput: Option[TaskInput] = expression match {
     case Some(expr) => None
-    case None => Option(TaskInput(name, wdlType, postfixQuantifier))
+    case None => Option(TaskInput(unqualifiedName, wdlType, postfixQuantifier))
+  }
+
+  def asWorkflowInput: Option[WorkflowInput] = expression match {
+    case Some(expr) => None
+    case None => Some(WorkflowInput(fullyQualifiedName, wdlType, postfixQuantifier))
   }
 
   def toWdlString: String = {
     val expr = expression.map(e => s" = ${e.toWdlString}").getOrElse("")
-    s"${wdlType.toWdlString} $name$expr"
+    s"${wdlType.toWdlString} $unqualifiedName$expr"
   }
-}
 
-object NewDeclaration {
-  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, scopedTo: Option[Scope]): NewDeclaration = {
-    NewDeclaration(
-      ast.getAttribute("type").wdlType(wdlSyntaxErrorFormatter),
-      Option(ast.getAttribute("postfix")).map(_.sourceString),
-      ast.getAttribute("name").sourceString,
-      ast.getAttribute("expression") match {
-        case a: AstNode => Some(WdlExpression(a))
-        case _ => None
-      },
-      scopedTo,
-      ast
-    )
-  }
-}
-
-case class NewDeclaration(wdlType: WdlType,
-                          postfixQuantifier: Option[String],
-                          unqualifiedName: String,
-                          expression: Option[WdlExpression],
-                          scopedTo: Option[Scope],
-                          ast: Ast) extends Scope with GraphNode with Declaration {
-  def name: String = unqualifiedName
   lazy val upstream: Set[Scope with GraphNode] = {
     val dependentNodes = for {
       expr <- expression.toIterable
@@ -75,19 +56,27 @@ case class NewDeclaration(wdlType: WdlType,
       if node.upstream.contains(this)
     } yield node
   }
+}
 
-  override def asTaskInput: Option[TaskInput] = expression match {
-    case Some(expr) => None
-    case None => Option(TaskInput(unqualifiedName, wdlType, postfixQuantifier))
-  }
-
-  def asWorkflowInput: Option[WorkflowInput] = expression match {
-    case Some(expr) => None
-    case None => Some(WorkflowInput(fullyQualifiedName, wdlType, postfixQuantifier))
-  }
-
-  override def toWdlString: String = {
-    val expr = expression.map(e => s" = ${e.toWdlString}").getOrElse("")
-    s"${wdlType.toWdlString} $unqualifiedName$expr"
+object Declaration {
+  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, scopedTo: Option[Scope]): Declaration = {
+    Declaration(
+      ast.getAttribute("type").wdlType(wdlSyntaxErrorFormatter),
+      Option(ast.getAttribute("postfix")).map(_.sourceString),
+      ast.getAttribute("name").sourceString,
+      ast.getAttribute("expression") match {
+        case a: AstNode => Some(WdlExpression(a))
+        case _ => None
+      },
+      scopedTo,
+      ast
+    )
   }
 }
+
+case class Declaration(wdlType: WdlType,
+                       postfixQuantifier: Option[String],
+                       unqualifiedName: String,
+                       expression: Option[WdlExpression],
+                       scopedTo: Option[Scope],
+                       ast: Ast) extends DeclarationInterface

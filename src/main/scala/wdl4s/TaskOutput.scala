@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.{Failure, Success}
 
-object TaskOutput extends LazyLogging {
+object TaskOutput {
   def apply(ast: Ast, syntaxErrorFormatter: WdlSyntaxErrorFormatter): TaskOutput = {
     val wdlType = ast.getAttribute("type").wdlType(syntaxErrorFormatter)
     val name = ast.getAttribute("var").sourceString
@@ -17,8 +17,7 @@ object TaskOutput extends LazyLogging {
   }
 }
 
-case class TaskOutput(name: String, wdlType: WdlType, requiredExpression: WdlExpression, ast: Ast) extends Declaration {
-  override val unqualifiedName = name
+case class TaskOutput(unqualifiedName: String, wdlType: WdlType, requiredExpression: WdlExpression, ast: Ast) extends DeclarationInterface {
   override val postfixQuantifier = None
   override val expression = Option(requiredExpression)
 }

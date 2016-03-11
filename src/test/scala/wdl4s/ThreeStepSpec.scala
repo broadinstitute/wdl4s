@@ -50,7 +50,7 @@ class ThreeStepSpec extends FlatSpec with Matchers {
     task.declarations.map(_.toWdlString) shouldEqual Vector("File in_file")
     task.instantiateCommand(Map("in_file" -> WdlFile("/path/to/file")), NoFunctions).get shouldEqual "cat /path/to/file | wc -l"
     task.outputs.size shouldEqual 1
-    task.outputs.head.name shouldEqual "count"
+    task.outputs.head.unqualifiedName shouldEqual "count"
     task.outputs.head.wdlType shouldEqual WdlIntegerType
   }
   it should "Have a task with name 'cgrep'" in {
@@ -63,7 +63,7 @@ class ThreeStepSpec extends FlatSpec with Matchers {
     task.instantiateCommand(Map("pattern" -> WdlString("^...$"), "in_file" -> WdlFile("/path/to/file")),
       NoFunctions).get shouldEqual "grep '^...$' /path/to/file | wc -l"
     task.outputs.size shouldEqual 1
-    task.outputs.head.name shouldEqual "count"
+    task.outputs.head.unqualifiedName shouldEqual "count"
     task.outputs.head.wdlType shouldEqual WdlIntegerType
   }
   it should "Have a task with name 'ps'" in {
@@ -72,7 +72,7 @@ class ThreeStepSpec extends FlatSpec with Matchers {
     task.declarations shouldEqual Vector()
     task.instantiateCommand(Map(), NoFunctions).get shouldEqual "ps"
     task.outputs.size shouldEqual 1
-    task.outputs.head.name shouldEqual "procs"
+    task.outputs.head.unqualifiedName shouldEqual "procs"
     task.outputs.head.wdlType shouldEqual WdlFileType
   }
 }

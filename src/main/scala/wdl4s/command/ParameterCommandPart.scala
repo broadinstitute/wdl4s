@@ -44,7 +44,7 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
     _instantiate(task.declarations, lookup, functions, valueMapper)
   }
 
-  def _instantiate(declarations: Seq[NewDeclaration],
+  def _instantiate(declarations: Seq[Declaration],
                    lookup: String => WdlValue,
                    functions: WdlFunctions[WdlValue],
                    valueMapper: WdlValue => WdlValue): String = {

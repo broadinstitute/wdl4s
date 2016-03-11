@@ -145,10 +145,10 @@ object SampleWdl {
         |    call C {input: C_in = B.B_out}
         |    call E
         |    scatter (itemB in B.B_out) {
-        |     call E as G
+        |      call E as G
         |    }
         |    scatter (itemB in B.B_out) {
-        |     call E as H
+        |      call E as H
         |    }
         |  }
         |  scatter (item in A.A_out) {

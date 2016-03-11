@@ -53,7 +53,7 @@ trait Scope {
   }
 
   /**
-    * All children ++ children's children ++ etc.  This will return in depth-first order
+    * All children ++ children's children ++ etc
     */
   lazy val descendants: Set[Scope] = (children ++ children.flatMap(_.descendants)).toSet
 
@@ -63,10 +63,11 @@ trait Scope {
   /**
     * Declarations within this Scope, in the order that they appear in source code
     */
-  lazy val declarations: Seq[NewDeclaration] = children.collect({ case d: NewDeclaration => d})
+  lazy val declarations: Seq[Declaration] = children.collect({ case d: Declaration => d})
 
-  def fullyQualifiedName = {
-    (ancestry.reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
+  def fullyQualifiedName = appearsInFqn match {
+    case true => (ancestry.reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
+    case false => fullyQualifiedNameWithIndexScopes
   }
 
   def fullyQualifiedNameWithIndexScopes = {
@@ -143,7 +144,7 @@ trait Scope {
           case (_, None) =>
             throw new VariableLookupException(s"Could not find a shard for scatter block with expression (${scatter.collection.toWdlString})")
         }
-      case Some(d: NewDeclaration) if d.expression.isDefined =>
+      case Some(d: Declaration) if d.expression.isDefined =>
         // TODO: sfrazer: d.parent.get?
         d.expression.get.evaluate(scopeLookupFunction(d.parent.get, inputs, shards, wdlFunctions), wdlFunctions) match {
           case Success(value) => Option(value)

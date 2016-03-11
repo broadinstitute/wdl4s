@@ -30,29 +30,6 @@ object Task {
       case x: Ast => ParameterCommandPart(x, wdlSyntaxErrorFormatter)
     }
 
-    // TODO: sfrazer: move this validation a higher level, at the namespace level perhaps
-    // This is checking that the command only references valid declarations (this needs to be scoped)
-    // Also checks that the declarations ++ outputs have referential integrity
-
-    /*val variablesReferencedInCommand = for {
-      param <- commandTemplate collect { case x: ParameterCommandPart => x }
-      variable <- param.expression.variableReferences
-    } yield variable
-
-    variablesReferencedInCommand foreach { variable =>
-      if (!declarations.map(_.name).contains(variable.getSourceString)) {
-        throw new SyntaxError(wdlSyntaxErrorFormatter.commandExpressionContainsInvalidVariableReference(taskNameTerminal, variable))
-      }
-    }
-
-    val declarationErrors = (declarations ++ outputs).foldLeft(DeclarationAccumulator())(validateDeclaration(ast, wdlSyntaxErrorFormatter))
-
-    declarationErrors.errors match {
-      case x if x.nonEmpty => throw new SyntaxError(x.mkString(s"\n${"-" * 50}\n\n"))
-      case _ =>
-    }
-    */
-
     Task(name, commandTemplate, runtimeAttributes, meta, parameterMeta, outputs, ast)
   }
 

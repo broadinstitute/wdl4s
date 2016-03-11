@@ -73,7 +73,7 @@ object RuntimeAttributeSpec {
       |  }
       |}
       |
-      |workflow hello {
+      |workflow hello_workflow {
       |  call hello
       |}
     """.stripMargin

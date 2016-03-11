@@ -106,7 +106,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
     * and return the value for storage in the symbol store
     */
   def staticDeclarationsRecursive(userInputs: WorkflowCoercedInputs, wdlFunctions: WdlStandardLibraryFunctions): Try[WorkflowCoercedInputs] = {
-    def evalDeclaration(accumulated: Map[FullyQualifiedName, Try[WdlValue]], current: NewDeclaration): Map[FullyQualifiedName, Try[WdlValue]] = {
+    def evalDeclaration(accumulated: Map[FullyQualifiedName, Try[WdlValue]], current: Declaration): Map[FullyQualifiedName, Try[WdlValue]] = {
       current.expression match {
         case Some(expr) =>
           val successfulAccumulated = accumulated.collect({ case (k, v) if v.isSuccess => k -> v.get })
@@ -239,7 +239,7 @@ object WdlNamespace {
       val scope = scopeAst.getName match {
         case AstNodeName.Call => Call(scopeAst, namespaces, tasks, wdlSyntaxErrorFormatter)
         case AstNodeName.Workflow => Workflow(scopeAst, wdlSyntaxErrorFormatter)
-        case AstNodeName.Declaration => NewDeclaration(scopeAst, wdlSyntaxErrorFormatter, scopedTo)
+        case AstNodeName.Declaration => Declaration(scopeAst, wdlSyntaxErrorFormatter, scopedTo)
         case AstNodeName.Scatter =>
           scopeIndexes(classOf[Scatter]) += 1
           Scatter(scopeAst, scopeIndexes(classOf[Scatter]))
@@ -376,7 +376,7 @@ object WdlNamespace {
       task <- namespace.tasks
       param <- task.commandTemplate.collect({ case p: ParameterCommandPart => p })
       variable <- param.expression.variableReferences
-      if !task.declarations.map(_.name).contains(variable.getSourceString)
+      if !task.declarations.map(_.unqualifiedName).contains(variable.getSourceString)
     } yield new SyntaxError(wdlSyntaxErrorFormatter.commandExpressionContainsInvalidVariableReference(task.ast.getAttribute("name").asInstanceOf[Terminal], variable))
 
     // TODO: sfrazer: what to do?
@@ -396,7 +396,7 @@ object WdlNamespace {
     * accumulate Declarations even if there was an error with that particular
     * Declaration
     */
-  case class DeclarationAccumulator(errors: Seq[String] = Seq.empty, declarations: Seq[Declaration] = Seq.empty)
+  case class DeclarationAccumulator(errors: Seq[String] = Seq.empty, declarations: Seq[DeclarationInterface] = Seq.empty)
 
   /**
     * Ensures that the current declaration doesn't have a name conflict with another declaration
@@ -407,7 +407,7 @@ object WdlNamespace {
     * @param current     The declaration being validated
     */
   private def validateDeclaration(wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter)
-                                 (accumulated: DeclarationAccumulator, current: Declaration): DeclarationAccumulator = {
+                                 (accumulated: DeclarationAccumulator, current: DeclarationInterface): DeclarationAccumulator = {
 
     // FIXME: the grammar file is inconsistent about what attribute name to use for declarations.
     // FIXME: most declarations use the 'name' attribute, but task outputs use 'var'
@@ -424,7 +424,7 @@ object WdlNamespace {
     val invalidVariableReferenceErrors = for {
       expr <- current.expression.toIterable
       variable <- expr.variableReferences
-      if !accumulated.declarations.map(_.name).contains(variable.getSourceString)
+      if !accumulated.declarations.map(_.unqualifiedName).contains(variable.getSourceString)
     } yield wdlSyntaxErrorFormatter.declarationContainsInvalidVariableReference(currentDeclarationName, variable)
 
     val typeErrors = (invalidVariableReferenceErrors, current.expression) match {
@@ -451,11 +451,11 @@ object WdlNamespace {
     * @param wdlSyntaxErrorFormatter A syntax error formatter in case an error was found.
     * @return Some(String) if an error occurred where the String is the error message, otherwise None
     */
-  private def typeCheckExpression(expr: WdlExpression, expectedType: WdlType, priorDeclarations: Seq[Declaration],
+  private def typeCheckExpression(expr: WdlExpression, expectedType: WdlType, priorDeclarations: Seq[DeclarationInterface],
                                   declNameTerminal: Terminal, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Option[String] = {
 
     // .get below because lookup functions should throw exceptions if they could not lookup the variable
-    def lookupType(n: String) = priorDeclarations.find(_.name == n).map(_.wdlType).get
+    def lookupType(n: String) = priorDeclarations.find(_.unqualifiedName == n).map(_.wdlType).get
 
     expr.evaluateType(lookupType, new WdlStandardLibraryFunctionsType) match {
       case Success(expressionWdlType) if !expectedType.isCoerceableFrom(expressionWdlType) =>
@@ -501,7 +501,7 @@ object WdlNamespace {
       ast.getAttribute("value").findTopLevelMemberAccesses flatMap { memberAccessAst =>
         val memberAccess = MemberAccess(memberAccessAst)
         call.resolveVariable(memberAccess.lhs) match {
-          case Some(c: Call) if c.task.outputs.exists(_.name == memberAccess.rhs) => None
+          case Some(c: Call) if c.task.outputs.exists(_.unqualifiedName == memberAccess.rhs) => None
           case Some(c: Call) =>
             Option(new SyntaxError(wdlSyntaxErrorFormatter.memberAccessReferencesBadTaskInput(memberAccessAst)))
           case None =>

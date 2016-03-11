@@ -99,7 +99,7 @@ case class Workflow(unqualifiedName: String,
     val outputs: Seq[PotentialReportableSymbol] = for {
       call: Call <- calls.toSeq
       output <- call.task.outputs
-    } yield PotentialReportableSymbol(s"${call.fullyQualifiedName}.${output.name}", output.wdlType, matchWorkflowOutputWildcards = true)
+    } yield PotentialReportableSymbol(s"${call.fullyQualifiedName}.${output.unqualifiedName}", output.wdlType, matchWorkflowOutputWildcards = true)
 
     val inputs: Seq[PotentialReportableSymbol] = for {
       call: Call <- calls.toSeq
