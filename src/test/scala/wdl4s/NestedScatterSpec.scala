@@ -9,6 +9,7 @@ class NestedScatterSpec extends FlatSpec with Matchers {
 
   def getTask(name: String): Task = namespace.tasks.find(_.unqualifiedName == name).get
   def getCall(name: String): Call = namespace.workflow.calls.find(_.unqualifiedName == name).get
+  def getScatter(index: Int): Scatter = namespace.resolve("w.$scatter_" + index).get.asInstanceOf[Scatter]
 
   val taskA = getTask("A")
   val taskB = getTask("B")
@@ -35,10 +36,10 @@ class NestedScatterSpec extends FlatSpec with Matchers {
   val declTaskC = taskC.declarations.head
   val declTaskD = taskD.declarations.head
 
-  val outerScatter1 = namespace.resolve("w.$scatter_0").get
-  val outerScatter2 = namespace.resolve("w.$scatter_3").get
-  val innerScatter1 = namespace.resolve("w.$scatter_0.$scatter_1").get
-  val innerScatter2 = namespace.resolve("w.$scatter_0.$scatter_2").get
+  val scatter0 = getScatter(0)
+  val scatter3 = getScatter(3)
+  val scatter1 = getScatter(1)
+  val scatter2 = getScatter(2)
 
   it should "have 5 tasks" in {
     namespace.tasks shouldEqual Seq(taskA, taskB, taskC, taskD, taskE)
@@ -64,10 +65,10 @@ class NestedScatterSpec extends FlatSpec with Matchers {
     ("w.F", "w.$scatter_3.F", callF),
     ("w.G", "w.$scatter_0.$scatter_1.G", callG),
     ("w.H", "w.$scatter_0.$scatter_2.H", callH),
-    ("w.$scatter_0", "w.$scatter_0", outerScatter1),
-    ("w.$scatter_3", "w.$scatter_3", outerScatter2),
-    ("w.$scatter_1", "w.$scatter_0.$scatter_1", innerScatter1),
-    ("w.$scatter_2", "w.$scatter_0.$scatter_2", innerScatter2),
+    ("w.$scatter_0", "w.$scatter_0", scatter0),
+    ("w.$scatter_3", "w.$scatter_3", scatter3),
+    ("w.$scatter_1", "w.$scatter_0.$scatter_1", scatter1),
+    ("w.$scatter_2", "w.$scatter_0.$scatter_2", scatter2),
     ("w.B.B_in", "w.$scatter_0.B.B_in", declCallB),
     ("w.C.C_in", "w.$scatter_0.C.C_in", declCallC),
     ("w.D.D_in", "w.D.D_in", declCallD),
@@ -96,7 +97,18 @@ class NestedScatterSpec extends FlatSpec with Matchers {
 
   val dependencyTable = Table(
     ("node", "upstream", "downstream"),
-    (callA, Set(), Set(outerScatter1, outerScatter2))
+    (callA, Set(), Set(scatter0, scatter3)),
+    (callB, Set(scatter0), Set(callC, scatter1, scatter2, callD)),
+    (callC, Set(callB, scatter0), Set()),
+    (callD, Set(callB), Set()),
+    (callE, Set(scatter0), Set()),
+    (callF, Set(scatter3), Set()),
+    (callG, Set(scatter1, scatter0), Set()),
+    (callH, Set(scatter2, scatter0), Set()),
+    (scatter0, Set(callA), Set(callB, callC, callE, callG, callH, scatter1, scatter2)),
+    (scatter3, Set(callA), Set(callF)),
+    (scatter1, Set(callB, scatter0), Set(callG)),
+    (scatter2, Set(callB, scatter0), Set(callH))
   )
 
   forAll(dependencyTable) { (node, upstream, downstream) =>
@@ -104,10 +116,68 @@ class NestedScatterSpec extends FlatSpec with Matchers {
       node.upstream shouldEqual upstream
     }
     it should s"compute downstream nodes for ${node.fullyQualifiedName}" in {
-      println(s"DOWNSTREAM OF ${node.fullyQualifiedName} --> ${node.downstream.map(_.fullyQualifiedName).mkString(",")}")
-      //node.downstream shouldEqual downstream
+      node.downstream shouldEqual downstream
     }
   }
+
+  val parentAndChildrenTable = Table(
+    ("node", "parent", "children"),
+    (callA, Option(workflow), Seq()),
+    (callB, Option(scatter0), Seq(declCallB)),
+    (callC, Option(scatter0), Seq(declCallC)),
+    (callD, Option(workflow), Seq(declCallD)),
+    (callE, Option(scatter0), Seq()),
+    (callF, Option(scatter3), Seq()),
+    (callG, Option(scatter1), Seq()),
+    (callH, Option(scatter2), Seq()),
+    (workflow, Option(namespace), Seq(callA, scatter0, scatter3, callD)),
+    (namespace, None, Seq(taskA, taskB, taskC, taskD, taskE, workflow))
+  )
+
+  forAll(parentAndChildrenTable) { (node, parent, children) =>
+    it should s"compute children for ${node.fullyQualifiedName}" in {
+      node.children shouldEqual children
+    }
+    it should s"compute parents for ${node.fullyQualifiedName}" in {
+      node.parent shouldEqual parent
+    }
+  }
+
+  val ancestryTable = Table(
+    ("node", "ancestry"),
+    (namespace, Seq()),
+    (workflow, Seq(namespace)),
+    (taskA, Seq(namespace)),
+    (taskB, Seq(namespace)),
+    (taskC, Seq(namespace)),
+    (taskD, Seq(namespace)),
+    (taskE, Seq(namespace)),
+    (declTaskB, Seq(taskB, namespace)),
+    (declTaskC, Seq(taskC, namespace)),
+    (declTaskD, Seq(taskD, namespace)),
+    (callA, Seq(workflow, namespace)),
+    (callB, Seq(scatter0, workflow, namespace)),
+    (callC, Seq(scatter0, workflow, namespace)),
+    (callD, Seq(workflow, namespace)),
+    (callE, Seq(scatter0, workflow, namespace)),
+    (callF, Seq(scatter3, workflow, namespace)),
+    (callG, Seq(scatter1, scatter0, workflow, namespace)),
+    (callH, Seq(scatter2, scatter0, workflow, namespace)),
+    (scatter0, Seq(workflow, namespace)),
+    (scatter1, Seq(scatter0, workflow, namespace)),
+    (scatter2, Seq(scatter0, workflow, namespace)),
+    (scatter3, Seq(workflow, namespace)),
+    (declCallB, Seq(callB, scatter0, workflow, namespace)),
+    (declCallC, Seq(callC, scatter0, workflow, namespace)),
+    (declCallD, Seq(callD, workflow, namespace))
+  )
+
+  forAll(ancestryTable) { (node, ancestry) =>
+    it should s"compute ancestry for ${node.fullyQualifiedName}" in {
+      node.ancestry shouldEqual ancestry
+    }
+  }
+
 
   it should "Have four 'children' objects" in {
     namespace.workflow.children.size shouldEqual 4

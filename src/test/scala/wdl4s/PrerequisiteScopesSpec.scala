@@ -9,8 +9,6 @@ class PrerequisiteScopesSpec extends FlatSpec with Matchers {
   val allCalls = workflow.calls
   val allScatters = workflow.scatters
 
-  def scopesByName(name: String) = workflow.callByName(name).get.upstream
-
   "ScatterWdl" should "have five calls" in {
     allCalls.size shouldEqual 5
   }
@@ -28,31 +26,27 @@ class PrerequisiteScopesSpec extends FlatSpec with Matchers {
   }
 
   it should "have A not depend on anything" in {
-    scopesByName("A") shouldBe empty
+    workflow.callByName("A").get.upstream shouldBe empty
   }
 
-  it should "have B.upstream == scatter, A" in {
+  it should "have B.upstream == scatter" in {
     val callB = namespace.workflow.callByName("B").get
     callB.upstream shouldEqual Set(
-      namespace.resolve("w.$scatter_0").get,
-      namespace.resolve("w.A").get
+      namespace.resolve("w.$scatter_0").get
     )
   }
 
-  it should "have C.upstream == scatter, A, B" in {
+  it should "have C.upstream == scatter, B" in {
     val callC = namespace.workflow.callByName("C").get
     callC.upstream shouldEqual Set(
       namespace.resolve("w.$scatter_0").get,
-      namespace.resolve("w.A").get,
       namespace.resolve("w.B").get
     )
   }
 
-  it should "have D.upstream == scatter, A, B" in {
+  it should "have D.upstream == B" in {
     val callD = namespace.workflow.callByName("D").get
     callD.upstream shouldEqual Set(
-      namespace.resolve("w.$scatter_0").get,
-      namespace.resolve("w.A").get,
       namespace.resolve("w.B").get
     )
   }
@@ -60,8 +54,7 @@ class PrerequisiteScopesSpec extends FlatSpec with Matchers {
   it should "have E.upstream == scatter, A" in {
     val callE = namespace.workflow.callByName("E").get
     callE.upstream shouldEqual Set(
-      namespace.resolve("w.$scatter_0").get,
-      namespace.resolve("w.A").get
+      namespace.resolve("w.$scatter_0").get
     )
   }
 }

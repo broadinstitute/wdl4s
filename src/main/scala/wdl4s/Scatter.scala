@@ -26,11 +26,15 @@ case class Scatter(index: Int, item: String, collection: WdlExpression, ast: Ast
   override def appearsInFqn = false
 
   lazy val upstream: Set[Scope with GraphNode] = {
-    (for {
+    val referencedNodes = for {
       variable <- collection.variableReferences
       node <- resolveVariable(variable.sourceString)
       if node.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes
-    } yield node).toSet
+    } yield node
+
+    val ancestorScatters = ancestry.collect({ case s: Scatter with GraphNode => s})
+
+    (referencedNodes ++ ancestorScatters).toSet
   }
 
   lazy val downstream: Set[Scope with GraphNode] = {
@@ -39,4 +43,6 @@ case class Scatter(index: Int, item: String, collection: WdlExpression, ast: Ast
       if node.upstream.contains(this)
     } yield node
   }
+
+  override def toString(): String = s"[Scatter $fullyQualifiedName]"
 }

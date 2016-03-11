@@ -41,18 +41,17 @@ trait DeclarationInterface extends Scope with GraphNode {
   }
 
   lazy val upstream: Set[Scope with GraphNode] = {
-    val dependentNodes = for {
-      expr <- expression.toIterable
+    val nodes = for {
+      expr <- expression.toSeq
       variable <- expr.variableReferences
       node <- resolveVariable(variable.sourceString)
     } yield node
-
-    (dependentNodes ++ dependentNodes.flatMap(_.upstream)).toSet
+    nodes.toSet
   }
 
   lazy val downstream: Set[Scope with GraphNode] = {
     for {
-      node <- namespace.descendants.collect({ case n: GraphNode => n }).filter(_.fullyQualifiedName != fullyQualifiedName).toSet
+      node <- namespace.descendants.collect({ case n: GraphNode => n }).filter(_.fullyQualifiedName != fullyQualifiedName)
       if node.upstream.contains(this)
     } yield node
   }
@@ -74,6 +73,7 @@ object Declaration {
   }
 }
 
+// TODO: sfrazer: scopedTo?
 case class Declaration(wdlType: WdlType,
                        postfixQuantifier: Option[String],
                        unqualifiedName: String,

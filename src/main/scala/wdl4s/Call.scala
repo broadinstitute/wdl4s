@@ -67,18 +67,25 @@ case class Call(alias: Option[String],
 
     val ancestorScatters = ancestry.collect({ case s: Scatter with GraphNode => s})
 
-    ( dependentNodes ++
-      dependentNodes.flatMap(_.upstream) ++
-      ancestorScatters ++
-      ancestorScatters.flatMap(_.upstream) ).toSet
+    (dependentNodes ++ ancestorScatters).toSet
   }
 
   lazy val downstream: Set[Scope with GraphNode] = {
+    def expressions(node: GraphNode): Iterable[WdlExpression] = node match {
+      case scatter: Scatter => Set(scatter.collection)
+      case call: Call => call.inputMappings.values
+      case ifStatement: If => Set(ifStatement.condition)
+      case declaration: Declaration => declaration.expression.toSet
+    }
+
     for {
       node <- namespace.descendants.collect({ case n: GraphNode => n }).filter(
         _.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes
       )
-      if node.upstream.contains(this)
+      expression <- expressions(node)
+      variable <- expression.variableReferences
+      referencedNode = resolveVariable(variable.sourceString)
+      if referencedNode == Option(this)
     } yield node
   }
 

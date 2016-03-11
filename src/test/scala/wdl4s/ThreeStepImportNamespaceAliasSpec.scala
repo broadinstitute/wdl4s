@@ -63,8 +63,9 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
   }
 
   val namespace = WdlNamespaceWithWorkflow.load(workflowWdl, resolver _)
+  val workflow = namespace.workflow
   val allTasks = namespace.tasks ++ namespace.namespaces.flatMap(_.tasks)
-  val allCalls = namespace.workflow.calls
+  val allCalls = workflow.calls
 
   val callA1 = allCalls.find(_.unqualifiedName == "a1").get
   val callA2 = allCalls.find(_.unqualifiedName == "a2").get
@@ -98,7 +99,7 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
 
   val fqnTable = Table(
     ("fqn", "scope"),
-    ("three_step", namespace.workflow),
+    ("three_step", workflow),
     ("three_step.a1", callA1),
     ("three_step.a2", callA2),
     ("three_step.wc", callWc),
@@ -116,15 +117,16 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
     ("ns3.wc.in_file", declTaskWcInfile)
   )
 
-  it should "resolve all FQNs" in {
-    forAll(fqnTable) { (fqn, scope) =>
-      namespace.resolve(fqn).get shouldEqual scope
+  forAll(fqnTable) { (fqn, scope) =>
+    it should s"resolve FQN: $fqn" in {
+      namespace.resolve(fqn) shouldEqual Option(scope)
     }
-  }
 
-  it should "generate all FQNs" in {
-    forAll(fqnTable) { (fqn, scope) =>
+    it should s"generate FQN: $fqn" in {
       scope.fullyQualifiedName shouldEqual fqn
+    }
+
+    it should s"generate FQN (with scopes): $fqn" in {
       scope.fullyQualifiedNameWithIndexScopes shouldEqual fqn
     }
   }
@@ -158,17 +160,17 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
   it should "compute ancestry" in {
     val ancestryTable = Table(
       ("node", "ancestry"),
-      (callA1, Seq(namespace.workflow, namespace)),
-      (callA2, Seq(namespace.workflow, namespace)),
-      (callWc, Seq(namespace.workflow, namespace)),
-      (namespace.workflow, Seq(namespace)),
+      (callA1, Seq(workflow, namespace)),
+      (callA2, Seq(workflow, namespace)),
+      (callWc, Seq(workflow, namespace)),
+      (workflow, Seq(namespace)),
       (namespace, Seq()),
       (ns1, Seq(namespace)),
       (ns2, Seq(namespace)),
       (ns3, Seq(namespace)),
-      (declCallCgrepInfile, Seq(callA2, namespace.workflow, namespace)),
-      (declCallCgrepPattern, Seq(callA2, namespace.workflow, namespace)),
-      (declCallWcInfile, Seq(callWc, namespace.workflow, namespace)),
+      (declCallCgrepInfile, Seq(callA2, workflow, namespace)),
+      (declCallCgrepPattern, Seq(callA2, workflow, namespace)),
+      (declCallWcInfile, Seq(callWc, workflow, namespace)),
       (declTaskCgrepInfile, Seq(taskCgrep, ns2, namespace)),
       (declTaskCgrepPattern, Seq(taskCgrep, ns2, namespace)),
       (declTaskWcInfile, Seq(taskWc, ns3, namespace))
@@ -182,10 +184,10 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
   it should "compute parents" in {
     val parentTable = Table(
       ("node", "parent"),
-      (callA1, Option(namespace.workflow)),
-      (callA2, Option(namespace.workflow)),
-      (callWc, Option(namespace.workflow)),
-      (namespace.workflow, Option(namespace)),
+      (callA1, Option(workflow)),
+      (callA2, Option(workflow)),
+      (callWc, Option(workflow)),
+      (workflow, Option(namespace)),
       (namespace, None),
       (ns1, Option(namespace)),
       (ns2, Option(namespace)),
@@ -195,7 +197,8 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
       (declCallWcInfile, Option(callWc)),
       (declTaskCgrepInfile, Option(taskCgrep)),
       (declTaskCgrepPattern, Option(taskCgrep)),
-      (declTaskWcInfile, Option(taskWc))
+      (declTaskWcInfile, Option(taskWc)),
+      (namespace, None)
     )
 
     forAll(parentTable) { (node, parent) =>
@@ -209,8 +212,8 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
       (callA1, Seq()),
       (callA2, Seq(declCallCgrepPattern, declCallCgrepInfile)),
       (callWc, Seq(declCallWcInfile)),
-      (namespace.workflow, Seq(callA1, callA2, callWc)),
-      (namespace, Seq(ns1, ns2, ns3, namespace.workflow)),
+      (workflow, Seq(callA1, callA2, callWc)),
+      (namespace, Seq(ns1, ns2, ns3, workflow)),
       (ns1, Seq(taskPs)),
       (ns2, Seq(taskCgrep)),
       (ns3, Seq(taskWc)),
@@ -233,7 +236,7 @@ class ThreeStepImportNamespaceAliasSpec extends FlatSpec with Matchers {
       (callA1, namespace),
       (callA2, namespace),
       (callWc, namespace),
-      (namespace.workflow, namespace),
+      (workflow, namespace),
       (namespace, namespace),
       (ns1, ns1),
       (ns2, ns2),
