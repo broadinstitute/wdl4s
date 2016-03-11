@@ -57,7 +57,14 @@ trait Scope {
     */
   lazy val descendants: Set[Scope] = (children ++ children.flatMap(_.descendants)).toSet
 
+  /**
+    * Descendants that are Calls
+    */
   lazy val calls: Set[Call] = descendants.collect({ case c: Call => c })
+
+  /**
+    * Descendants that are Scatters
+    */
   lazy val scatters: Set[Scatter] = descendants.collect({ case s: Scatter => s })
 
   /**
@@ -65,15 +72,15 @@ trait Scope {
     */
   lazy val declarations: Seq[Declaration] = children.collect({ case d: Declaration => d})
 
-  def fullyQualifiedName = appearsInFqn match {
-    case true => (ancestry.reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
-    case false => fullyQualifiedNameWithIndexScopes
+  def fullyQualifiedName = {
+    (ancestry.reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
   }
 
   def fullyQualifiedNameWithIndexScopes = {
     (Seq(this) ++ ancestry).reverse.map(_.unqualifiedName).filter(_.nonEmpty).mkString(".")
   }
 
+  // TODO: sfrazer: remove
   def callByName(callName: String): Option[Call] = calls.find(_.unqualifiedName == callName)
 
   def closestCommonAncestor(other: Scope): Option[Scope] = {

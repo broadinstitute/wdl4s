@@ -13,7 +13,7 @@ import scala.collection.JavaConverters._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
-case class RuntimeAttributes(attrs: Map[String, WdlExpression]) {
+case class RuntimeAttributes(attrs: Map[String, WdlExpression], ast: Ast) {
   def evaluate(lookup: ScopedLookupFunction, functions: WdlFunctions[WdlValue]): Map[String, Try[WdlValue]] = {
     attrs map { case (k, v) =>
       k -> v.evaluate(lookup, functions)
@@ -30,7 +30,7 @@ object RuntimeAttributes {
       case Some(vector) => vector.map(processRuntimeAttribute).toMap
       case None => Map.empty[String, WdlExpression]
     }
-    RuntimeAttributes(kvPairs)
+    RuntimeAttributes(kvPairs, ast)
   }
 
   private def processRuntimeAttribute(ast: Ast): (String, WdlExpression) = {

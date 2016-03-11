@@ -172,19 +172,6 @@ object WdlNamespace {
     WdlNamespace(AstTools.getAst(wdlSource, resource), wdlSource, importResolver, importedAs, root = true)
   }
 
-  private def loadChild(wdlSource: WdlSource, resource: String, importResolver: ImportResolver, importedAs: Option[String]): WdlNamespace = {
-    WdlNamespace(AstTools.getAst(wdlSource, resource), wdlSource, importResolver, importedAs, root = false)
-  }
-
-  private val ScopeAstNames = Seq(
-    AstNodeName.Call, AstNodeName.Workflow, AstNodeName.Namespace,
-    AstNodeName.Scatter, AstNodeName.If, AstNodeName.Declaration
-  )
-
-  private def getScopeAsts(root: Ast, astAttribute: String): Seq[Ast] = {
-    root.getAttribute(astAttribute).astListAsVector.collect({ case a: Ast if ScopeAstNames.contains(a.getName) => a })
-  }
-
   def apply(ast: Ast, source: WdlSource, importResolver: ImportResolver, namespaceName: Option[String], root: Boolean = false): WdlNamespace = {
     val imports = for {
       importAst <- Option(ast).map(_.getAttribute("imports")).toSeq
@@ -251,6 +238,15 @@ object WdlNamespace {
     }
 
     def getChildren(scopeAst: Ast, scope: Option[Scope]): Seq[Scope] = {
+      val ScopeAstNames = Seq(
+        AstNodeName.Call, AstNodeName.Workflow, AstNodeName.Namespace,
+        AstNodeName.Scatter, AstNodeName.If, AstNodeName.Declaration
+      )
+
+      def getScopeAsts(root: Ast, astAttribute: String): Seq[Ast] = {
+        root.getAttribute(astAttribute).astListAsVector.collect({ case a: Ast if ScopeAstNames.contains(a.getName) => a })
+      }
+
       scopeAst.getName match {
         case AstNodeName.Task => getScopeAsts(scopeAst, "declarations").map(getScope(_, scope))
         case AstNodeName.Declaration => Seq.empty[Scope]
@@ -268,37 +264,6 @@ object WdlNamespace {
       }
     }
 
-    /**
-      * Ensure that no namespace names collide with task names.
-      */
-    /*for {
-      i <- imports
-      namespaceTerminal <- i.namespaceTerminal
-      task <- findTask(namespaceTerminal.sourceString, namespaces, tasks)
-    } yield {
-      throw new SyntaxError(wdlSyntaxErrorFormatter.taskAndNamespaceHaveSameName(task.ast, namespaceTerminal))
-    }*/
-
-    /**
-      * Ensure that no namespace names collide with workflow names
-      */
-    /*for {
-      workflowAst <- ast.findAsts(AstNodeName.Workflow)
-      i <- imports
-      namespaceTerminal <- i.namespaceTerminal
-      if namespaceTerminal.sourceString == workflowAst.getAttribute("name").sourceString
-    } yield {
-      throw new SyntaxError(wdlSyntaxErrorFormatter.workflowAndNamespaceHaveSameName(workflowAst, namespaceTerminal))
-    }*/
-
-    /** Detect duplicated task names */
-    /*val dupeTaskAstsByName = tasks.map(_.ast).duplicatesByName
-    if (dupeTaskAstsByName.nonEmpty) {
-      throw new SyntaxError(wdlSyntaxErrorFormatter.duplicateTask(dupeTaskAstsByName))
-    }*/
-
-    // TODO: sfrazer: verify that no a declaration and a call don't have the same name in the same scope!!
-
     val nonTaskScopes = for {
       ast <- topLevelScopeAsts
       if ast.getName != AstNodeName.Task
@@ -313,33 +278,37 @@ object WdlNamespace {
     }
 
     /**
-      * Write-once var setting for parent/child relationships TODO: sfrazer: don't need if statement
+      * Write-once var setting for parent/child relationships
       */
-    if (namespaceName.isDefined || root) {
-      def descendants(scope: Scope): Seq[Scope] = {
-        val children = scope.children
-        val childDescendants = scope.children.flatMap({
-          case n: WdlNamespace => Seq.empty
-          case s => descendants(s)
-        })
-        children ++ childDescendants
-      }
-      namespace.children = children
-      namespace.children.foreach(_.parent = namespace)
 
-      tasks foreach { task =>
-        task.children = getChildren(task.ast, Option(task))
-        task.children.foreach(_.parent = task)
-      }
-
-      descendants(namespace).foreach(_.namespace = namespace)
+    def descendants(scope: Scope): Seq[Scope] = {
+      val children = scope.children
+      val childDescendants = scope.children.flatMap({
+        case n: WdlNamespace => Seq.empty
+        case s => descendants(s)
+      })
+      children ++ childDescendants
     }
 
-    /** SYNTAX CHECKS */
+    namespace.children = children
+    namespace.children.foreach(_.parent = namespace)
+
+    tasks foreach { task =>
+      task.children = getChildren(task.ast, Option(task))
+      task.children.foreach(_.parent = task)
+    }
+
+    descendants(namespace).foreach(_.namespace = namespace)
+
+    /**
+      * SYNTAX CHECKS
+      */
 
     val callInputSectionErrors = namespace.descendants.collect({ case c: Call => c }).flatMap(
       validateCallInputSection(_, wdlSyntaxErrorFormatter)
     )
+
+    /*****************/
 
     val declarationErrors = namespace.descendants flatMap { scope =>
       val decls = scope match {
@@ -350,6 +319,8 @@ object WdlNamespace {
       val accumulator = decls.foldLeft(DeclarationAccumulator())(validateDeclaration(wdlSyntaxErrorFormatter))
       accumulator.errors.map(new SyntaxError(_))
     }
+
+    /*****************/
 
     def scopeNameAndTerminal(scope: Scope): (String, Terminal) = {
       scope match {
@@ -372,12 +343,25 @@ object WdlNamespace {
     }
     val duplicateSiblingScopeNameErrors = accumulatedErrors.flatMap(_.errors).map(new SyntaxError(_)).toSeq
 
+    /*****************/
+
     val taskCommandReferenceErrors = for {
       task <- namespace.tasks
       param <- task.commandTemplate.collect({ case p: ParameterCommandPart => p })
       variable <- param.expression.variableReferences
       if !task.declarations.map(_.unqualifiedName).contains(variable.getSourceString)
     } yield new SyntaxError(wdlSyntaxErrorFormatter.commandExpressionContainsInvalidVariableReference(task.ast.getAttribute("name").asInstanceOf[Terminal], variable))
+
+    /*****************/
+
+    val runtimeAttributes = namespace.tasks map { task =>
+      task.runtimeAttributes.attrs.get("memory") map { memoryAttribute =>
+        val memoryKeyTerminal = task.runtimeAttributes.ast.getAttribute("map").astListAsVector.map(_.asInstanceOf[Ast]).find(
+          _.getAttribute("key").sourceString == "memory"
+        ).get
+        memoryKeyTerminal
+      }
+    }
 
     // TODO: sfrazer: what to do?
     declarationErrors ++ callInputSectionErrors ++ taskCommandReferenceErrors ++ duplicateSiblingScopeNameErrors match {

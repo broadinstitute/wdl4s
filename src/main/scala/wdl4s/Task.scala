@@ -53,7 +53,7 @@ object Task {
     }
   }
 
-  def empty: Task = new Task("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, Seq.empty, null)
+  def empty: Task = new Task("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression], null), Map.empty, Map.empty, Seq.empty, null)
 }
 
 /**
