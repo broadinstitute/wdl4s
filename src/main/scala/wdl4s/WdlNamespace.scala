@@ -222,14 +222,17 @@ object WdlNamespace {
       */
     val scopeIndexes: mutable.Map[Class[_ <: Scope], Int] = mutable.HashMap.empty.withDefaultValue(-1)
 
-    def getScope(scopeAst: Ast, scopedTo: Option[Scope]): Scope = {
+    def getScope(scopeAst: Ast, parent: Option[Scope]): Scope = {
       val scope = scopeAst.getName match {
         case AstNodeName.Call => Call(scopeAst, namespaces, tasks, wdlSyntaxErrorFormatter)
         case AstNodeName.Workflow => Workflow(scopeAst, wdlSyntaxErrorFormatter)
-        case AstNodeName.Declaration => Declaration(scopeAst, wdlSyntaxErrorFormatter, scopedTo)
+        case AstNodeName.Declaration => Declaration(scopeAst, wdlSyntaxErrorFormatter, parent)
         case AstNodeName.Scatter =>
           scopeIndexes(classOf[Scatter]) += 1
           Scatter(scopeAst, scopeIndexes(classOf[Scatter]))
+        case AstNodeName.If =>
+          scopeIndexes(classOf[If]) += 1
+          If(scopeAst, scopeIndexes(classOf[If]))
       }
 
       scope.children = getChildren(scopeAst, Option(scope))
@@ -253,7 +256,7 @@ object WdlNamespace {
         case AstNodeName.Call =>
           val referencedTask = findTask(scopeAst.getAttribute("task").sourceString, namespaces, tasks)
           referencedTask match {
-            case Some(task) => getScopeAsts(task.ast, "declarations").map(getScope(_, scope))
+            case Some(task) => getScopeAsts(task.ast, "declarations").map(d => getScope(d, scope))
             // TODO: sfrazer: uh oh... syntax error
             case None => Seq.empty[Scope]
           }
@@ -267,7 +270,7 @@ object WdlNamespace {
       if ast.getName != AstNodeName.Task
     } yield ast
 
-    val children = tasks ++ namespaces ++ nonTaskScopes.map(ast => getScope(ast, scopedTo = None))
+    val children = tasks ++ namespaces ++ nonTaskScopes.map(ast => getScope(ast, parent = None))
 
     val namespace = children.collect({ case w: Workflow => w }) match {
       case Nil => WdlNamespaceWithoutWorkflow(namespaceName, imports, namespaces, tasks, terminalMap, ast)

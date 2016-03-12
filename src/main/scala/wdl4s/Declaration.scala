@@ -58,7 +58,7 @@ trait DeclarationInterface extends Scope with GraphNode {
 }
 
 object Declaration {
-  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, scopedTo: Option[Scope]): Declaration = {
+  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, parent: Option[Scope]): Declaration = {
     Declaration(
       ast.getAttribute("type").wdlType(wdlSyntaxErrorFormatter),
       Option(ast.getAttribute("postfix")).map(_.sourceString),
@@ -67,7 +67,7 @@ object Declaration {
         case a: AstNode => Some(WdlExpression(a))
         case _ => None
       },
-      scopedTo,
+      parent,
       ast
     )
   }
@@ -78,5 +78,5 @@ case class Declaration(wdlType: WdlType,
                        postfixQuantifier: Option[String],
                        unqualifiedName: String,
                        expression: Option[WdlExpression],
-                       scopedTo: Option[Scope],
+                       override val parent: Option[Scope],
                        ast: Ast) extends DeclarationInterface
