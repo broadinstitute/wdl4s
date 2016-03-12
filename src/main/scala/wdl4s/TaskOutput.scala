@@ -11,7 +11,7 @@ import scala.util.{Failure, Success}
 object TaskOutput {
   def apply(ast: Ast, syntaxErrorFormatter: WdlSyntaxErrorFormatter): TaskOutput = {
     val wdlType = ast.getAttribute("type").wdlType(syntaxErrorFormatter)
-    val name = ast.getAttribute("var").sourceString
+    val name = ast.getAttribute("name").sourceString
     val expression = WdlExpression(ast.getAttribute("expression"))
     TaskOutput(name, wdlType, expression, ast)
   }

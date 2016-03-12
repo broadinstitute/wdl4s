@@ -73,7 +73,6 @@ object Declaration {
   }
 }
 
-// TODO: sfrazer: scopedTo?
 case class Declaration(wdlType: WdlType,
                        postfixQuantifier: Option[String],
                        unqualifiedName: String,

@@ -7,7 +7,7 @@ import wdl4s.util.StringUtil
 import wdl4s.values.WdlValue
 
 import scala.language.postfixOps
-import scala.util.{Try, Success, Failure}
+import scala.util.{Success, Try}
 
 object Call {
   def apply(ast: Ast,
@@ -66,8 +66,9 @@ case class Call(alias: Option[String],
     } yield node
 
     val ancestorScatters = ancestry.collect({ case s: Scatter with GraphNode => s})
+    val ancestorIf = ancestry.collect({ case i: If with GraphNode => i})
 
-    (dependentNodes ++ ancestorScatters).toSet
+    (dependentNodes ++ ancestorScatters ++ ancestorIf).toSet
   }
 
   lazy val downstream: Set[Scope with GraphNode] = {
@@ -95,8 +96,8 @@ case class Call(alias: Option[String],
    * are satisfied via the 'input' section of the Call definition.
    */
   def unsatisfiedInputs: Seq[WorkflowInput] = for {
-    i <- task.declarations if !inputMappings.contains(i.unqualifiedName) && i.expression.isEmpty
-  } yield WorkflowInput(s"$fullyQualifiedName.${i.unqualifiedName}", i.wdlType, i.postfixQuantifier)
+    i <- declarations if !inputMappings.contains(i.unqualifiedName) && i.expression.isEmpty
+  } yield WorkflowInput(i.fullyQualifiedName, i.wdlType, i.postfixQuantifier)
 
   override def toString: String = s"[Call name=$unqualifiedName, task=$task]"
 

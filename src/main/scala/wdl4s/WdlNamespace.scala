@@ -393,9 +393,7 @@ object WdlNamespace {
   private def validateDeclaration(wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter)
                                  (accumulated: DeclarationAccumulator, current: DeclarationInterface): DeclarationAccumulator = {
 
-    // FIXME: the grammar file is inconsistent about what attribute name to use for declarations.
-    // FIXME: most declarations use the 'name' attribute, but task outputs use 'var'
-    def declarationName(declarationAst: Ast): Terminal = Seq("name", "var").flatMap(s => Option(declarationAst.getAttribute(s))).head.asInstanceOf[Terminal]
+    def declarationName(declarationAst: Ast): Terminal = declarationAst.getAttribute("name").asInstanceOf[Terminal]
     val currentDeclarationName = declarationName(current.ast)
 
     val duplicateDeclarationError = accumulated.declarations.find(_.unqualifiedName == current.unqualifiedName) map { duplicate =>
