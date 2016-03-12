@@ -4,17 +4,23 @@ import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.WdlExpression._
 import wdl4s.expression.{FileEvaluator, TypeEvaluator, ValueEvaluator, WdlFunctions}
 import wdl4s.formatter.{NullSyntaxHighlighter, SyntaxHighlighter}
-import wdl4s.types._
-import wdl4s.values._
 import wdl4s.parser.WdlParser
 import wdl4s.parser.WdlParser.{Ast, AstList, AstNode, Terminal}
+import wdl4s.types._
+import wdl4s.values._
 
 import scala.collection.JavaConverters._
 import scala.language.postfixOps
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 class WdlExpressionException(message: String = null, cause: Throwable = null) extends RuntimeException(message, cause)
 case class VariableNotFoundException(variable: String, cause: Throwable = null) extends Exception(s"Variable '$variable' not found", cause)
+case class VariableLookupException(message: String, cause: Throwable = null) extends Exception(message, cause)
+
+case object NoLookup extends ScopedLookupFunction {
+  def apply(value: String): WdlValue =
+    throw new UnsupportedOperationException(s"No identifiers should be looked up: $value")
+}
 
 object WdlExpression {
 
@@ -147,7 +153,6 @@ object WdlExpression {
 
 case class WdlExpression(ast: AstNode) extends WdlValue {
   override val wdlType = WdlExpressionType
-  import WdlExpression.AstForExpressions
 
   def evaluate(lookup: ScopedLookupFunction, functions: WdlFunctions[WdlValue]): Try[WdlValue] =
     WdlExpression.evaluate(ast, lookup, functions)
@@ -171,9 +176,4 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
   }
   def topLevelMemberAccesses: Set[MemberAccess] = AstTools.findTopLevelMemberAccesses(ast) map { MemberAccess(_) } toSet
   def variableReferences: Iterable[Terminal] = AstTools.findVariableReferences(ast)
-}
-
-case object NoLookup extends ScopedLookupFunction {
-  def apply(value: String): WdlValue =
-    throw new UnsupportedOperationException(s"No identifiers should be looked up: $value")
 }
