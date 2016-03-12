@@ -72,17 +72,28 @@ trait Scope {
     */
   lazy val declarations: Seq[Declaration] = children.collect({ case d: Declaration => d})
 
+  /**
+    * String identifier for this scope.  this.namespace.resolve(this.fullyQualifiedName) == this
+    */
   def fullyQualifiedName = {
     (ancestry.reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
   }
 
+  /**
+    * String identifier for this scope, with hidden scope information.
+    *
+    * this.namespace.resolve(this.fullyQualifiedNameWithIndexScopes) == this
+    */
   def fullyQualifiedNameWithIndexScopes = {
     (Seq(this) ++ ancestry).reverse.map(_.unqualifiedName).filter(_.nonEmpty).mkString(".")
   }
 
-  // TODO: sfrazer: remove
-  def callByName(callName: String): Option[Call] = calls.find(_.unqualifiedName == callName)
-
+  /**
+    * Given another scope, returns the closest common ancestor between the two scopes,
+    * if one exists at all
+    *
+    * @return closest common ancestor
+    */
   def closestCommonAncestor(other: Scope): Option[Scope] = {
     val otherAncestry = other.ancestry
     ancestry find { otherAncestry.contains(_) }
@@ -123,16 +134,6 @@ trait Scope {
                                   inputs: WorkflowCoercedInputs,
                                   shards: Map[Scatter, Int],
                                   wdlFunctions: WdlFunctions[WdlValue])(name: String): WdlValue = {
-    val callInputMappingLookup = scope match {
-      case call: Call =>
-        for {
-          expr <- call.inputMappings.get(name)
-          // .get so this intentionally throws an exception (lookup function always throws exception when lookup fails)
-          value = expr.evaluate(scopeLookupFunction(call.parent.get, inputs, shards, wdlFunctions), wdlFunctions).get
-        } yield value
-      case _ => None
-    }
-
     val scopeResolvedValue = scope.resolveVariable(name) match {
       case Some(scatter: Scatter) =>
         // This case will happen if `name` references a Scatter.item (i.e. `x` in expression scatter(x in y) {...})
@@ -157,14 +158,10 @@ trait Scope {
           case Success(value) => Option(value)
           case Failure(ex) => throw new VariableLookupException(s"Could not evaluate expression for declaration '${d.toWdlString}'", ex)
         }
-      case Some(s) => this match {
-        case t: Task => inputs.get(s.unqualifiedName)
-        case _ => inputs.get(s.fullyQualifiedName)
-      }
+      case Some(s) => inputs.get(s.fullyQualifiedName)
     }
 
-    if (callInputMappingLookup.isDefined) callInputMappingLookup.get
-    else if (scopeResolvedValue.isDefined) scopeResolvedValue.get
+    if (scopeResolvedValue.isDefined) scopeResolvedValue.get
     else throw new VariableNotFoundException(name)
   }
 

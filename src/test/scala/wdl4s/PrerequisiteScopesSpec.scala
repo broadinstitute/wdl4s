@@ -26,18 +26,18 @@ class PrerequisiteScopesSpec extends FlatSpec with Matchers {
   }
 
   it should "have A not depend on anything" in {
-    workflow.callByName("A").get.upstream shouldBe empty
+    workflow.calls.find(_.unqualifiedName == "A").get.upstream shouldBe empty
   }
 
   it should "have B.upstream == scatter" in {
-    val callB = namespace.workflow.callByName("B").get
+    val callB = namespace.workflow.calls.find(_.unqualifiedName == "B").get
     callB.upstream shouldEqual Set(
       namespace.resolve("w.$scatter_0").get
     )
   }
 
   it should "have C.upstream == scatter, B" in {
-    val callC = namespace.workflow.callByName("C").get
+    val callC = namespace.workflow.calls.find(_.unqualifiedName == "C").get
     callC.upstream shouldEqual Set(
       namespace.resolve("w.$scatter_0").get,
       namespace.resolve("w.B").get
@@ -45,14 +45,14 @@ class PrerequisiteScopesSpec extends FlatSpec with Matchers {
   }
 
   it should "have D.upstream == B" in {
-    val callD = namespace.workflow.callByName("D").get
+    val callD = namespace.workflow.calls.find(_.unqualifiedName == "D").get
     callD.upstream shouldEqual Set(
       namespace.resolve("w.B").get
     )
   }
 
   it should "have E.upstream == scatter, A" in {
-    val callE = namespace.workflow.callByName("E").get
+    val callE = namespace.workflow.calls.find(_.unqualifiedName == "E").get
     callE.upstream shouldEqual Set(
       namespace.resolve("w.$scatter_0").get
     )

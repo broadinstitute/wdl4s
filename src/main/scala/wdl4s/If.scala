@@ -24,7 +24,6 @@ case class If(index: Int, condition: WdlExpression, ast: Ast) extends Scope with
   val unqualifiedName = s"${If.FQNIdentifier}_$index"
   override def appearsInFqn = false
 
-  // TODO: sfrazer: copied from Scatter
   lazy val upstream: Set[Scope with GraphNode] = {
     (for {
       variable <- condition.variableReferences
