@@ -44,49 +44,49 @@ class ParameterCommandPartSpec extends FlatSpec with Matchers {
 
   "Command instantiation" should "succeed if given valid inputs" in {
     task.instantiateCommand(Map(
-      "a" -> WdlString("a_val"),
-      "b" -> WdlString("b_val"),
-      "c" -> WdlArray(WdlArrayType(WdlStringType), Seq(WdlString("c0"), WdlString("c1"), WdlString("c2"))),
-      "d" -> WdlInteger(1),
-      "e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(0, 1, 2).map(WdlInteger(_))),
-      "f" -> WdlBoolean.False
+      "param_test.a" -> WdlString("a_val"),
+      "param_test.b" -> WdlString("b_val"),
+      "param_test.c" -> WdlArray(WdlArrayType(WdlStringType), Seq(WdlString("c0"), WdlString("c1"), WdlString("c2"))),
+      "param_test.d" -> WdlInteger(1),
+      "param_test.e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(0, 1, 2).map(WdlInteger(_))),
+      "param_test.f" -> WdlBoolean.False
     ), NoFunctions).get shouldEqual "./binary a_val -p b_val c0,c1,c2 1 0\t1\t2 --false"
   }
 
   it should "succeed if omitting an optional input" in {
     task.instantiateCommand(Map(
-      "a" -> WdlString("a_val"),
-      "b" -> WdlString("b_val"),
-      "c" -> WdlArray(WdlArrayType(WdlStringType), Seq(WdlString("c0"), WdlString("c1"), WdlString("c2"))),
-      "e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(0, 1, 2).map(WdlInteger(_))),
-      "f" -> WdlBoolean.True
+      "param_test.a" -> WdlString("a_val"),
+      "param_test.b" -> WdlString("b_val"),
+      "param_test.c" -> WdlArray(WdlArrayType(WdlStringType), Seq(WdlString("c0"), WdlString("c1"), WdlString("c2"))),
+      "param_test.e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(0, 1, 2).map(WdlInteger(_))),
+      "param_test.f" -> WdlBoolean.True
     ), NoFunctions).get shouldEqual "./binary a_val -p b_val c0,c1,c2 9 0\t1\t2 --true"
   }
 
   it should "succeed if providing an array with one element" in {
     task.instantiateCommand(Map(
-      "a" -> WdlString("a_val"),
-      "b" -> WdlString("b_val"),
-      "c" -> WdlArray(WdlArrayType(WdlStringType), Seq(WdlString("c0"))),
-      "d" -> WdlInteger(1),
-      "e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq()),
-      "f" -> WdlBoolean.True
+      "param_test.a" -> WdlString("a_val"),
+      "param_test.b" -> WdlString("b_val"),
+      "param_test.c" -> WdlArray(WdlArrayType(WdlStringType), Seq(WdlString("c0"))),
+      "param_test.d" -> WdlInteger(1),
+      "param_test.e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq()),
+      "param_test.f" -> WdlBoolean.True
     ), NoFunctions).get shouldEqual "./binary a_val -p b_val c0 1  --true"
   }
 
   it should "succeed if providing an array with zero elements" in {
     task.instantiateCommand(Map(
-      "a" -> WdlString("a_val"),
-      "b" -> WdlString("b_val"),
-      "c" -> WdlArray(WdlArrayType(WdlStringType), Seq()),
-      "d" -> WdlInteger(1),
-      "e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq()),
-      "f" -> WdlBoolean.True
+      "param_test.a" -> WdlString("a_val"),
+      "param_test.b" -> WdlString("b_val"),
+      "param_test.c" -> WdlArray(WdlArrayType(WdlStringType), Seq()),
+      "param_test.d" -> WdlInteger(1),
+      "param_test.e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq()),
+      "param_test.f" -> WdlBoolean.True
     ), NoFunctions).get shouldEqual "./binary a_val -p b_val  1  --true"
   }
 
   it should "raise exception if a required input is missing" in {
-    task.instantiateCommand(Map("a" -> WdlString("a_val")), NoFunctions) match {
+    task.instantiateCommand(Map("param_test.a" -> WdlString("a_val")), NoFunctions) match {
       case Failure(f) => // expected
       case _ => fail("Expected an exception")
     }
@@ -94,11 +94,11 @@ class ParameterCommandPartSpec extends FlatSpec with Matchers {
 
   it should "raise exception if a parameter is an expression" in {
     task.instantiateCommand(Map(
-      "a" -> WdlString("a_val"),
-      "b" -> WdlExpression.fromString("'a'+'b'"),
-      "c" -> WdlArray(WdlArrayType(WdlStringType), Seq()),
-      "d" -> WdlInteger(1),
-      "e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq())
+      "param_test.a" -> WdlString("a_val"),
+      "param_test.b" -> WdlExpression.fromString("'a'+'b'"),
+      "param_test.c" -> WdlArray(WdlArrayType(WdlStringType), Seq()),
+      "param_test.d" -> WdlInteger(1),
+      "param_test.e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq())
     ), NoFunctions) match {
       case Failure(f) => // expected
       case _ => fail("Expected an exception")

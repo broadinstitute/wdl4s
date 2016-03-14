@@ -6,9 +6,9 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class ScopeSpec extends FlatSpec with Matchers {
 
-  val namespace = NamespaceWithWorkflow.load(SampleWdl.NestedScatterWdl.wdlSource())
-  val calls: Seq[Call] = namespace.workflow.calls
-  val scatters: Seq[Scatter] = namespace.workflow.scatters
+  val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.NestedScatterWdl.wdlSource())
+  val calls: Set[Call] = namespace.workflow.calls
+  val scatters: Set[Scatter] = namespace.workflow.scatters
   val scatter0: Scatter = scatters.find(_.unqualifiedName == "$scatter_0").get
   val scatter1: Scatter = scatters.find(_.unqualifiedName == "$scatter_1").get
   val scatter2: Scatter = scatters.find(_.unqualifiedName == "$scatter_2").get
@@ -37,7 +37,8 @@ class ScopeSpec extends FlatSpec with Matchers {
     scatter2.parent.get shouldEqual scatter0
     scatter3.parent.get shouldEqual namespace.workflow
 
-    namespace.workflow.parent shouldEqual None
+    namespace.workflow.parent shouldEqual Option(namespace)
+    namespace.parent shouldEqual None
   }
 
   it should "Have correct parent/child relationships" in {
@@ -48,10 +49,14 @@ class ScopeSpec extends FlatSpec with Matchers {
     scatter2.children shouldEqual Seq(callH)
     scatter3.children shouldEqual Seq(callF)
 
+    val B_in = namespace.resolve("w.B.B_in").get
+    val C_in = namespace.resolve("w.C.C_in").get
+    val D_in = namespace.resolve("w.D.D_in").get
+
     callA.children shouldBe empty
-    callB.children shouldBe empty
-    callC.children shouldBe empty
-    callD.children shouldBe empty
+    callB.children shouldBe Seq(B_in)
+    callC.children shouldBe Seq(C_in)
+    callD.children shouldBe Seq(D_in)
     callE.children shouldBe empty
     callF.children shouldBe empty
     callG.children shouldBe empty
@@ -59,14 +64,14 @@ class ScopeSpec extends FlatSpec with Matchers {
   }
 
   it should "Have correct ancestry for each Scope" in {
-    callA.ancestry shouldEqual Seq(namespace.workflow)
-    callB.ancestry shouldEqual Seq(scatter0, namespace.workflow)
-    callC.ancestry shouldEqual Seq(scatter0, namespace.workflow)
-    callE.ancestry shouldEqual Seq(scatter0, namespace.workflow)
-    callG.ancestry shouldEqual Seq(scatter1, scatter0, namespace.workflow)
-    callH.ancestry shouldEqual Seq(scatter2, scatter0, namespace.workflow)
-    callF.ancestry shouldEqual Seq(scatter3, namespace.workflow)
-    callD.ancestry shouldEqual Seq(namespace.workflow)
+    callA.ancestry shouldEqual Seq(namespace.workflow, namespace)
+    callB.ancestry shouldEqual Seq(scatter0, namespace.workflow, namespace)
+    callC.ancestry shouldEqual Seq(scatter0, namespace.workflow, namespace)
+    callE.ancestry shouldEqual Seq(scatter0, namespace.workflow, namespace)
+    callG.ancestry shouldEqual Seq(scatter1, scatter0, namespace.workflow, namespace)
+    callH.ancestry shouldEqual Seq(scatter2, scatter0, namespace.workflow, namespace)
+    callF.ancestry shouldEqual Seq(scatter3, namespace.workflow, namespace)
+    callD.ancestry shouldEqual Seq(namespace.workflow, namespace)
   }
 
   it should "Be able to determine common ancestor between two Scopes" in {
@@ -84,7 +89,7 @@ class ScopeSpec extends FlatSpec with Matchers {
   it should "throw an exception if trying to generate a workflow from a non-workflow ast" in {
     val callAst: Ast = AstTools.findAsts(namespace.ast, AstNodeName.Call).head
     the [UnsupportedOperationException] thrownBy {
-      Workflow(callAst, namespace.namespaces, namespace.tasks, namespace.wdlSyntaxErrorFormatter)
-    } should have message "Ast is not a 'Workflow Ast' but a 'Call Ast'"
+      Workflow(callAst, namespace.wdlSyntaxErrorFormatter)
+    } should have message "Expecting Workflow AST, got a Call AST"
   }
 }
