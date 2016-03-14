@@ -178,66 +178,45 @@ class NestedScatterSpec extends FlatSpec with Matchers {
     }
   }
 
+  val scatterTable = Table(
+    ("node", "item", "collection", "index"),
+    (scatter0, "item", "A.A_out", 0),
+    (scatter1, "itemB", "B.B_out", 1),
+    (scatter2, "itemB", "B.B_out", 2),
+    (scatter3, "item", "A.A_out", 3)
+  )
 
-  it should "Have four 'children' objects" in {
-    namespace.workflow.children.size shouldEqual 4
+  forAll(scatterTable) { (node, item, collection, index) =>
+    it should s"have '$item' as the iteration variable for scatter block ${node.fullyQualifiedName}" in {
+      node.item shouldEqual item
+    }
+    it should s"have '$collection' as the expression for scatter block ${node.fullyQualifiedName}" in {
+      node.collection.toWdlString shouldEqual collection
+    }
+    it should s"have '$index' as the index scatter block ${node.fullyQualifiedName}" in {
+      node.index shouldEqual index
+    }
   }
 
-  it should "Have two 'direct Call descendents' objects" in {
-    namespace.workflow.children.collect({ case c: Call => c }).size shouldEqual 2
-  }
+  val lookupVarTable = Table(
+    ("node", "variable", "resolution"),
+    (callB, "item", Some(scatter0)),
+    (callD, "B", Some(callB)),
+    (callD, "item", None),
+    (callC, "B.B_out", Some(declCallB))
+  )
 
-  it should "Have two 'direct Scatter descendents' objects" in {
-    namespace.workflow.children.collect({ case s: Scatter => s }).size shouldEqual 2
+  forAll(lookupVarTable) { (node, variable, resolution) =>
+    it should s"resolve variable $variable (relative to ${node.fullyQualifiedName}) -> ${resolution.map(_.fullyQualifiedName).getOrElse("None")}" in {
+      node.resolveVariable(variable) shouldEqual resolution
+    }
   }
 
   it should "Have eight 'Call' objects" in {
-    namespace.workflow.calls.size shouldEqual 8
+    namespace.workflow.calls shouldEqual Set(callA, callB, callC, callD, callE, callF, callG, callH)
   }
 
   it should "Have four 'Scatter' objects" in {
-    namespace.workflow.scatters.size shouldEqual 4
+    namespace.workflow.scatters shouldEqual Set(scatter0, scatter1, scatter2, scatter3)
   }
-
-  it should "Have 'Scatter' objects indexed properly" in {
-    val scatters = namespace.workflow.scatters
-    scatters.find(_.fullyQualifiedName  == "w.$scatter_0").map(_.index) shouldEqual Option(0)
-    scatters.find(_.fullyQualifiedName  == "w.$scatter_1").map(_.index) shouldEqual Option(1)
-    scatters.find(_.fullyQualifiedName  == "w.$scatter_2").map(_.index) shouldEqual Option(2)
-    scatters.find(_.fullyQualifiedName  == "w.$scatter_3").map(_.index) shouldEqual Option(3)
-  }
-
-  it should "Not appear in Calls FQNs" in {
-    val calls = namespace.workflow.calls
-    calls.find(_.fullyQualifiedName == "w.A") shouldBe defined
-    calls.find(_.fullyQualifiedName == "w.B") shouldBe defined
-    calls.find(_.fullyQualifiedName == "w.C") shouldBe defined
-    calls.find(_.fullyQualifiedName == "w.E") shouldBe defined
-    calls.find(_.fullyQualifiedName == "w.G") shouldBe defined
-    calls.find(_.fullyQualifiedName == "w.H") shouldBe defined
-    calls.find(_.fullyQualifiedName == "w.F") shouldBe defined
-    calls.find(_.fullyQualifiedName == "w.D") shouldBe defined
-  }
-
-  it should "Have correct FQNs for Scatter blocks" in {
-    namespace.workflow.scatters.find(_.fullyQualifiedNameWithIndexScopes == "w.$scatter_0") shouldBe defined
-    namespace.workflow.scatters.find(_.fullyQualifiedNameWithIndexScopes == "w.$scatter_0.$scatter_1") shouldBe defined
-    namespace.workflow.scatters.find(_.fullyQualifiedNameWithIndexScopes == "w.$scatter_0.$scatter_2") shouldBe defined
-    namespace.workflow.scatters.find(_.fullyQualifiedNameWithIndexScopes == "w.$scatter_3") shouldBe defined
-  }
-
-  it should "Instantiate Scatters with correct item attributes" in {
-    namespace.workflow.scatters.find(_.unqualifiedName == "$scatter_0").get.item shouldEqual "item"
-    namespace.workflow.scatters.find(_.unqualifiedName == "$scatter_1").get.item shouldEqual "itemB"
-    namespace.workflow.scatters.find(_.unqualifiedName == "$scatter_2").get.item shouldEqual "itemB"
-    namespace.workflow.scatters.find(_.unqualifiedName == "$scatter_3").get.item shouldEqual "item"
-  }
-
-  it should "Instantiate Scatters with correct collection attributes" in {
-    namespace.workflow.scatters.find(_.unqualifiedName == "$scatter_0").get.collection.toWdlString shouldEqual "A.A_out"
-    namespace.workflow.scatters.find(_.unqualifiedName == "$scatter_1").get.collection.toWdlString shouldEqual "B.B_out"
-    namespace.workflow.scatters.find(_.unqualifiedName == "$scatter_2").get.collection.toWdlString shouldEqual "B.B_out"
-    namespace.workflow.scatters.find(_.unqualifiedName == "$scatter_3").get.collection.toWdlString shouldEqual "A.A_out"
-  }
-
 }

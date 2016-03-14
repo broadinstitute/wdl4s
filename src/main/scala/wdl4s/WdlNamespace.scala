@@ -116,7 +116,6 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
       }
     }
 
-    // TODO: sfrazer: add namespace level declarations here
     def evalScope(scope: Scope): Map[FullyQualifiedName, Try[WdlValue]] = {
       val evaledDeclarations = scope.declarations.foldLeft(Map.empty[FullyQualifiedName, Try[WdlValue]])(evalDeclaration)
       val nonTasks = scope.children.collect({
