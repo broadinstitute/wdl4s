@@ -25,11 +25,18 @@ case class If(index: Int, condition: WdlExpression, ast: Ast) extends Scope with
   override def appearsInFqn = false
 
   lazy val upstream: Set[Scope with GraphNode] = {
-    (for {
+    val referencedNodes = for {
       variable <- condition.variableReferences
       node <- resolveVariable(variable.sourceString)
       if node.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes
-    } yield node).toSet
+    } yield node
+
+    val firstScatterOrIf = ancestry.collect({
+      case s: Scatter with GraphNode => s
+      case i: If with GraphNode => i
+    }).headOption
+
+    (referencedNodes ++ firstScatterOrIf.toSeq).toSet
   }
 
   lazy val downstream: Set[Scope with GraphNode] = {
@@ -38,5 +45,7 @@ case class If(index: Int, condition: WdlExpression, ast: Ast) extends Scope with
       if node.upstream.contains(this)
     } yield node
   }
+
+  override def toString(): String = s"[If fqn=$fullyQualifiedName, condition=${condition.toWdlString}]"
 }
 

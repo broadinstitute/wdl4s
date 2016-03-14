@@ -55,6 +55,10 @@ trait DeclarationInterface extends Scope with GraphNode {
       if node.upstream.contains(this)
     } yield node
   }
+
+  override def toString(): String = {
+    s"[Declaration name=$unqualifiedName expr=${expression.map(_.toWdlString)}]"
+  }
 }
 
 object Declaration {

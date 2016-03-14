@@ -65,10 +65,12 @@ case class Call(alias: Option[String],
       node <- resolveVariable(variable.sourceString)
     } yield node
 
-    val ancestorScatters = ancestry.collect({ case s: Scatter with GraphNode => s})
-    val ancestorIf = ancestry.collect({ case i: If with GraphNode => i})
+    val firstScatterOrIf = ancestry.collect({
+      case s: Scatter with GraphNode => s
+      case i: If with GraphNode => i
+    }).headOption
 
-    (dependentNodes ++ ancestorScatters ++ ancestorIf).toSet
+    (dependentNodes ++ firstScatterOrIf.toSeq).toSet
   }
 
   lazy val downstream: Set[Scope with GraphNode] = {

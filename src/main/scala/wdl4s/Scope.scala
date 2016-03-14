@@ -104,11 +104,18 @@ trait Scope {
     * until it finds a GraphNode with the `name` as its unqualifiedName
     */
   def resolveVariable(name: String): Option[Scope with GraphNode] = {
-    val localLookup = children.collect({ case n: GraphNode => n }) find {
+    val localLookup = children collect {
+      case d: Declaration if d.unqualifiedName == name => d
+      case c: Call if c.unqualifiedName == name => c
+    }
+    val scatterLookup = Seq(this) collect {
+      case s: Scatter if s.item == name => s
+    }
+    /*val localLookup = children.collect({ case n: GraphNode => n }) find {
       case s: Scatter => s.item == name
       case n => n.unqualifiedName == name
-    }
-    localLookup match {
+    }*/
+    (scatterLookup ++ localLookup).headOption match {
       case scope: Some[_] => scope
       case None => parent.flatMap(_.resolveVariable(name))
     }

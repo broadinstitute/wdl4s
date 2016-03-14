@@ -32,9 +32,12 @@ case class Scatter(index: Int, item: String, collection: WdlExpression, ast: Ast
       if node.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes
     } yield node
 
-    val ancestorScatters = ancestry.collect({ case s: Scatter with GraphNode => s})
+    val firstScatterOrIf = ancestry.collect({
+      case s: Scatter with GraphNode => s
+      case i: If with GraphNode => i
+    }).headOption
 
-    (referencedNodes ++ ancestorScatters).toSet
+    (referencedNodes ++ firstScatterOrIf.toSeq).toSet
   }
 
   lazy val downstream: Set[Scope with GraphNode] = {
@@ -44,5 +47,5 @@ case class Scatter(index: Int, item: String, collection: WdlExpression, ast: Ast
     } yield node
   }
 
-  override def toString(): String = s"[Scatter $fullyQualifiedName]"
+  override def toString(): String = s"[Scatter fqn=$fullyQualifiedName, item=$item, collection=${collection.toWdlString}]"
 }

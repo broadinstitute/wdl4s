@@ -103,9 +103,9 @@ class NestedScatterSpec extends FlatSpec with Matchers {
     (callD, Set(callB), Set()),
     (callE, Set(scatter0), Set()),
     (callF, Set(scatter3), Set()),
-    (callG, Set(scatter1, scatter0), Set()),
-    (callH, Set(scatter2, scatter0), Set()),
-    (scatter0, Set(callA), Set(callB, callC, callE, callG, callH, scatter1, scatter2)),
+    (callG, Set(scatter1), Set()),
+    (callH, Set(scatter2), Set()),
+    (scatter0, Set(callA), Set(callB, callC, callE, scatter1, scatter2)),
     (scatter3, Set(callA), Set(callF)),
     (scatter1, Set(callB, scatter0), Set(callG)),
     (scatter2, Set(callB, scatter0), Set(callH))
@@ -203,7 +203,7 @@ class NestedScatterSpec extends FlatSpec with Matchers {
     (callB, "item", Some(scatter0)),
     (callD, "B", Some(callB)),
     (callD, "item", None),
-    (callC, "B.B_out", Some(declCallB))
+    (callC, "B_out", None)
   )
 
   forAll(lookupVarTable) { (node, variable, resolution) =>
