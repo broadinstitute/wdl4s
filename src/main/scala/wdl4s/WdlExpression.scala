@@ -109,7 +109,8 @@ object WdlExpression {
    */
   def standardLookupFunction(parameters: Map[String, WdlValue], declarations: Seq[Declaration], functions: WdlFunctions[WdlValue]): String => WdlValue = {
     def resolveParameter(name: String): Try[WdlValue] = parameters.get(name) match {
-      case Some(value) => Success(value)
+      case Some(value: WdlExpression) => Success(value.evaluate(lookup, functions)).getOrElse(Failure(new WdlExpressionException(s"Could not evaluate parameter: $value")))
+      case Some(value: WdlValue) => Success(value)
       case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as an input parameter"))
     }
     def resolveDeclaration(lookup: ScopedLookupFunction)(name: String) = declarations.find(_.name == name) match {

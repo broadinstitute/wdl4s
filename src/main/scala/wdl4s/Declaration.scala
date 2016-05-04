@@ -1,8 +1,9 @@
 package wdl4s
 
 import wdl4s.AstTools.EnhancedAstNode
-import wdl4s.types.WdlType
 import wdl4s.parser.WdlParser.{Ast, AstNode}
+import wdl4s.types.WdlType
+import wdl4s.values.WdlValue
 
 object Declaration {
   def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Declaration = {
@@ -38,6 +39,7 @@ trait Declaration {
   def postfixQuantifier: Option[String]
   def name: String
   def expression: Option[WdlExpression]
+  def resolveWith(wdlValue: WdlValue) = ResolvedDeclaration(name, wdlType, postfixQuantifier, wdlValue)
   def asTaskInput: Option[TaskInput] = expression match {
     case Some(expr) => None
     case None => Option(TaskInput(name, wdlType, postfixQuantifier))
@@ -46,6 +48,15 @@ trait Declaration {
   def toWdlString: String = {
     val expr = expression.map(e => s" = ${e.toWdlString}").getOrElse("")
     s"${wdlType.toWdlString} $name$expr"
+  }
+
+  def isOptional = postfixQuantifier contains "?"
+}
+
+case class ResolvedDeclaration(name: String, wdlType: WdlType, postfixQuantifier: Option[String], unevaluatedValue: WdlValue) extends Declaration {
+  override def expression: Option[WdlExpression] = unevaluatedValue match {
+    case e: WdlExpression => Option(e)
+    case _ => None
   }
 }
 

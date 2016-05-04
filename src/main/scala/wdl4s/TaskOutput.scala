@@ -1,12 +1,9 @@
 package wdl4s
 
-import wdl4s.AstTools.EnhancedAstNode
-import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctionsType}
-import wdl4s.types.WdlType
-import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import com.typesafe.scalalogging.LazyLogging
-
-import scala.util.{Failure, Success}
+import wdl4s.AstTools.EnhancedAstNode
+import wdl4s.parser.WdlParser.Ast
+import wdl4s.types.WdlType
 
 object TaskOutput extends LazyLogging {
   def apply(ast: Ast, syntaxErrorFormatter: WdlSyntaxErrorFormatter): TaskOutput = {
