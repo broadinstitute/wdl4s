@@ -1,13 +1,13 @@
 package wdl4s
 
-import java.io.File
+import java.nio.file.{Path, Paths}
 
+import better.files._
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode, EnhancedAstSeq}
 import wdl4s.expression.WdlStandardLibraryFunctions
 import wdl4s.parser.WdlParser
 import wdl4s.parser.WdlParser._
 import wdl4s.types._
-import wdl4s.util.FileUtil.EnhancedFile
 import wdl4s.util.TryUtil
 import wdl4s.values._
 
@@ -62,7 +62,7 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
   def coerceRawInputs(rawInputs: WorkflowRawInputs): Try[WorkflowCoercedInputs] = {
     def coerceRawInput(input: WorkflowInput): Try[Option[WdlValue]] = input.fqn match {
       case _ if rawInputs.contains(input.fqn) =>
-        val rawValue = rawInputs.get(input.fqn).get
+        val rawValue = rawInputs(input.fqn)
         input.wdlType.coerceRawValue(rawValue) match {
           case Success(value) => Success(Some(value))
           case _ => Failure(new UnsatisfiedInputsException(s"Could not coerce value for '${input.fqn}' into: ${input.wdlType}"))
@@ -110,7 +110,7 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
    * For the declarations that have an expression attached to it already, evaluate the expression
    * and return the value for storage in the symbol store
    */
-  def staticDeclarationsRecursive(userInputs: WorkflowCoercedInputs, wdlFunctions: WdlStandardLibraryFunctions): Try[WorkflowCoercedInputs] = {
+  private def evaluateStaticDeclarations(userInputs: WorkflowCoercedInputs, wdlFunctions: WdlStandardLibraryFunctions, scopedDeclarations: Seq[Seq[ScopedDeclaration]]): Try[WorkflowCoercedInputs] = {
     def evalDeclaration(accumulated: Map[String, Try[WdlValue]], current: ScopedDeclaration): Map[String, Try[WdlValue]] = {
       current.expression match {
         case Some(expr) =>
@@ -122,9 +122,22 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
     }
 
     // declarationsByScope is a Seq[Seq[ScopedDeclaration]] where each Declaration in the Seq[ScopedDeclaration] have the same scope
-    val declarationsByScope = workflow.calls.map(_.scopedDeclarations) ++ Seq(workflow.scopedDeclarations)
-    val attemptedEvaluations = declarationsByScope.flatMap(d => d.foldLeft(Map.empty[String, Try[WdlValue]])(evalDeclaration)).toMap
+    val attemptedEvaluations = scopedDeclarations.flatMap(d => d.foldLeft(Map.empty[String, Try[WdlValue]])(evalDeclaration)).toMap
     TryUtil.sequenceMap(attemptedEvaluations)
+  }
+
+  /**
+    * Evaluates workflow (and only workflow) statically defined declarations sequentially and in order.
+    */
+  def staticWorkflowDeclarationsRecursive(userInputs: WorkflowCoercedInputs, wdlFunctions: WdlStandardLibraryFunctions): Try[WorkflowCoercedInputs] = {
+    evaluateStaticDeclarations(userInputs, wdlFunctions, Seq(workflow.scopedDeclarations))
+  }
+
+  /**
+    * Evaluates ALL statically defined declarations (workflow + task) sequentially and in order.
+    */
+  def staticDeclarationsRecursive(userInputs: WorkflowCoercedInputs, wdlFunctions: WdlStandardLibraryFunctions): Try[WorkflowCoercedInputs] = {
+    evaluateStaticDeclarations(userInputs, wdlFunctions, Seq(workflow.scopedDeclarations) ++ workflow.calls.map(_.scopedDeclarations))
   }
 
   /**
@@ -149,21 +162,21 @@ case class NamespaceWithWorkflow(importedAs: Option[String],
  */
 object WdlNamespace {
   /**
-   * Given a pointer to a WDL file, parse the text and build Workflow and Task
-   * objects.
-   *
-   * @param wdlFile The file to parse/process
-   * @return WdlBinding object with the parsed results
-   * @throws WdlParser.SyntaxError if there was a problem parsing the source code
-   * @throws UnsupportedOperationException if an error occurred constructing the
-   *                                       Workflow and Task objects
-   *
-   */
-  def load(wdlFile: File): WdlNamespace = {
+    * Given a pointer to a WDL file, parse the text and build Workflow and Task
+    * objects.
+    *
+    * @param wdlFile The file to parse/process
+    * @return WdlBinding object with the parsed results
+    * @throws WdlParser.SyntaxError         if there was a problem parsing the source code
+    * @throws UnsupportedOperationException if an error occurred constructing the
+    *                                       Workflow and Task objects
+    *
+    */
+  def load(wdlFile: Path): WdlNamespace = {
     load(readFile(wdlFile), wdlFile.toString, localImportResolver, None)
   }
 
-  def load(wdlFile: File, importResolver: ImportResolver): WdlNamespace = {
+  def load(wdlFile: Path, importResolver: ImportResolver): WdlNamespace = {
     load(readFile(wdlFile), wdlFile.toString, importResolver, None)
   }
 
@@ -201,15 +214,15 @@ object WdlNamespace {
     val imports = ast.getAttribute("imports").asInstanceOf[AstList].asScala map {x => Import(x)}
 
     /* WdlBinding objects for each import statement */
-    val namespaces: Seq[WdlNamespace] = {for {
+    val namespaces: Seq[WdlNamespace] = for {
       i <- imports
       source = importResolver(i.uri) if source.length > 0
-    } yield WdlNamespace.load(source, i.uri, importResolver, i.namespace)}.toSeq
+    } yield WdlNamespace.load(source, i.uri, importResolver, i.namespace)
 
     /* Create a map of Terminal -> WdlBinding */
     val terminalMap = AstTools.terminalMap(ast, source)
     val combinedTerminalMap = ((namespaces map {x => x.terminalMap}) ++ Seq(terminalMap)) reduce (_ ++ _)
-    val wdlSyntaxErrorFormatter = new WdlSyntaxErrorFormatter(combinedTerminalMap)
+    val wdlSyntaxErrorFormatter = WdlSyntaxErrorFormatter(combinedTerminalMap)
 
     /**
      * All imported `task` definitions for `import` statements without a namespace (e.g. no `as` clause)
@@ -274,12 +287,13 @@ object WdlNamespace {
        * a.findTasks("b.c") would call a.b.findTasks("c")
        * a.b.findTasks("c") would return the task named "c" in the "b" namespace
        */
-      namespaces find {_.importedAs == Some(parts(0))} flatMap {x => findTask(parts(1), x.namespaces, x.tasks)}
+      namespaces find (_.importedAs.contains(parts(0))) flatMap { x => findTask(parts(1), x.namespaces, x.tasks)}
     } else tasks.find(_.name == name)
   }
 
-  private def localImportResolver(path: String): WdlSource = readFile(new File(path))
-  private def readFile(wdlFile: File): WdlSource = wdlFile.slurp
+  private def localImportResolver(path: String): WdlSource = readFile(Paths.get(path))
+
+  private def readFile(wdlFile: Path): WdlSource = File(wdlFile).contentAsString
 }
 
 object NamespaceWithWorkflow {
