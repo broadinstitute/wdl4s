@@ -8,7 +8,7 @@ organization := "org.broadinstitute"
 scalaVersion := "2.11.8"
 
 // Upcoming release, or current if we're on the master branch
-git.baseVersion := "0.5"
+git.baseVersion := "0.6"
 
 // Shorten the git commit hash
 git.gitHeadCommit := git.gitHeadCommit.value map { _.take(7) }
@@ -23,7 +23,7 @@ val sprayJsonV = "1.3.2"
 libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0",
   "io.spray" %% "spray-json" % sprayJsonV,
-  "org.scalaz" %% "scalaz-core" % "7.2.5",
+  "org.typelevel" %% "cats" % "0.7.2",
   "commons-codec" % "commons-codec" % "1.10",
   "commons-io" % "commons-io" % "2.5",
   "org.apache.commons" % "commons-lang3" % "3.4",
