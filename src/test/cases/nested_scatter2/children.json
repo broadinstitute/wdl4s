@@ -1,7 +1,7 @@
 {
-  "inner": ["inner.i"],
+  "inner": ["inner.i", "inner.out"],
   "inner.i": [],
-  "outer": ["outer.matrix"],
+  "outer": ["outer.matrix", "outer.tsv"],
   "outer.matrix": [],
   "w": ["w.array", "w.$scatter_0", "w.outer"],
   "w.$scatter_0": ["w.$scatter_1"],

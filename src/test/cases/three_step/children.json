@@ -1,8 +1,8 @@
 {
-  "cgrep": ["cgrep.pattern", "cgrep.in_file"],
+  "cgrep": ["cgrep.pattern", "cgrep.in_file", "cgrep.count"],
   "cgrep.in_file": [],
   "cgrep.pattern": [],
-  "ps": [],
+  "ps": ["ps.procs"],
   "three_step": ["three_step.ps", "three_step.cgrep", "three_step.wc"],
   "three_step.cgrep": ["three_step.cgrep.pattern", "three_step.cgrep.in_file"],
   "three_step.cgrep.in_file": [],
@@ -10,6 +10,6 @@
   "three_step.ps": [],
   "three_step.wc": ["three_step.wc.in_file"],
   "three_step.wc.in_file": [],
-  "wc": ["wc.in_file"],
+  "wc": ["wc.in_file", "wc.count"],
   "wc.in_file": []
 }

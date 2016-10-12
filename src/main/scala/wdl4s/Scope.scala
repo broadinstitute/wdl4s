@@ -5,7 +5,7 @@ import wdl4s.parser.WdlParser.Ast
 import wdl4s.values.{WdlArray, WdlValue}
 
 import scala.language.postfixOps
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
 trait Scope {
   def unqualifiedName: LocallyQualifiedName
@@ -112,6 +112,7 @@ trait Scope {
     val localLookup = siblingScopes collect {
       case d: Declaration if d.unqualifiedName == name => d
       case c: Call if c.unqualifiedName == name => c
+      case o: TaskOutput if o.unqualifiedName == name => o
     }
     val scatterLookup = Seq(this) collect {
       case s: Scatter if s.item == name => s

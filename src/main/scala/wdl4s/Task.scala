@@ -32,9 +32,6 @@ object Task {
     val runtimeAttributes = RuntimeAttributes(ast)
     val meta = wdlSectionToStringMap(ast, AstNodeName.Meta, wdlSyntaxErrorFormatter)
     val parameterMeta = wdlSectionToStringMap(ast, AstNodeName.ParameterMeta, wdlSyntaxErrorFormatter)
-    val outputs = ast.findAsts(AstNodeName.Output) map {
-      TaskOutput(_, wdlSyntaxErrorFormatter)
-    }
 
     if (commandAsts.size != 1) throw new SyntaxError(wdlSyntaxErrorFormatter.expectedExactlyOneCommandSectionPerTask(taskNameTerminal))
     val commandTemplate = commandAsts.head.getAttribute("parts").asInstanceOf[AstList].asScala.toVector map {
@@ -42,7 +39,7 @@ object Task {
       case x: Ast => ParameterCommandPart(x, wdlSyntaxErrorFormatter)
     }
 
-    Task(name, commandTemplate, runtimeAttributes, meta, parameterMeta, outputs, ast)
+    Task(name, commandTemplate, runtimeAttributes, meta, parameterMeta, ast)
   }
 
   private def wdlSectionToStringMap(taskAst: Ast, node: String, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Map[String, String] = {
@@ -65,7 +62,7 @@ object Task {
     }
   }
 
-  def empty: Task = new Task("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, Seq.empty, null)
+  def empty: Task = new Task("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, null)
 }
 
 /**
@@ -76,7 +73,6 @@ object Task {
   * @param runtimeAttributes 'runtime' section of a file
   * @param meta              'meta' section of a task
   * @param parameterMeta     - 'parameter_meta' section of a task
-  * @param outputs           Set of defined outputs in the `output` section of the task
   * @param ast               The syntax tree from which this was built.
   */
 case class Task(name: String,
@@ -84,10 +80,13 @@ case class Task(name: String,
                 runtimeAttributes: RuntimeAttributes,
                 meta: Map[String, String],
                 parameterMeta: Map[String, String],
-                outputs: Seq[TaskOutput],
                 ast: Ast) extends Scope {
 
   override val unqualifiedName: LocallyQualifiedName = name
+
+  // Assumes that this will not be accessed before the children for the task are set, otherwise it will be empty
+  // If that assumption proves false, make it a def or a var that is set after children are.
+  lazy val outputs = children collect { case output: TaskOutput => output }
 
   /**
     * Given a map of task-local parameter names and WdlValues, create a command String.

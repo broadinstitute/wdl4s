@@ -14,7 +14,7 @@ class WdlWiringSpec extends FlatSpec with Matchers {
     val wdlFile = testDir / "test.wdl"
     if (!wdlFile.exists) fail(s"Expecting a 'test.wdl' file at ${testDir.name}")
     def resolver(relPath: String): String = (testDir / relPath).contentAsString
-    val namespace = WdlNamespaceWithWorkflow.load(wdlFile.toJava, resolver _)
+    val namespace = WdlNamespaceWithWorkflow.load(wdlFile.path, resolver _)
     val wdlFileRelPath = File(".").relativize(wdlFile)
 
     expectedFullyQualifiedNames(testDir, namespace) foreach { case (fqn, expectedType) =>
@@ -50,7 +50,7 @@ class WdlWiringSpec extends FlatSpec with Matchers {
     }
 
     expectedChildren(testDir, namespace) foreach { case (nodeFqn, children) =>
-      it should s"compute parent of $nodeFqn to be ${children.map(_.fullyQualifiedName).mkString(", ")} in WDL file $wdlFileRelPath" in {
+      it should s"compute children of $nodeFqn to be ${children.map(_.fullyQualifiedName).mkString(", ")} in WDL file $wdlFileRelPath" in {
         val nodeResolution = namespace.resolve(nodeFqn)
         nodeResolution.map(_.children) shouldEqual Option(children)
       }

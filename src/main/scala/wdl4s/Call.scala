@@ -79,6 +79,7 @@ case class Call(alias: Option[String],
       case call: Call => call.inputMappings.values
       case ifStatement: If => Set(ifStatement.condition)
       case declaration: Declaration => declaration.expression.toSet
+      case _ => Set.empty
     }
 
     for {

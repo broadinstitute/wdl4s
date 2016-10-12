@@ -11,6 +11,7 @@ import wdl4s.parser.WdlParser._
 import wdl4s.types._
 import wdl4s.util.TryUtil
 import wdl4s.values._
+import wdl4s.AstTools._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -104,7 +105,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
   /**
     * Some declarations need a value from the user and some have an expression attached to them.
     * For the declarations that have an expression attached to it already, evaluate the expression
-    * and return the value for storage in the symbol store
+    * and return the value. Only evaluates workflow level declarations. Other declarations will be evaluated at runtime.
     */
   def staticDeclarationsRecursive(userInputs: WorkflowCoercedInputs, wdlFunctions: WdlStandardLibraryFunctions): Try[WorkflowCoercedInputs] = {
     def evalDeclaration(accumulated: Map[FullyQualifiedName, Try[WdlValue]], current: Declaration): Map[FullyQualifiedName, Try[WdlValue]] = {
@@ -120,7 +121,6 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
     def evalScope(scope: Scope): Map[FullyQualifiedName, Try[WdlValue]] = {
       val evaledDeclarations = scope.declarations.foldLeft(Map.empty[FullyQualifiedName, Try[WdlValue]])(evalDeclaration)
       val nonTasks = scope.children.collect({
-        case n: GraphNode => n
         case w: Workflow => w
       })
       evaledDeclarations ++ nonTasks.flatMap(evalScope).toMap
@@ -232,6 +232,7 @@ object WdlNamespace {
         case AstNodeName.If =>
           scopeIndexes(classOf[If]) += 1
           If(scopeAst, scopeIndexes(classOf[If]))
+        case AstNodeName.Output => TaskOutput(scopeAst, wdlSyntaxErrorFormatter)
       }
 
       scope.children = getChildren(scopeAst, Option(scope))
@@ -250,8 +251,11 @@ object WdlNamespace {
       }
 
       scopeAst.getName match {
-        case AstNodeName.Task => getScopeAsts(scopeAst, "declarations").map(getScope(_, scope))
-        case AstNodeName.Declaration => Seq.empty[Scope]
+        case AstNodeName.Task =>
+          val inputDeclarations = getScopeAsts(scopeAst, "declarations").map(getScope(_, scope))
+          val outputDeclarations = scopeAst.findAsts(AstNodeName.Output).map(getScope(_, scope))
+          inputDeclarations ++ outputDeclarations
+        case AstNodeName.Declaration | AstNodeName.Output => Seq.empty[Scope]
         case AstNodeName.Call =>
           val referencedTask = findTask(scopeAst.getAttribute("task").sourceString, namespaces, tasks)
           referencedTask match {
@@ -322,12 +326,8 @@ object WdlNamespace {
     }
     case class ScopeAccumulator(accumulated: Seq[Scope] = Seq.empty, errors: Seq[String] = Seq.empty)
     val accumulatedErrors = (namespace.descendants + namespace).filter(_.namespace == namespace) map { scope =>
-      val children = scope match {
-        case t: Task => t.children ++ t.outputs
-        case s: Scope => s.children
-      }
 
-      children.foldLeft(ScopeAccumulator()) { (acc, cur) =>
+      scope.children.foldLeft(ScopeAccumulator()) { (acc, cur) =>
         val possibleError = acc.accumulated.find(_.unqualifiedName == cur.unqualifiedName) map { duplicate =>
             val (dupName, dupTerminal) = scopeNameAndTerminal(duplicate)
             val (curName, curTerminal) = scopeNameAndTerminal(cur)
@@ -467,7 +467,7 @@ object WdlNamespace {
        * a.findTasks("b.c") would call a.b.findTasks("c")
        * a.b.findTasks("c") would return the task named "c" in the "b" namespace
        */
-      namespaces.find(_.importedAs.contains(parts(0))) flatMap { x => findTask(parts(1), x.namespaces, x.tasks) }
+      namespaces find (_.importedAs.contains(parts(0))) flatMap { x => findTask(parts(1), x.namespaces, x.tasks)}
     } else tasks.find(_.name == name)
   }
 

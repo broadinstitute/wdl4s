@@ -115,17 +115,7 @@ class DeclarationSpec extends FlatSpec with Matchers {
         values shouldEqual Map(
           "w.foo" -> WdlString("foo"),
           "w.bar" -> WdlString("bar"),
-          "w.foobar" -> WdlString("foobar"),
-          "w.a.foo" -> WdlString("notfoo"),
-          "w.a.bar" -> WdlString("bar"),
-          "w.a.foobar" -> WdlString("notfoobar"),
-          "w.a_prime.foo" -> WdlString("notfoo"),
-          "w.a_prime.bar" -> WdlString("bar"),
-          "w.a_prime.foobar" -> WdlString("notfoobar"),
-          "w.b.foo" -> WdlInteger(10),
-          "w.b.bar" -> WdlInteger(2),
-          "w.b.foobar" -> WdlInteger(12),
-          "w.b.foobar2" -> WdlInteger(12)
+          "w.foobar" -> WdlString("foobar")
         )
     }
   }

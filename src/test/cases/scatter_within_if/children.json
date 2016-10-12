@@ -1,8 +1,8 @@
 {
   "global": [],
-  "taskA": ["taskA.i"],
+  "taskA": ["taskA.i", "taskA.o"],
   "taskA.i": [],
-  "taskB": ["taskB.i"],
+  "taskB": ["taskB.i", "taskB.o"],
   "taskB.i": [],
   "w": ["w.i", "w.foo", "w.arr", "w.A", "w.$if_0", "w.D"],
   "w.$if_0": ["w.j", "w.h", "w.add_first", "w.add_second", "w.B", "w.$scatter_0"],
