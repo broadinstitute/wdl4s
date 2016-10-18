@@ -168,10 +168,11 @@ trait Scope {
     }
 
     def lookup(name: String): WdlValue = {
-      val scopeResolvedValue = resolveVariable(name, relativeTo) match {
-        case Some(scatter: Scatter) => handleScatterResolution(scatter)
-        case Some(d: DeclarationInterface) if d.expression.isDefined => handleDeclarationEvaluation(d)
-        case Some(s) => inputs.get(s.fullyQualifiedName)
+      val scopeResolvedValue = resolveVariable(name, relativeTo) flatMap {
+        case s if inputs.contains(s.fullyQualifiedName) => inputs.get(s.fullyQualifiedName)
+        case scatter: Scatter => handleScatterResolution(scatter)
+        case d: DeclarationInterface if d.expression.isDefined => handleDeclarationEvaluation(d)
+        case _ => None
       }
 
       if (scopeResolvedValue.isDefined) scopeResolvedValue.get

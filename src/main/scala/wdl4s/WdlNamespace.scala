@@ -11,7 +11,6 @@ import wdl4s.parser.WdlParser._
 import wdl4s.types._
 import wdl4s.util.TryUtil
 import wdl4s.values._
-import wdl4s.AstTools._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
