@@ -1,23 +1,19 @@
 package wdl4s
 
 import wdl4s.AstTools.EnhancedAstNode
-import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctionsType}
+import wdl4s.parser.WdlParser.Ast
 import wdl4s.types.WdlType
-import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
-import com.typesafe.scalalogging.LazyLogging
-
-import scala.util.{Failure, Success}
 
 object TaskOutput {
-  def apply(ast: Ast, syntaxErrorFormatter: WdlSyntaxErrorFormatter): TaskOutput = {
+  def apply(ast: Ast, syntaxErrorFormatter: WdlSyntaxErrorFormatter, parent: Option[Scope]): TaskOutput = {
     val wdlType = ast.getAttribute("type").wdlType(syntaxErrorFormatter)
     val name = ast.getAttribute("name").sourceString
     val expression = WdlExpression(ast.getAttribute("expression"))
-    TaskOutput(name, wdlType, expression, ast)
+    TaskOutput(name, wdlType, expression, ast, parent)
   }
 }
 
-case class TaskOutput(unqualifiedName: String, wdlType: WdlType, requiredExpression: WdlExpression, ast: Ast) extends DeclarationInterface {
+case class TaskOutput(unqualifiedName: String, wdlType: WdlType, requiredExpression: WdlExpression, ast: Ast, override val parent: Option[Scope]) extends DeclarationInterface {
   override val postfixQuantifier = None
   override val expression = Option(requiredExpression)
 }

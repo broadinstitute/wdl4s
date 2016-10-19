@@ -111,7 +111,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
       current.expression match {
         case Some(expr) =>
           val successfulAccumulated = accumulated.collect({ case (k, v) if v.isSuccess => k -> v.get })
-          val value = expr.evaluate(current.lookupFunction(successfulAccumulated ++ userInputs, wdlFunctions, Map.empty[Scatter, Int]), wdlFunctions)
+          val value = expr.evaluate(current.lookupFunction(successfulAccumulated ++ userInputs, wdlFunctions, NoOutputResolver, Map.empty[Scatter, Int]), wdlFunctions)
           accumulated + (current.fullyQualifiedName -> value)
         case None => accumulated
       }
@@ -231,7 +231,7 @@ object WdlNamespace {
         case AstNodeName.If =>
           scopeIndexes(classOf[If]) += 1
           If(scopeAst, scopeIndexes(classOf[If]))
-        case AstNodeName.Output => TaskOutput(scopeAst, wdlSyntaxErrorFormatter)
+        case AstNodeName.Output => TaskOutput(scopeAst, wdlSyntaxErrorFormatter, parent)
       }
 
       scope.children = getChildren(scopeAst, Option(scope))
@@ -249,11 +249,14 @@ object WdlNamespace {
         root.getAttribute(astAttribute).astListAsVector.collect({ case a: Ast if ScopeAstNames.contains(a.getName) => a })
       }
 
+      def getTaskInputsOutputs(ast: Ast) = {
+        val inputDeclarations = getScopeAsts(ast, "declarations").map(getScope(_, scope))
+        val outputDeclarations = ast.findAsts(AstNodeName.Output).map(getScope(_, scope))
+        inputDeclarations ++ outputDeclarations
+      }
+
       scopeAst.getName match {
-        case AstNodeName.Task =>
-          val inputDeclarations = getScopeAsts(scopeAst, "declarations").map(getScope(_, scope))
-          val outputDeclarations = scopeAst.findAsts(AstNodeName.Output).map(getScope(_, scope))
-          inputDeclarations ++ outputDeclarations
+        case AstNodeName.Task => getTaskInputsOutputs(scopeAst)
         case AstNodeName.Declaration | AstNodeName.Output => Seq.empty[Scope]
         case AstNodeName.Call =>
           val referencedTask = findTask(scopeAst.getAttribute("task").sourceString, namespaces, tasks)

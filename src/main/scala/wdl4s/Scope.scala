@@ -114,9 +114,12 @@ trait Scope {
       case c: Call if c.unqualifiedName == name => c
       case o: TaskOutput if o.unqualifiedName == name => o
     }
+
+    // If this is a scatter and the variable being resolved is the item
     val scatterLookup = Seq(this) collect {
       case s: Scatter if s.item == name => s
     }
+
     (scatterLookup ++ localLookup).headOption match {
       case scope: Some[_] => scope
       case None => parent.flatMap(_.resolveVariable(name, relativeTo))
@@ -128,21 +131,22 @@ trait Scope {
     * scope hierarchy to find a value for `name`.  An exception will be thrown if a value cannot
     * be found for `name`
     *
-    * @param inputs All known values of FQNs
+    * @param knownInputs All known values of FQNs
     * @param wdlFunctions Implementation of WDL functions for expression evaluation
     * @param shards For resolving specific shards of scatter blocks
     * @return String => WdlValue lookup function rooted at `scope`
     * @throws VariableNotFoundException => If no errors occurred, but also `name` didn't resolve to any value
     * @throws VariableLookupException if anything else goes wrong in looking up a value for `name`
     */
-  def lookupFunction(inputs: WorkflowCoercedInputs,
+  def lookupFunction(knownInputs: WorkflowCoercedInputs,
                      wdlFunctions: WdlFunctions[WdlValue],
+                     outputResolver: OutputResolver = NoOutputResolver,
                      shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
                      relativeTo: Scope = this): String => WdlValue = {
 
     def handleScatterResolution(scatter: Scatter): Option[WdlValue] = {
       // This case will happen if `name` references a Scatter.item (i.e. `x` in expression scatter(x in y) {...})
-      val evaluatedCollection = scatter.collection.evaluate(scatter.lookupFunction(inputs, wdlFunctions, shards), wdlFunctions)
+      val evaluatedCollection = scatter.collection.evaluate(scatter.lookupFunction(knownInputs, wdlFunctions, outputResolver, shards), wdlFunctions)
       val scatterShard = shards.get(scatter)
 
       (evaluatedCollection, scatterShard) match {
@@ -162,16 +166,32 @@ trait Scope {
     def handleDeclarationEvaluation(declaration: DeclarationInterface): Option[WdlValue] = {
       for {
         expression <- declaration.expression
-        parentLookup = declaration.parent.map(_.lookupFunction(inputs, wdlFunctions, shards)).getOrElse(NoLookup)
+        parentLookup = declaration.parent.map(_.lookupFunction(knownInputs, wdlFunctions, outputResolver, shards)).getOrElse(NoLookup)
         value = expression.evaluate(parentLookup, wdlFunctions).get
       } yield value
     }
 
+    def handleCallEvaluation(call: Call): Option[WdlValue] = {
+      this match {
+          // Only use the shard number if the call is inside the scatter
+        case s: Scatter if children.contains(call) => shards.get(s) map { shard =>
+          outputResolver(call, Option(shard)) getOrElse {
+            throw new VariableLookupException(s"Could not find outputs for call ${call.fullyQualifiedName} at shard $shard")
+          }
+        } orElse {
+          throw new VariableLookupException(s"Could not find a shard for scatter block with expression (${s.collection.toWdlString})")
+        }
+        case _ => outputResolver(call, None).toOption
+      }
+    }
+
     def lookup(name: String): WdlValue = {
       val scopeResolvedValue = resolveVariable(name, relativeTo) flatMap {
-        case s if inputs.contains(s.fullyQualifiedName) => inputs.get(s.fullyQualifiedName)
+        // First check if the variable has been provided in the known values
+        case scope if knownInputs.contains(scope.fullyQualifiedName) => knownInputs.get(scope.fullyQualifiedName)
+        case call: Call => handleCallEvaluation(call)
         case scatter: Scatter => handleScatterResolution(scatter)
-        case d: DeclarationInterface if d.expression.isDefined => handleDeclarationEvaluation(d)
+        case declaration: DeclarationInterface if declaration.expression.isDefined => handleDeclarationEvaluation(declaration)
         case _ => None
       }
 

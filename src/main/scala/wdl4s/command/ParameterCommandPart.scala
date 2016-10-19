@@ -29,26 +29,10 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
   def attributesToString: String = if (attributes.nonEmpty) attributes.map({case (k,v) => s"$k=${WdlString(v).toWdlString}"}).mkString(" ") + " " else ""
   override def toString: String = "${" + s"$attributesToString${expression.toWdlString}" + "}"
 
-  override def instantiate(call: Call,
-                           parameters: WorkflowCoercedInputs,
-                           functions: WdlFunctions[WdlValue],
-                           shards: Map[Scatter, Int] = Map.empty[Scatter, Int] ,
-                           valueMapper: WdlValue => WdlValue): String = {
-    val lookup = call.lookupFunction(parameters, functions, shards)
-    _instantiate(call.declarations, lookup, functions, valueMapper)
-  }
-  override def instantiate(task: Task,
-                           parameters: CallInputs,
-                           functions: WdlFunctions[WdlValue],
-                           valueMapper: WdlValue => WdlValue): String = {
-    val lookup = task.lookupFunction(parameters, functions, Map.empty[Scatter, Int])
-    _instantiate(task.declarations, lookup, functions, valueMapper)
-  }
+  override def instantiate(declarations: Seq[Declaration], inputsMap: EvaluatedTaskInputs, functions: WdlFunctions[WdlValue], valueMapper: (WdlValue) => WdlValue): String = {
+    val inputs = inputsMap map { case (d, v) => d.unqualifiedName -> v }
+    val lookup = (s: String) => inputs.getOrElse(s, throw new VariableNotFoundException(s))
 
-  def _instantiate(declarations: Seq[Declaration],
-                   lookup: String => WdlValue,
-                   functions: WdlFunctions[WdlValue],
-                   valueMapper: WdlValue => WdlValue): String = {
     val value = expression.evaluate(lookup, functions) match {
       case Success(v) => v
       case Failure(f) => f match {

@@ -1,13 +1,13 @@
 package wdl4s
 
+import cats.data.NonEmptyList
 import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.expression.WdlFunctions
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
-import wdl4s.util.StringUtil
 import wdl4s.values.WdlValue
 
 import scala.language.postfixOps
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 object Call {
   def apply(ast: Ast,
@@ -105,18 +105,48 @@ case class Call(alias: Option[String],
   override def toString: String = s"[Call $fullyQualifiedName]"
 
   /**
-   * Instantiate the abstract command line corresponding to this call using the specified inputs.
-    *
-   */
-  def instantiateCommandLine(inputs: WorkflowCoercedInputs,
-                             functions: WdlFunctions[WdlValue],
-                             shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
-                             valueMapper: WdlValue => WdlValue = (v) => v): Try[String] = {
-    Try(StringUtil.normalize(task.commandTemplate.map(_.instantiate(this, inputs, functions, shards, valueMapper)).mkString("")))
+    * The call is responsible for evaluating runtime inputs for its underlying task,
+    * as the input value are provided for a specific call.
+    * The returned value is a map from Declaration to WdlValue.
+    * The keys int the return value are the task's declarations,
+    * not the call's, as they will be used later for command instantiation
+    * as well as output evaluation, which will both be performed by the task.
+    */
+  def evaluateTaskInputs(inputs: WorkflowCoercedInputs,
+                         wdlFunctions: WdlFunctions[WdlValue],
+                         outputResolver: OutputResolver = NoOutputResolver,
+                         shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): EvaluatedTaskInputs = {
+    val declarationAttempts = task.declarations map { declaration =>
+      val lookup = lookupFunction(inputs, wdlFunctions, outputResolver, shards, relativeTo = declaration)
+      val evaluatedDeclaration = Try(lookup(declaration.unqualifiedName))
+      val coercedDeclaration = evaluatedDeclaration flatMap { declaration.wdlType.coerceRawValue(_) }
+      
+      declaration -> coercedDeclaration
+    }
+    
+    val (success, errors) = declarationAttempts partition {
+      case (_, Success(_)) => true
+      case (d, Failure(_: VariableNotFoundException)) if d.postfixQuantifier.contains("?") => true
+      case _ => false
+    }
+    
+    if (errors.nonEmpty) {
+      val errorsMessage = errors map { _._2.failed.get.getMessage }
+      throw new ValidationException(
+        s"Input evaluation for Call $fullyQualifiedName failed.", NonEmptyList.fromListUnsafe(errorsMessage.toList)
+      )
+    }
+
+    val successfulDeclarations = success map { case (d, v) => v.toOption map { d -> _ } }
+    successfulDeclarations.flatten.toMap
   }
 
+  /**
+    * Overrides the default lookup function to provide call specific resolution.
+    */
   override def lookupFunction(inputs: WorkflowCoercedInputs,
                               wdlFunctions: WdlFunctions[WdlValue],
+                              outputResolver: OutputResolver = NoOutputResolver,
                               shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
                               relativeTo: Scope = this): String => WdlValue = {
     def lookup(name: String): WdlValue = {
@@ -131,7 +161,7 @@ case class Call(alias: Option[String],
       val inputMappingsLookup = for {
         inputExpr <- inputMappingsWithMatchingName
         parent <- Try(parent.getOrElse(throw new Exception(s"Call $unqualifiedName has no parent")))
-        evaluatedExpr <- inputExpr.evaluate(parent.lookupFunction(inputs, wdlFunctions, shards, relativeTo), wdlFunctions)
+        evaluatedExpr <- inputExpr.evaluate(parent.lookupFunction(inputs, wdlFunctions, outputResolver, shards, relativeTo), wdlFunctions)
       } yield evaluatedExpr
 
       val declarationLookup = for {
@@ -142,12 +172,12 @@ case class Call(alias: Option[String],
       val declarationExprLookup = for {
         declaration <- declarationsWithMatchingName
         declarationExpr <- Try(declaration.expression.getOrElse(throw new Exception(s"No expression defined for declaration ${declaration.fullyQualifiedName}")))
-        evaluatedExpr <- declarationExpr.evaluate(lookupFunction(inputs, wdlFunctions, shards, relativeTo), wdlFunctions)
+        evaluatedExpr <- declarationExpr.evaluate(lookupFunction(inputs, wdlFunctions, outputResolver, shards, relativeTo), wdlFunctions)
       } yield evaluatedExpr
 
       val taskParentResolution = for {
         parent <- Try(task.parent.getOrElse(throw new Exception(s"Task ${task.unqualifiedName} has no parent")))
-        parentLookup <- Try(parent.lookupFunction(inputs, wdlFunctions, shards, relativeTo)(name))
+        parentLookup <- Try(parent.lookupFunction(inputs, wdlFunctions, outputResolver, shards, relativeTo)(name))
       } yield parentLookup
 
       val resolutions = Seq(inputMappingsLookup, declarationLookup, declarationExprLookup, taskParentResolution)
