@@ -19,7 +19,7 @@ This was created based on 0.19 code with the goal to clean up the API and push W
 
 ### Immediate plan:
 
-* Things like lookup function generation and variable resolution need more tests and more design.  probably 70% there right now.  My goal was to push as much code related to expression lookup functions and WDL functions into wdl4s as possible.  Cromwell shouldn't need to do wdl-specific lexical rules to resolve a variable.  There are some subtleties around resolving variables in the context a `Task` versus a `Call` that might need some more in depth tests.
+* Things like lookup function generation and variable resolution need more tests and more design.  probably 70% there right now.  My goal was to push as much code related to expression lookup functions and WDL functions into wdl4s as possible.  Cromwell shouldn't need to do wdl-specific lexical rules to resolve a variable.  There are some subtleties around resolving variables in the context of a `Task` versus a `Call` that might need some more in depth tests.
 * Figure out specific if statement semantics and update the WDL specification.  See `src/test/cases/if_statement/test.wdl` and `src/test/cases/scatter_within_if/test.wdl` for some starting points about the discussion of if-statement semantics.  Some things that need to be figured out:
 ** How do you handle a call that depends on another call that's within an if-statement?  Use optional inputs for this?
 ** What if there's an if-statement within a scatter block?  What happens to those shards that are NOT run?
@@ -45,7 +45,7 @@ workflow w {
 }
 ```
 
-* `x` and `y` are **siblings** who's **parent** is `w`
+* `x` and `y` are **siblings** whose **parent** is `w`
 * `y` is **downstream** of `x` and `x` is **upstream** of `y`
 
 ### Graph relationships
@@ -66,7 +66,7 @@ The following classes are `GraphNode`s:
 * `If`
 * `Scatter`
 
-`GraphNode` describes relationships to other `GraphNode`s.  `GraphNode.upstream` returns a set of `GraphNode`s that the current `GraphNode` depend on.  `GraphNode.downstream` returns the set of `GraphNode`s that depend on the current node.
+`GraphNode` describes relationships to other `GraphNode`s.  `GraphNode.upstream` returns a set of `GraphNode`s that the current `GraphNode` depend on.  `GraphNode.downstream` returns the set of `GraphNode`s that depends on the current node.
 
 For example
 
@@ -102,7 +102,7 @@ def upstreamRecursive(node: GraphNode): Set[Scope with GraphNode] = {
 
 ### Lexical Relationships
 
-A lexical relationship describes `Scope`s relate to each other.  This relationship is always tied to how they are represented in source code.  Currently the following classes are `Scope`s:
+A lexical relationship describes how `Scope`s relate to each other.  This relationship is always tied to how they are represented in source code.  Currently the following classes are `Scope`s:
 
 * `Call`
 * `Declaration`
@@ -403,4 +403,4 @@ $ cat src/test/cases/nested_scatter/downstream.json
 How to use this:
 
 * The goal is to have all WDL files that are used in tests to also automatically have their lexical relationships, graph relationships, inputs, and FQNs tested.
-* If you want to add a WDL file, create a new directory in `src/test/cases`.  Then, in that directory create `test.wdl`.  Run `sbt test`.  The directory will now be populated with a bunch of `.json` files.  Verify that the contents of these is correct, then add them go Git.
+* If you want to add a WDL file, create a new directory in `src/test/cases`.  Then, in that directory create `test.wdl`.  Run `sbt test`.  The directory will now be populated with a bunch of `.json` files.  Verify that the contents of these is correct, then add them to Git.

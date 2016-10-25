@@ -205,7 +205,7 @@ object AstTools {
   def findVariableReferences(expr: AstNode): Iterable[Terminal] = {
     def isMemberAccessRhs(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
       /** e.g. for MemberAccess ast representing source code A.B.C, this would return true for only B,C and not A */
-      trail.collect({ case a: Ast if a.isMemberAccess => a }).exists(_.getAttribute("rhs") == identifier)
+      trail.collect({ case a: Ast if a.isMemberAccess && a.getAttribute("rhs") == identifier => a }).nonEmpty
     }
     def isFunctionName(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
       trail.lastOption match {

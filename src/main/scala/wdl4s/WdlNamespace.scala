@@ -262,7 +262,6 @@ object WdlNamespace {
           val referencedTask = findTask(scopeAst.getAttribute("task").sourceString, namespaces, tasks)
           referencedTask match {
             case Some(task) => getScopeAsts(task.ast, "declarations").map(d => getScope(d, scope))
-            // TODO: sfrazer: uh oh... syntax error
             case None => Seq.empty[Scope]
           }
         case AstNodeName.Workflow | AstNodeName.Scatter | AstNodeName.If | AstNodeName.Namespace =>
@@ -404,7 +403,7 @@ object WdlNamespace {
             declarationName(decl.ast), wdlType, decl.wdlType
           )))
         case Success(wdlType) =>
-          expr.evaluate((s: String) => throw new Throwable("not implemented"), NoFunctions) match {
+          expr.evaluate(NoLookup, NoFunctions) match {
             case Success(value) if decl.wdlType.coerceRawValue(value).isFailure =>
               Option(new SyntaxError(wdlSyntaxErrorFormatter.declarationExpressionNotCoerceableToTargetType(
                 declarationName(decl.ast), decl.wdlType

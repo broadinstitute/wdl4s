@@ -65,10 +65,10 @@ case class Call(alias: Option[String],
       node <- parent.flatMap(_.resolveVariable(variable.sourceString))
     } yield node
 
-    val firstScatterOrIf = ancestry.collect({
+    val firstScatterOrIf = ancestry.collectFirst({
       case s: Scatter with GraphNode => s
       case i: If with GraphNode => i
-    }).headOption
+    })
 
     (dependentNodes ++ firstScatterOrIf.toSeq).toSet
   }
@@ -83,9 +83,9 @@ case class Call(alias: Option[String],
     }
 
     for {
-      node <- namespace.descendants.collect({ case n: GraphNode => n }).filter(
-        _.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes
-      )
+      node <- namespace.descendants.collect({ 
+        case n: GraphNode if n.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes => n 
+      })
       expression <- expressions(node)
       variable <- expression.variableReferences
       referencedNode = resolveVariable(variable.sourceString)
@@ -126,7 +126,7 @@ case class Call(alias: Option[String],
     
     val (success, errors) = declarationAttempts partition {
       case (_, Success(_)) => true
-      case (d, Failure(_: VariableNotFoundException)) if d.postfixQuantifier.contains("?") => true
+      case (d, Failure(_: VariableNotFoundException)) if d.postfixQuantifier.contains(Declaration.OptionalPostfixQuantifier) => true
       case _ => false
     }
     
@@ -182,7 +182,7 @@ case class Call(alias: Option[String],
 
       val resolutions = Seq(inputMappingsLookup, declarationLookup, declarationExprLookup, taskParentResolution)
 
-      resolutions.collect({ case s: Success[WdlValue] => s}).headOption match {
+      resolutions.collectFirst({ case s: Success[WdlValue] => s}) match {
         case Some(Success(value)) => value
         case None => throw new VariableNotFoundException(name)
       }

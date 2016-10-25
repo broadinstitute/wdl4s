@@ -51,7 +51,9 @@ trait DeclarationInterface extends Scope with GraphNode {
 
   lazy val downstream: Set[Scope with GraphNode] = {
     for {
-      node <- namespace.descendants.collect({ case n: GraphNode => n }).filter(_.fullyQualifiedName != fullyQualifiedName)
+      node <- namespace.descendants.collect({ 
+        case n: GraphNode if n.fullyQualifiedName != fullyQualifiedName => n 
+      })
       if node.upstream.contains(this)
     } yield node
   }
@@ -62,13 +64,15 @@ trait DeclarationInterface extends Scope with GraphNode {
 }
 
 object Declaration {
+  val OptionalPostfixQuantifier = "?"
+  
   def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, parent: Option[Scope]): Declaration = {
     Declaration(
       ast.getAttribute("type").wdlType(wdlSyntaxErrorFormatter),
       Option(ast.getAttribute("postfix")).map(_.sourceString),
       ast.getAttribute("name").sourceString,
       ast.getAttribute("expression") match {
-        case a: AstNode => Some(WdlExpression(a))
+        case a: AstNode => Option(WdlExpression(a))
         case _ => None
       },
       parent,

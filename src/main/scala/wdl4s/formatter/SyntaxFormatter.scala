@@ -149,7 +149,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
 
   private def formatWorkflow(workflow: Workflow): String = {
     val declarations = workflow.declarations.map(formatDeclaration(_, 1))
-    val children = workflow.children.filter(c => !workflow.declarations.contains(c)).map(formatScope(_, 1))
+    val children = workflow.children.collect({case c if !workflow.declarations.contains(c) => formatScope(c, 1) })
     val outputs = formatWorkflowOutputs(workflow.workflowOutputDecls, 1)
     val sections = (declarations ++ children ++ Seq(outputs)).filter(_.nonEmpty)
     s"""${highlighter.keyword("workflow")} ${highlighter.name(workflow.unqualifiedName)} {
@@ -202,7 +202,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
   }
 
   private def formatScatter(scatter: Scatter, level: Int): String = {
-    val children = scatter.children.filterNot(c => c.isInstanceOf[Declaration]).map(formatScope(_, 1))
+    val children = scatter.children.collect({case c if !c.isInstanceOf[Declaration] => formatScope(c, 1) })
     indent(
       s"""${highlighter.keyword("scatter")} (${scatter.item} in ${scatter.collection.toString(highlighter)}) {
        |${children.mkString("\n")}

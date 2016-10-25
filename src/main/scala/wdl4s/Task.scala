@@ -164,7 +164,9 @@ case class Task(name: String,
       expression -> value
     } toMap
 
-    evaluatedExpressionMap collect { case (k, v: Success[_]) => k -> v.get } collect { case (k, v: WdlFile) => k -> v}
+    evaluatedExpressionMap collect { 
+      case (k, Success(file: WdlFile)) => k -> file
+    }
   }
 
   /**
@@ -201,7 +203,7 @@ case class Task(name: String,
 
     }) map { case (k, v) => k.unqualifiedName -> v }
 
-    TryUtil.sequenceMap(evaluatedOutputs, s"Failed to evaluate outputs.")
+    TryUtil.sequenceMap(evaluatedOutputs, "Failed to evaluate outputs.")
   }
 
   /**
