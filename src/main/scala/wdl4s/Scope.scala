@@ -52,6 +52,14 @@ trait Scope {
     case None => Seq.empty[Scope]
   }
 
+  // This is needed in one specific case during WdlNamespace validation
+  // where we need to compute the ancestries at a point where the full
+  // parent branch has not been set yet.
+  private [wdl4s] def ancestrySafe: Seq[Scope] = parent match {
+    case Some(p) => Seq(p) ++ p.ancestrySafe
+    case None => Seq.empty[Scope]
+  }
+  
   /**
     * All children ++ children's children ++ etc
     */
@@ -61,6 +69,10 @@ trait Scope {
     * Descendants that are Calls
     */
   lazy val calls: Set[Call] = descendants.collect({ case c: Call => c })
+  
+  lazy val taskCalls: Set[TaskCall] = calls collect { case c: TaskCall => c }
+  
+  lazy val workflowCalls: Set[WorkflowCall] = calls collect { case c: WorkflowCall => c }
 
   /**
     * Descendants that are Scatters
@@ -79,6 +91,10 @@ trait Scope {
     (ancestry.reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
   }
 
+  def locallyQualifiedName(relativeTo: Scope): String = {
+    (ancestry.takeWhile(_ != relativeTo).:+(relativeTo).reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
+  }
+  
   /**
     * String identifier for this scope, with hidden scope information.
     *
@@ -111,7 +127,7 @@ trait Scope {
 
     val localLookup = siblingScopes collect {
       case d: Declaration if d.unqualifiedName == name => d
-      case c: Call if c.unqualifiedName == name => c
+      case c: TaskCall if c.unqualifiedName == name => c
       case o: TaskOutput if o.unqualifiedName == name => o
     }
 
