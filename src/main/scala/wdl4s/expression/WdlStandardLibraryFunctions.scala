@@ -138,6 +138,20 @@ trait WdlStandardLibraryFunctions extends WdlFunctions[WdlValue] {
     } yield WdlString(pattern.r.replaceAllIn(str, replace))
   }
 
+  def select_first(params: Seq[Try[WdlValue]]): Try[WdlValue] = extractSingleArgument(params) flatMap {
+    case WdlArray(WdlArrayType(WdlOptionalType(_)), arrayValue) =>
+      (arrayValue collect { case WdlOptionalValue(_, Some(wdlValue)) => wdlValue }).headOption
+        .map(Success(_))
+        .getOrElse(Failure(new IllegalArgumentException("Select_first failed. All provided values were empty.")))
+    case other => Failure(new IllegalArgumentException("Select_first must take an array of optional values but got: " + other.toWdlString))
+  }
+
+  def select_all(params: Seq[Try[WdlValue]]): Try[WdlArray] = extractSingleArgument(params) flatMap {
+    case WdlArray(WdlArrayType(WdlOptionalType(memberType)), arrayValue) =>
+      Success(WdlArray(WdlArrayType(memberType), arrayValue collect { case WdlOptionalValue(_, Some(wdlValue)) => wdlValue }))
+    case other => Failure(new IllegalArgumentException("Select_all must take an array of optional values but got: " + other.toWdlString))
+  }
+
   def zip(params: Seq[Try[WdlValue]]): Try[WdlArray] = {
     val badArgsFailure = Failure(new IllegalArgumentException(s"Invalid parameters for engine function zip: $params. Requires exactly two evaluated array values of equal length."))
 
@@ -262,6 +276,12 @@ class WdlStandardLibraryFunctionsType extends WdlFunctions[WdlType] {
     case Success(t @ WdlArrayType(WdlArrayType(wdlType))) :: Nil => Success(t)
     case _ => Failure(new Exception(s"Unexpected transpose target: $params"))
   }
+  def select_first(params: Seq[Try[WdlType]]): Try[WdlType] = extractSingleArgument(params) flatMap {
+    case WdlArrayType(WdlOptionalType(innerType)) => Success(innerType)
+  }
+  def select_all(params: Seq[Try[WdlType]]): Try[WdlType] = extractSingleArgument(params) flatMap {
+    case WdlArrayType(WdlOptionalType(innerType)) => Success(WdlArrayType(innerType))
+  }
   def zip(params: Seq[Try[WdlType]]): Try[WdlType] = {
     val badArgsFailure = Failure(new Exception(s"Unexpected zip parameters: $params"))
     WdlStandardLibraryFunctions.extractTwoParams(params, badArgsFailure) flatMap {
@@ -285,6 +305,8 @@ case object NoFunctions extends WdlStandardLibraryFunctions {
   override def sub(params: Seq[Try[WdlValue]]): Try[WdlString] = Failure(new NotImplementedError())
   override def range(params: Seq[Try[WdlValue]]): Try[WdlArray] = Failure(new NotImplementedError())
   override def transpose(params: Seq[Try[WdlValue]]): Try[WdlArray] = Failure(new NotImplementedError())
+  override def select_first(params: Seq[Try[WdlValue]]): Try[WdlArray] = Failure(new NotImplementedError())
+  override def select_all(params: Seq[Try[WdlValue]]): Try[WdlArray] = Failure(new NotImplementedError())
   override def zip(params: Seq[Try[WdlValue]]): Try[WdlArray] = Failure(new NotImplementedError())
   override def cross(params: Seq[Try[WdlValue]]): Try[WdlArray] = Failure(new NotImplementedError())
 }
