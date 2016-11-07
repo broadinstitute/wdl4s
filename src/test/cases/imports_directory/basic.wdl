@@ -1,3 +1,5 @@
+import "echoHello.wdl"
+
 task ls {
   command {
     ls -l

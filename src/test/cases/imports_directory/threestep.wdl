@@ -1,3 +1,5 @@
+import "echoHello.wdl" as funEcho
+
 task ps {
   command {
     ps

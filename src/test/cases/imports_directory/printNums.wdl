@@ -1,3 +1,12 @@
+import "echoHello.wdl" as multilingualEcho
+
+task ls {
+  command {
+    ls
+  }
+}
+
+
 task print1 {
   Int x = 10
   command {

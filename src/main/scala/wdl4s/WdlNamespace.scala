@@ -204,35 +204,21 @@ object WdlNamespace {
     } yield WdlNamespace.load(source.get, imp.uri, importResolvers, Option(imp.namespaceName))
 
     /**
-      * For import statements without an 'as' clause, c# style include?
-      */
-    val nonNamespacedImportsScopeAsts = for {
-      imp <- imports if imp.usingDefaultNamespace
-      source = tryResolve(imp.uri)
-      if source.isDefined
-      ast = AstTools.getAst(source.get, imp.uri)
-      scopeAst <- ast.getAttribute("body").astListAsVector().collect({ case a: Ast => a })
-    } yield scopeAst
-
-    val mainWorkflowScopeAst = ast.getAttribute("body").astListAsVector.collect({ case a: Ast => a })
-
-    val topLevelScopeAsts = nonNamespacedImportsScopeAsts ++ mainWorkflowScopeAst
-
-    /**
       * Map of Terminal -> WDL Source Code so the syntax error formatter can show line numbers
       */
     val terminalMap = AstTools.terminalMap(ast, source)
     val combinedTerminalMap = ((namespaces map {x => x.terminalMap}) ++ Seq(terminalMap)) reduce (_ ++ _)
     val wdlSyntaxErrorFormatter = new WdlSyntaxErrorFormatter(combinedTerminalMap)
 
-    /**
-      * All `task` definitions of primary workflow and imported non-namespaced workflows. List of
-      * all the tasks that can be called without a namespace.
-      */
-    val topLevelScopeTasks: Seq[Task] = for {
-      taskAst <- topLevelScopeAsts if taskAst.getName == AstNodeName.Task
-    } yield Task(taskAst, wdlSyntaxErrorFormatter)
+    // Would like to rename this to something more appropriate
+    val topLevelAsts = ast.getAttribute("body").astListAsVector.collect({ case a: Ast => a })
 
+    /**
+      * All `task` definitions of primary workflow.
+      */
+    val topLevelTasks: Seq[Task] = for {
+      taskAst <- topLevelAsts if taskAst.getName == AstNodeName.Task
+    } yield Task(taskAst, wdlSyntaxErrorFormatter)
 
     /**
       * Build scope tree recursively
@@ -241,7 +227,7 @@ object WdlNamespace {
 
     def getScope(scopeAst: Ast, parent: Option[Scope]): Scope = {
       val scope = scopeAst.getName match {
-        case AstNodeName.Call => Call(scopeAst, namespaces, topLevelScopeTasks, wdlSyntaxErrorFormatter)
+        case AstNodeName.Call => Call(scopeAst, namespaces, topLevelTasks, wdlSyntaxErrorFormatter)
         case AstNodeName.Workflow => Workflow(scopeAst, wdlSyntaxErrorFormatter)
         case AstNodeName.Declaration => Declaration(scopeAst, wdlSyntaxErrorFormatter, parent)
         case AstNodeName.Scatter =>
@@ -278,7 +264,7 @@ object WdlNamespace {
         case AstNodeName.Task => getTaskInputsOutputs(scopeAst)
         case AstNodeName.Declaration | AstNodeName.Output => Seq.empty[Scope]
         case AstNodeName.Call =>
-          val referencedTask = findTask(scopeAst.getAttribute("task").sourceString, namespaces, topLevelScopeTasks)
+          val referencedTask = findTask(scopeAst.getAttribute("task").sourceString, namespaces, topLevelTasks)
           referencedTask match {
             case Some(task) => getScopeAsts(task.ast, "declarations").map(d => getScope(d, scope))
             // TODO: sfrazer: uh oh... syntax errorƒ
@@ -290,15 +276,15 @@ object WdlNamespace {
     }
 
     val nonTaskScopes = for {
-      ast <- mainWorkflowScopeAst
+      ast <- topLevelAsts
       if ast.getName != AstNodeName.Task
     } yield ast
 
-    val children = topLevelScopeTasks ++ namespaces ++ nonTaskScopes.map(ast => getScope(ast, parent = None))
+    val children = topLevelTasks ++ namespaces ++ nonTaskScopes.map(ast => getScope(ast, parent = None))
 
     val namespace = children.collect({ case w: Workflow => w }) match {
-      case Nil => WdlNamespaceWithoutWorkflow(namespaceName, imports, namespaces, topLevelScopeTasks, terminalMap, ast)
-      case Seq(workflow) => WdlNamespaceWithWorkflow(ast, workflow, namespaceName, imports, namespaces, topLevelScopeTasks, terminalMap, wdlSyntaxErrorFormatter)
+      case Nil => WdlNamespaceWithoutWorkflow(namespaceName, imports, namespaces, topLevelTasks, terminalMap, ast)
+      case Seq(workflow) => WdlNamespaceWithWorkflow(ast, workflow, namespaceName, imports, namespaces, topLevelTasks, terminalMap, wdlSyntaxErrorFormatter)
       case x => throw new SyntaxError(wdlSyntaxErrorFormatter.tooManyWorkflows(ast.findAsts(AstNodeName.Workflow).asJava))
     }
 
@@ -318,7 +304,7 @@ object WdlNamespace {
     namespace.children = children
     namespace.children.foreach(_.parent = namespace)
 
-    topLevelScopeTasks foreach { task =>
+    topLevelTasks foreach { task =>
       task.children = getChildren(task.ast, Option(task))
       task.children.foreach(_.parent = task)
     }
@@ -488,7 +474,6 @@ object WdlNamespace {
        * a.findTasks("b.c") would call a.b.findTasks("c")
        * a.b.findTasks("c") would return the task named "c" in the "b" namespace
        */
-      //val x = namespaces map (_.importedAs)
       namespaces find (_.importedAs.contains(parts(0))) flatMap { x => findTask(parts(1), x.namespaces, x.tasks)}
     } else {
         tasks.find(_.name == name)
