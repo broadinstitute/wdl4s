@@ -1,0 +1,8 @@
+{
+  "b.ints": [],
+  "w.a0": ["w.ints"],
+  "w.a1": ["w.ints"],
+  "w.b": [],
+  "w.b.ints": [],
+  "w.ints": ["w.b"]
+}
