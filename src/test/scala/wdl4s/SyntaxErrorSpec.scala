@@ -128,10 +128,10 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
   case object TaskAndNamespaceNameCollision extends ErrorWdl {
     val testString = "detect when a task and a namespace have the same name"
     val wdl =
-      """import "ps" as ps
-        |task ps {command {ps}}
+      """import "ps" as ps1
+        |task ps1 {command {ps}}
         |workflow three_step {
-        |  call ps
+        |  call ps1.ps
         |}
       """.stripMargin
 

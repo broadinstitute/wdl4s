@@ -40,7 +40,6 @@ sealed trait WdlNamespace extends WdlValue with Scope {
   def resolve(fqn: FullyQualifiedName): Option[Scope] = {
     (descendants + this).find(d => d.fullyQualifiedName == fqn || d.fullyQualifiedNameWithIndexScopes == fqn)
   }
-  //def resolvedWorkflow =
 }
 
 /**
@@ -328,7 +327,14 @@ object WdlNamespace {
 
     def scopeNameAndTerminal(scope: Scope): (String, Terminal) = {
       scope match {
-        case ns: WdlNamespace => ("Namespace", imports.find(_.namespaceName == ns.importedAs).get.namespaceTerminal)
+        case ns: WdlNamespace => ("Namespace", imports.find(_.namespaceName == ns.importedAs) match {
+          case Some(x) => x.namespaceTerminal
+          case None =>
+            println(s"namespaceName is ${namespaceName }")
+            println(s"ns.importedAs is ${ns.importedAs}")
+            println(s"list of imports is ${imports map {x => x.namespaceName}}")
+            imports.find(_.namespaceName == ns.importedAs).get.namespaceTerminal
+        })
         case s: Scope => (s.getClass.getSimpleName, s.ast.findFirstTerminal.get)
       }
     }
