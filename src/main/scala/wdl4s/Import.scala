@@ -7,11 +7,11 @@ import wdl4s.parser.WdlParser.{Terminal, Ast, AstNode}
 object Import {
   def apply(astNode: AstNode): Import = {
     val uri = astNode.asInstanceOf[Ast].getAttribute("uri").sourceString
-    val importNamespace = Option(astNode.asInstanceOf[Ast].getAttribute("namespace")).map(_.asInstanceOf[Terminal]).getOrElse {
+    val namespaceTerminal = Option(astNode.asInstanceOf[Ast].getAttribute("namespace")).map(_.asInstanceOf[Terminal]).getOrElse {
       astNode.asInstanceOf[Ast].getAttribute("uri").asInstanceOf[Terminal]
     }
 
-    Import(uri, importNamespace)
+    Import(uri, namespaceTerminal)
   }
 }
 

@@ -331,7 +331,7 @@ object WdlNamespace {
 
     def scopeNameAndTerminal(scope: Scope): (String, Terminal) = {
       scope match {
-        case ns: WdlNamespace => ("Namespace", imports.find(_.namespaceName == ns.importedAs).get.namespaceTerminal)
+        case ns: WdlNamespace => ("Namespace", imports.find(_.namespaceName == ns.importedAs.get).get.namespaceTerminal)
         case s: Scope => (s.getClass.getSimpleName, s.ast.findFirstTerminal.get)
       }
     }

@@ -125,31 +125,6 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       """.stripMargin
   }
 
-  case object TaskAndNamespaceNameCollision extends ErrorWdl {
-    val testString = "detect when a task and a namespace have the same name"
-    val wdl =
-      """import "ps" as ps
-        |task ps {command {ps}}
-        |workflow three_step {
-        |  call ps
-        |}
-      """.stripMargin
-
-    val errors =
-      """ERROR: Sibling nodes have conflicting names:
-        |
-        |Task defined here (line 2, col 6):
-        |
-        |task ps {command {ps}}
-        |     ^
-        |
-        |Namespace statement defined here (line 1, col 16):
-        |
-        |import "ps" as ps
-        |               ^
-      """.stripMargin
-  }
-
   case object WorkflowAndNamespaceNameCollision extends ErrorWdl {
     val testString = "detect when a namespace and a workflow have the same name"
     val wdl =
@@ -174,7 +149,8 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       """.stripMargin
   }
 
-  //RUCHI: Broken
+  //RUCHI: Needs fixing, the syntax formatter should list both import statements, not
+  //just the first one twice.
   case object NamespaceNameCollision extends ErrorWdl {
     val testString = "detect when two namespaces have the same name"
     val wdl =
@@ -611,7 +587,6 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
     CallReferencesBadInput,
     CallReferencesBadTask,
     MultipleWorkflows,
-    TaskAndNamespaceNameCollision,
     WorkflowAndNamespaceNameCollision,
     //NamespaceNameCollision,
     BadMemberAccessInCallInputSection,

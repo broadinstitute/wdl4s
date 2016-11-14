@@ -171,7 +171,6 @@ class WdlWiringSpec extends FlatSpec with Matchers {
 
     expectedAncestryFile.contentAsString.parseJson.asInstanceOf[JsObject].fields.asInstanceOf[Map[String, JsArray]] map {
       case (k, v) =>
-        println(s"looking at $k")
         val expectedAncestry = v.elements.asInstanceOf[Vector[JsString]].map(n => namespace.resolve(n.value).get)
         val resolvedFqn = namespace.resolve(k).get.asInstanceOf[Scope with GraphNode]
         resolvedFqn -> expectedAncestry
@@ -192,7 +191,7 @@ class WdlWiringSpec extends FlatSpec with Matchers {
     expectedUpstreamFile.contentAsString.parseJson.asInstanceOf[JsObject].fields.asInstanceOf[Map[String, JsArray]] map {
       case (k, v) =>
         val expectedUpstream = v.elements.asInstanceOf[Vector[JsString]].map(n => namespace.resolve(n.value).get).toSet
-        val resolvedFqn = namespace.resolve(k).asInstanceOf[Scope with GraphNode]
+        val resolvedFqn = namespace.resolve(k).get.asInstanceOf[Scope with GraphNode]
         resolvedFqn -> expectedUpstream
     }
   }
