@@ -80,7 +80,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
 
   private def formatImport(imp: Import): String = {
     val namespace = imp.namespaceName
-    s"${highlighter.keyword("import")} '${imp.uri}'$namespace"
+    s"${highlighter.keyword("import")} '${imp.uri}' as $namespace"
   }
 
   private def formatTask(task: Task): String = {

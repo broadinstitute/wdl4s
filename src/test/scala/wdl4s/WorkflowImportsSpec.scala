@@ -43,7 +43,7 @@ class WorkflowImportsSpec extends FlatSpec with Matchers {
 
   val basicWdl =
     s"""
-      |import "${echoHelloWdlFile}"
+      |import "$echoHelloWdlFile"
       """.stripMargin +
     """
       |
@@ -76,7 +76,7 @@ class WorkflowImportsSpec extends FlatSpec with Matchers {
 
   val printNumsWdl =
     s"""
-      |import "${echoHelloWdlFile}" as multilingualEcho
+      |import "$echoHelloWdlFile" as multilingualEcho
       |
       """.stripMargin +
     """
@@ -133,11 +133,7 @@ class WorkflowImportsSpec extends FlatSpec with Matchers {
       |}
     """.stripMargin
 
-  val threestepWdl =
-    s"""
-      |import "${echoHelloWdlFile}" as funEcho
-      |
-      """.stripMargin +
+  val threeStepWdl =
     """
       |task ps {
       |  command {
@@ -178,8 +174,15 @@ class WorkflowImportsSpec extends FlatSpec with Matchers {
       |}
     """.stripMargin
 
+
+  val threeStepWdlWithImports =
+    s"""
+      |import "$echoHelloWdlFile" as funEcho
+      |
+      """.stripMargin + threeStepWdl
+
   val basicWdlImportFile = addAndGetFile("basic", basicWdl)
-  val threeStepWdlImportFile = addAndGetFile("threestep", threestepWdl)
+  val threeStepWdlImportFile = addAndGetFile("threestep", threeStepWdlWithImports)
   val snoozeWdlImportFile = addAndGetFile("snooze", snoozeWdl)
   val printNumsWdlImportFile = addAndGetFile("printNums", printNumsWdl)
 
@@ -238,6 +241,19 @@ class WorkflowImportsSpec extends FlatSpec with Matchers {
 
   it should "Have 4 imported WdlNamespaces" in {
     namespace.namespaces.size shouldEqual 4
+  }
+
+  it should "import a WDL file (with alias) and be able to reference its tasks by FQN" in {
+    namespace.resolve("classicThreeStep.ps").size shouldEqual 1
+  }
+  it should "import a WDL file (with no alias) and be able to reference its tasks by FQN" in {
+    namespace.resolve(s"${noExtension(printNumsWdlImportFile)}.print1").size shouldEqual 1
+  }
+  it should "import two WDL file (with clashing task names) and be able to reference all tasks by FQN" in {
+    val clashingTaskNames = Seq(namespace.resolve(s"${noExtension(basicWdlImportFile)}.ls"),
+                            namespace.resolve(s"${noExtension(printNumsWdlImportFile)}.ls"))
+
+    clashingTaskNames.size shouldEqual 2
   }
 
   def deleteTempFiles() = wdlDirectory.delete(swallowIOExceptions = true)

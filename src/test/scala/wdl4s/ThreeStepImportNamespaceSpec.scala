@@ -81,7 +81,7 @@ class ThreeStepImportNamespaceSpec extends FlatSpec with Matchers {
       val badBinding = WdlNamespace.load(workflowWdl, badResolver _)
       fail("Expecting an exception to be thrown when using badResolver")
     } catch {
-      case _: RuntimeException =>
+      case _: ValidationException =>
     }
   }
 }

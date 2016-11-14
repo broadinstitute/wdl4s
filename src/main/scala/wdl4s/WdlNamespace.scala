@@ -7,6 +7,7 @@ import cats.data.NonEmptyList
 import cats.syntax.flatMap
 import java.net
 
+import sun.tools.java.Imports
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.command.ParameterCommandPart
 import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStandardLibraryFunctionsType}
@@ -34,7 +35,7 @@ sealed trait WdlNamespace extends WdlValue with Scope {
   def workflows: Seq[Workflow]
   def terminalMap: Map[Terminal, WdlSource]
   def findTask(name: String): Option[Task] = tasks.find(_.name == name)
-  override def unqualifiedName: LocallyQualifiedName = importedAs.getOrElse{""}
+  override def unqualifiedName: LocallyQualifiedName = importedAs.getOrElse("")
   override def appearsInFqn: Boolean = importedAs.isDefined
   override def namespace: WdlNamespace = this
   def resolve(fqn: FullyQualifiedName): Option[Scope] = {
@@ -185,12 +186,17 @@ object WdlNamespace {
       importStatement <- importAst.astListAsVector.map(Import(_))
     } yield importStatement
 
-    def tryResolve(str: String): Option[WdlSource] = {
-      importResolvers map { resolver =>
-        Try(resolver(str))
-      } collectFirst {
-        case Success(s) => s
-        case Failure(error) => throw error
+
+    def tryResolve(str: String, remainingResolvers: Seq[ImportResolver], errors: List[Throwable]): Option[WdlSource] = {
+      remainingResolvers match {
+        case resolver :: tail =>
+          Try(resolver(str)) match {
+            case Success(s) => Option(s)
+            case Failure(f) => tryResolve(str, tail, errors :+ f)
+          }
+        case Nil =>
+          val collectedErrors = errors.map(_.getMessage)
+          throw new ValidationException(s"Failed to import workflow $str from ", NonEmptyList.fromListUnsafe(collectedErrors))
       }
     }
 
@@ -199,7 +205,7 @@ object WdlNamespace {
       */
     val namespaces: Seq[WdlNamespace] = for {
       imp <- imports
-      source = tryResolve(imp.uri)
+      source = tryResolve(imp.uri, importResolvers, List.empty)
       if source.isDefined
     } yield WdlNamespace.load(source.get, imp.uri, importResolvers, Option(imp.namespaceName))
 
@@ -210,7 +216,6 @@ object WdlNamespace {
     val combinedTerminalMap = ((namespaces map {x => x.terminalMap}) ++ Seq(terminalMap)) reduce (_ ++ _)
     val wdlSyntaxErrorFormatter = new WdlSyntaxErrorFormatter(combinedTerminalMap)
 
-    // Would like to rename this to something more appropriate
     val topLevelAsts = ast.getAttribute("body").astListAsVector.collect({ case a: Ast => a })
 
     /**
@@ -267,7 +272,6 @@ object WdlNamespace {
           val referencedTask = findTask(scopeAst.getAttribute("task").sourceString, namespaces, topLevelTasks)
           referencedTask match {
             case Some(task) => getScopeAsts(task.ast, "declarations").map(d => getScope(d, scope))
-            // TODO: sfrazer: uh oh... syntax errorƒ
             case None => Seq.empty[Scope]
           }
         case AstNodeName.Workflow | AstNodeName.Scatter | AstNodeName.If | AstNodeName.Namespace =>
@@ -285,7 +289,7 @@ object WdlNamespace {
     val namespace = children.collect({ case w: Workflow => w }) match {
       case Nil => WdlNamespaceWithoutWorkflow(namespaceName, imports, namespaces, topLevelTasks, terminalMap, ast)
       case Seq(workflow) => WdlNamespaceWithWorkflow(ast, workflow, namespaceName, imports, namespaces, topLevelTasks, terminalMap, wdlSyntaxErrorFormatter)
-      case x => throw new SyntaxError(wdlSyntaxErrorFormatter.tooManyWorkflows(ast.findAsts(AstNodeName.Workflow).asJava))
+      case _ => throw new SyntaxError(wdlSyntaxErrorFormatter.tooManyWorkflows(ast.findAsts(AstNodeName.Workflow).asJava))
     }
 
     /**
@@ -327,17 +331,11 @@ object WdlNamespace {
 
     def scopeNameAndTerminal(scope: Scope): (String, Terminal) = {
       scope match {
-        case ns: WdlNamespace => ("Namespace", imports.find(_.namespaceName == ns.importedAs) match {
-          case Some(x) => x.namespaceTerminal
-          case None =>
-            println(s"namespaceName is ${namespaceName }")
-            println(s"ns.importedAs is ${ns.importedAs}")
-            println(s"list of imports is ${imports map {x => x.namespaceName}}")
-            imports.find(_.namespaceName == ns.importedAs).get.namespaceTerminal
-        })
+        case ns: WdlNamespace => ("Namespace", imports.find(_.namespaceName == ns.importedAs).get.namespaceTerminal)
         case s: Scope => (s.getClass.getSimpleName, s.ast.findFirstTerminal.get)
       }
     }
+
     case class ScopeAccumulator(accumulated: Seq[Scope] = Seq.empty, errors: Seq[String] = Seq.empty)
     val accumulatedErrors = (namespace.descendants + namespace).filter(_.namespace == namespace) map { scope =>
 

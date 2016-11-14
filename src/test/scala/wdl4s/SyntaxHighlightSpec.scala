@@ -1,9 +1,9 @@
 package wdl4s
 
 import wdl4s.formatter.{AnsiSyntaxHighlighter, HtmlSyntaxHighlighter, SyntaxFormatter}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{FlatSpec, Matchers, WordSpec}
 
-class SyntaxHighlightSpec extends Matchers with WordSpecLike {
+class SyntaxHighlightSpec extends WordSpec with Matchers {
   "SyntaxFormatter for simple workflow" should {
     val namespace = WdlNamespace.load(
       """task t {
@@ -132,6 +132,25 @@ class SyntaxHighlightSpec extends Matchers with WordSpecLike {
   }
 
   "SyntaxFormatter for more feature-rich workflow" should {
+
+    val fooTaskWdl = """
+                       |task foo {
+                       |  command {
+                       |    echo "foo!"
+                       |  }
+                       |  output {
+                       |  File out = stdout()
+                       |  }
+                       |}
+                     """.stripMargin
+
+    def resolver(importUri: String): WdlSource = {
+      importUri match {
+        case "foo.wdl" => fooTaskWdl
+        case _ => throw new RuntimeException(s"Can't resolve $importUri")
+      }
+    }
+
     val namespace = WdlNamespace.load(
       """import "foo.wdl" as foo_ns
         |
@@ -163,8 +182,7 @@ class SyntaxHighlightSpec extends Matchers with WordSpecLike {
         |  call t as u {
         |    input: f="abc", p=p
         |  }
-        |}""".stripMargin,
-      importResolver = (s:String) => ""
+        |}""".stripMargin, resolver _
     )
 
     val console =

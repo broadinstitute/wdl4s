@@ -121,12 +121,7 @@ class WdlWiringSpec extends FlatSpec with Matchers {
 
     expectedChildrenFile.contentAsString.parseJson.asInstanceOf[JsObject].fields.asInstanceOf[Map[String, JsArray]] map {
       case (k, v) =>
-        val children = v.elements.collect({ case s: JsString => s }).map(s => namespace.resolve(s.value) match {
-          case Some(sc) => sc
-          case None =>
-            println(s"evaluating $k and failed")
-            namespace.resolve(s.value).get
-        })
+        val children = v.elements.collect({ case s: JsString => s }).map(s => namespace.resolve(s.value).get)
         k -> children
     }
   }
@@ -197,12 +192,7 @@ class WdlWiringSpec extends FlatSpec with Matchers {
     expectedUpstreamFile.contentAsString.parseJson.asInstanceOf[JsObject].fields.asInstanceOf[Map[String, JsArray]] map {
       case (k, v) =>
         val expectedUpstream = v.elements.asInstanceOf[Vector[JsString]].map(n => namespace.resolve(n.value).get).toSet
-        val resolvedFqn = namespace.resolve(k) match {
-          case Some(x) => x.asInstanceOf[Scope with GraphNode]
-          case None =>
-            println(s"failed evaluating k: ${k}")
-            namespace.resolve(k).get.asInstanceOf
-        }
+        val resolvedFqn = namespace.resolve(k).asInstanceOf[Scope with GraphNode]
         resolvedFqn -> expectedUpstream
     }
   }
