@@ -72,16 +72,16 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
     * cannot be coerced to the target type of the input as specified in the namespace.
     */
   def coerceRawInputs(rawInputs: WorkflowRawInputs): Try[WorkflowCoercedInputs] = {
-    def coerceRawInput(input: WorkflowInput): Try[Option[WdlValue]] = input.fqn match {
+    def coerceRawInput(input: WorkflowInput): Try[WdlValue] = input.fqn match {
       case _ if rawInputs.contains(input.fqn) =>
         val rawValue = rawInputs(input.fqn)
         input.wdlType.coerceRawValue(rawValue) match {
-          case Success(value) => Success(Some(value))
-          case _ => Failure(new UnsatisfiedInputsException(s"Could not coerce value for '${input.fqn}' into: ${input.wdlType}"))
+          case Success(value) => Success(value)
+          case _ => Failure(new UnsatisfiedInputsException(s"Could not coerce ${rawValue.getClass.getSimpleName} value for '${input.fqn}' ($rawValue) into: ${input.wdlType}"))
         }
       case _ =>
         input.optional match {
-          case true => Success(None)
+          case true => Success(WdlOptionalValue(input.wdlType.asInstanceOf[WdlOptionalType].memberType, None))
           case _ => Failure(new UnsatisfiedInputsException(s"Required workflow input '${input.fqn}' not specified."))
         }
     }
@@ -92,11 +92,10 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
     if (failures.isEmpty) {
       Try(for {
         (key, tryValue) <- successes
-        optionValue = tryValue.get if tryValue.get.isDefined
-      } yield key -> optionValue.get)
+      } yield key -> tryValue.get)
     } else {
       val errors = failures.values.collect { case f: Failure[_] => f.exception.getMessage }
-      // .fromListUnsafe because failures is guaranteed to be nonEmpty
+      // Fine to use .fromListUnsafe because failures is guaranteed to be nonEmpty
       Failure(new ValidationException("Workflow input processing failed.", NonEmptyList.fromListUnsafe(errors.toList)))
     }
   }
@@ -112,7 +111,8 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
         case Some(expr) =>
           val successfulAccumulated = accumulated.collect({ case (k, v) if v.isSuccess => k -> v.get })
           val value = expr.evaluate(current.lookupFunction(successfulAccumulated ++ userInputs, wdlFunctions, NoOutputResolver, Map.empty[Scatter, Int]), wdlFunctions)
-          accumulated + (current.fullyQualifiedName -> value)
+          val correctlyCoerced = value flatMap { v => current.wdlType.coerceRawValue(v) }
+          accumulated + (current.fullyQualifiedName -> correctlyCoerced)
         case None => accumulated
       }
     }
