@@ -7,7 +7,6 @@ import cats.data.NonEmptyList
 import cats.syntax.flatMap
 import java.net
 
-import sun.tools.java.Imports
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.command.ParameterCommandPart
 import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStandardLibraryFunctionsType}
