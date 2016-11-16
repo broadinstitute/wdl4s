@@ -23,7 +23,7 @@ class WorkflowImportsSpec extends FlatSpec with Matchers {
       |}
       |
       |task inSpanish {
-      |  String x = "ohla"
+      |  String x = "hola"
       |  command {
       |    echo "${x}"
       |  }
@@ -235,7 +235,7 @@ class WorkflowImportsSpec extends FlatSpec with Matchers {
 
   val namespace = WdlNamespaceWithWorkflow.load(wdlWithImports, wdlDirectory)
 
-  "WDL file with imports" should "Have 0 tasks (3 tasks are in separate namespace)" in {
+  "WDL file with imports" should "Have 1 task (remaining tasks are in separate namespaces)" in {
     namespace.tasks.size shouldEqual 1
   }
 

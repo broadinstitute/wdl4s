@@ -5,7 +5,7 @@ import org.scalatest.{FlatSpec, Matchers, WordSpec}
 
 class SyntaxHighlightSpec extends WordSpec with Matchers {
   "SyntaxFormatter for simple workflow" should {
-    val namespace = WdlNamespace.load(
+    val namespace = WdlNamespace.loadUsingSource(
       """task t {
         |  String f
         |  Int p
@@ -41,8 +41,8 @@ class SyntaxHighlightSpec extends WordSpec with Matchers {
         |    t.p
         |    t.f
         |  }
-        |}""".stripMargin
-    )
+        |}""".stripMargin,
+      None, None)
 
     val console =
       """\u001b[38;5;214mtask\u001b[0m \u001b[38;5;253mt\u001b[0m {
@@ -151,7 +151,7 @@ class SyntaxHighlightSpec extends WordSpec with Matchers {
       }
     }
 
-    val namespace = WdlNamespace.load(
+    val namespace = WdlNamespace.loadUsingSource(
       """import "foo.wdl" as foo_ns
         |
         |task t {
@@ -182,7 +182,7 @@ class SyntaxHighlightSpec extends WordSpec with Matchers {
         |  call t as u {
         |    input: f="abc", p=p
         |  }
-        |}""".stripMargin, resolver _
+        |}""".stripMargin, None, Option(Seq(resolver))
     )
 
     val console =

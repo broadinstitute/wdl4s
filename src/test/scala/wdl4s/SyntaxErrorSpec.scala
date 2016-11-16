@@ -149,8 +149,6 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       """.stripMargin
   }
 
-  //RUCHI: Needs fixing, the syntax formatter should list both import statements, not
-  //just the first one twice.
   case object NamespaceNameCollision extends ErrorWdl {
     val testString = "detect when two namespaces have the same name"
     val wdl =
@@ -168,10 +166,10 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         |import "ps" as ps
         |               ^
         |
-        |Namespace defined here (line 1, col 16):
+        |Namespace statement defined here (line 2, col 19):
         |
-        |import "ps" as ps
-        |               ^
+        |import "cgrep" as ps
+        |                  ^
       """.stripMargin
   }
 
@@ -588,7 +586,7 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
     CallReferencesBadTask,
     MultipleWorkflows,
     WorkflowAndNamespaceNameCollision,
-    //NamespaceNameCollision,
+    NamespaceNameCollision,
     BadMemberAccessInCallInputSection,
     BadMemberAccessInCallInputSection2,
     UnexpectedEof,
@@ -612,7 +610,7 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
   forAll(syntaxErrorWdlTable) { (errorWdl) =>
     it should errorWdl.testString in {
       try {
-        WdlNamespace.load(errorWdl.wdl, resolver _)
+        WdlNamespace.loadUsingSource(errorWdl.wdl, None, Option(Seq(resolver)))
         fail("Expecting a SyntaxError")
       } catch {
         case e: SyntaxError =>
