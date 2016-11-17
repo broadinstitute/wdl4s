@@ -281,12 +281,12 @@ object WdlNamespace {
       }
     }
 
-    val nonTaskOrWorkflowScopes = for {
+    val topLevelDeclarationScopes = for {
       ast <- topLevelAsts
       if ast.getName != AstNodeName.Task && ast.getName != AstNodeName.Workflow
     } yield ast
 
-    val children = topLevelTasks ++ namespaces ++ workflows ++ nonTaskOrWorkflowScopes.map(ast => getScope(ast, parent = None))
+    val children = topLevelTasks ++ namespaces ++ workflows ++ topLevelDeclarationScopes.map(ast => getScope(ast, parent = None))
 
     val namespace = workflows match {
       case Nil => WdlNamespaceWithoutWorkflow(namespaceName, imports, namespaces, topLevelTasks, terminalMap, ast)
