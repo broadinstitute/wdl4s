@@ -91,8 +91,31 @@ trait Scope {
     (ancestry.reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
   }
 
+  /**
+    * Similar to fullyQualifiedName but relatively to an ancestry scope.
+    * e.g.
+    * Workflow w
+    *   Call a
+    *     Output o
+    *     
+    * o.locallyQualified(a) = "a.o"
+    * o.locallyQualified(w) = o.fullyQualifiedName = "w.a.o"
+    */
   def locallyQualifiedName(relativeTo: Scope): String = {
-    (ancestry.takeWhile(_ != relativeTo).:+(relativeTo).reverse.filter(_.appearsInFqn).map(_.unqualifiedName) :+ unqualifiedName).mkString(".")
+    // Take ancestries until we reach relativeTo
+    (ancestry.takeWhile(_ != relativeTo)
+      // we want relativeTo in the lqn but it's been rejected by takeWhile wo add it back
+      .:+(relativeTo)
+      // Reverse because we start from the scope and climb up the ancestry tree but in the end we want a top-bottom lqn 
+      .reverse
+      // Get rid of scatters, ifs... because we don't want them here
+      .filter(_.appearsInFqn)
+      // Take the unqualifiedName of each scope
+      .map(_.unqualifiedName)
+      // Add the current scope
+      :+ unqualifiedName)
+      // Concatenate all of this
+      .mkString(".")
   }
   
   /**

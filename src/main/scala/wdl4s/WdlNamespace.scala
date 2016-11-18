@@ -359,14 +359,12 @@ object WdlNamespace {
       }
     }
 
-    val scopeDuplicationErrors = (namespace.descendants + namespace).filter(_.namespace == namespace) map { scope =>
-      lookForDuplicates(scope.children)
+    val scopeDuplicationErrors = (namespace.descendants + namespace) collect {
+      case scope if scope.namespace == namespace => lookForDuplicates(scope.children)
     }
 
     val expandedWorkflowOutputsDuplicationErrors = {
-      (namespace.descendants + namespace) collect { case workflow: Workflow => workflow } map { workflow =>
-        lookForDuplicates(workflow.outputs)
-      }
+      (namespace.descendants + namespace) collect { case workflow: Workflow => lookForDuplicates(workflow.outputs) }
     }
 
     val accumulatedErrors = expandedWorkflowOutputsDuplicationErrors ++ scopeDuplicationErrors
