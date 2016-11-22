@@ -5,7 +5,7 @@ import wdl4s.parser.WdlParser.Ast
 import wdl4s.values.{WdlArray, WdlValue}
 
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 trait Scope {
   def unqualifiedName: LocallyQualifiedName
@@ -37,7 +37,7 @@ trait Scope {
     * Containing namespace
     */
   def namespace: WdlNamespace = _namespace
-  private var _namespace: WdlNamespace = null
+  private var _namespace: WdlNamespace = _
   def namespace_=[Child <: WdlNamespace](ns: WdlNamespace): Unit = {
     if (Option(this._namespace).isEmpty) {
       this._namespace = ns
@@ -183,59 +183,65 @@ trait Scope {
                      shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
                      relativeTo: Scope = this): String => WdlValue = {
 
-    def handleScatterResolution(scatter: Scatter): Option[WdlValue] = {
+    def handleScatterResolution(scatter: Scatter): Try[WdlValue] = {
       // This case will happen if `name` references a Scatter.item (i.e. `x` in expression scatter(x in y) {...})
       val evaluatedCollection = scatter.collection.evaluate(scatter.lookupFunction(knownInputs, wdlFunctions, outputResolver, shards), wdlFunctions)
       val scatterShard = shards.get(scatter)
 
       (evaluatedCollection, scatterShard) match {
         case (Success(value: WdlArray), Some(shard)) if 0 <= shard && shard < value.value.size =>
-          value.value.lift(shard)
+          value.value.lift(shard) map Success.apply getOrElse {
+            Failure(VariableLookupException(s"Could not find value for shard index $shard in scatter collection $value"))
+          }
         case (Success(value: WdlArray), Some(shard)) =>
-          throw new VariableLookupException(s"Scatter expression (${scatter.collection.toWdlString}) evaluated to an array of ${value.value.size} elements, but element ${shard} was requested.")
+          Failure(VariableLookupException(s"Scatter expression (${scatter.collection.toWdlString}) evaluated to an array of ${value.value.size} elements, but element $shard was requested."))
         case (Success(value: WdlValue), _) =>
-          throw new VariableLookupException(s"Expected scatter expression (${scatter.collection.toWdlString}) to evaluate to an Array.  Instead, got a ${value}")
+          Failure(VariableLookupException(s"Expected scatter expression (${scatter.collection.toWdlString}) to evaluate to an Array.  Instead, got a $value"))
         case (Failure(ex), _) =>
-          throw new VariableLookupException(s"Failed to evaluate scatter expression (${scatter.collection.toWdlString})", ex)
+          Failure(VariableLookupException(s"Failed to evaluate scatter expression (${scatter.collection.toWdlString})", ex))
         case (_, None) =>
-          throw new VariableLookupException(s"Could not find a shard for scatter block with expression (${scatter.collection.toWdlString})")
+          Failure(VariableLookupException(s"Could not find a shard for scatter block with expression (${scatter.collection.toWdlString})"))
       }
     }
 
-    def handleDeclarationEvaluation(declaration: DeclarationInterface): Option[WdlValue] = {
-      for {
-        expression <- declaration.expression
-        parentLookup = declaration.parent.map(_.lookupFunction(knownInputs, wdlFunctions, outputResolver, shards)).getOrElse(NoLookup)
-        value = expression.evaluate(parentLookup, wdlFunctions).get
-      } yield value
+    def handleDeclarationEvaluation(declaration: DeclarationInterface): Try[WdlValue] = {
+      declaration.expression match {
+        case Some(e) =>
+          val parentLookup = declaration.parent.map(_.lookupFunction(knownInputs, wdlFunctions, outputResolver, shards)).getOrElse(NoLookup)
+          e.evaluate(parentLookup, wdlFunctions)
+        case None =>
+          Failure(VariableLookupException(s"Declaration ${declaration.fullyQualifiedName} does not have an expression"))
+      }
     }
 
-    def handleCallEvaluation(call: Call): Option[WdlValue] = {
+    def handleCallEvaluation(call: Call): Try[WdlValue] = {
       this match {
           // Only use the shard number if the call is inside the scatter
         case s: Scatter if children.contains(call) => shards.get(s) map { shard =>
-          outputResolver(call, Option(shard)) getOrElse {
-            throw new VariableLookupException(s"Could not find outputs for call ${call.fullyQualifiedName} at shard $shard")
-          }
-        } orElse {
-          throw new VariableLookupException(s"Could not find a shard for scatter block with expression (${s.collection.toWdlString})")
+          outputResolver(call, Option(shard))
+        } getOrElse {
+          Failure(VariableLookupException(s"Could not find a shard for scatter block with expression (${s.collection.toWdlString})"))
         }
-        case _ => outputResolver(call, None).toOption
+        case _ => outputResolver(call, None)
       }
     }
 
     def lookup(name: String): WdlValue = {
-      val scopeResolvedValue = resolveVariable(name, relativeTo) flatMap {
+      val scopeResolvedValue = resolveVariable(name, relativeTo) map {
         // First check if the variable has been provided in the known values
-        case scope if knownInputs.contains(scope.fullyQualifiedName) => knownInputs.get(scope.fullyQualifiedName)
+        case scope if knownInputs.contains(scope.fullyQualifiedName) => 
+          knownInputs.get(scope.fullyQualifiedName) map Success.apply getOrElse {
+            Failure(VariableLookupException(s"Could not find value in inputs map."))
+          }
         case call: Call => handleCallEvaluation(call)
         case scatter: Scatter => handleScatterResolution(scatter)
         case declaration: DeclarationInterface if declaration.expression.isDefined => handleDeclarationEvaluation(declaration)
-        case _ => None
+        case scope => Failure(VariableLookupException(s"Variable $name resolved to scope ${scope.fullyQualifiedName} but cannot be evaluated."))
+      } getOrElse {
+        Failure(VariableNotFoundException(name))
       }
 
-      if (scopeResolvedValue.isDefined) scopeResolvedValue.get
-      else throw new VariableNotFoundException(name)
+      scopeResolvedValue.get
     }
 
     lookup
