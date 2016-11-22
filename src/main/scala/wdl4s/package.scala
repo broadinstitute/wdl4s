@@ -12,7 +12,9 @@ package object wdl4s {
   type EvaluatedTaskInputs = Map[Declaration, WdlValue]
   type ImportResolver = String => WdlSource
   type OutputResolver = (Call, Option[Int]) => Try[WdlCallOutputsObject]
-  val NoOutputResolver: OutputResolver = (c: Call, i: Option[Int]) => Failure(new VariableLookupException(s"Could not find outputs for call ${c.fullyQualifiedName} at index $i"))
+  
+  class OutputVariableLookupException(call: Call, index: Option[Int]) extends VariableLookupException(s"Could not find outputs for call ${call.fullyQualifiedName} at index $index")
+  val NoOutputResolver: OutputResolver = (c: Call, i: Option[Int]) => Failure(new OutputVariableLookupException(c, i))
 
   trait TsvSerializable {
     def tsvSerialize: Try[String]

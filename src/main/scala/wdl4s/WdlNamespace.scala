@@ -134,7 +134,14 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
       (declarations ++ workflowDeclarations).foldLeft(Map.empty[FullyQualifiedName, Try[WdlValue]])(evalDeclaration)
     }
 
-    TryUtil.sequenceMap(evalScope)
+    val evaluated = evalScope
+    // Filter out declarations which evaluation failed because a call output variable could not be resolved, as this method is meant for pre-execution validation
+    val filtered = evaluated filterNot {
+      case (_, Failure(_: OutputVariableLookupException)) => true
+      case _ => false
+    }
+    
+    TryUtil.sequenceMap(filtered)
   }
 }
 
