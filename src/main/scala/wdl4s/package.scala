@@ -1,4 +1,4 @@
-import wdl4s.values.{WdlCallOutputsObject, WdlValue}
+import wdl4s.values.WdlValue
 
 import scala.util.{Failure, Try}
 
@@ -11,10 +11,10 @@ package object wdl4s {
   type LocallyQualifiedName = String
   type EvaluatedTaskInputs = Map[Declaration, WdlValue]
   type ImportResolver = String => WdlSource
-  type OutputResolver = (Call, Option[Int]) => Try[WdlCallOutputsObject]
+  type OutputResolver = (GraphNode, Option[Int]) => Try[WdlValue]
   
-  class OutputVariableLookupException(call: Call, index: Option[Int]) extends VariableLookupException(s"Could not find outputs for call ${call.fullyQualifiedName} at index $index")
-  val NoOutputResolver: OutputResolver = (c: Call, i: Option[Int]) => Failure(new OutputVariableLookupException(c, i))
+  class OutputVariableLookupException(node: GraphNode, index: Option[Int]) extends VariableLookupException(s"Could not find outputs for call ${node.fullyQualifiedName} at index $index")
+  val NoOutputResolver: OutputResolver = (node: GraphNode, i: Option[Int]) => Failure(new OutputVariableLookupException(node, i))
 
   trait TsvSerializable {
     def tsvSerialize: Try[String]
