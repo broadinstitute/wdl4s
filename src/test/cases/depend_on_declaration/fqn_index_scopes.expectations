@@ -1,0 +1,16 @@
+{
+  "a": "Task",
+  "a.o": "TaskOutput",
+  "b": "Task",
+  "b.ints": "Declaration",
+  "b.o": "TaskOutput",
+  "w": "Workflow",
+  "w.a0": "TaskCall",
+  "w.a0.o": "CallOutput",
+  "w.a1": "TaskCall",
+  "w.a1.o": "CallOutput",
+  "w.b": "TaskCall",
+  "w.b.ints": "Declaration",
+  "w.b.o": "CallOutput",
+  "w.ints": "Declaration"
+}

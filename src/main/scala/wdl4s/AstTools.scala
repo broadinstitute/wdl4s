@@ -3,6 +3,7 @@ package wdl4s
 import java.nio.file.Path
 
 import better.files._
+import wdl4s.WdlExpression.AstForExpressions
 import wdl4s.parser.WdlParser
 import wdl4s.parser.WdlParser._
 import wdl4s.types._
@@ -15,7 +16,14 @@ object AstTools {
   implicit class EnhancedAstNode(val astNode: AstNode) extends AnyVal {
     def findAsts(name: String): Seq[Ast] = AstTools.findAsts(astNode, name)
     def findAstsWithTrail(name: String, trail: Seq[AstNode] = Seq.empty): Map[Ast, Seq[AstNode]] = {
-      AstTools.findAstsWithTrail(astNode, name, trail)
+      astNode match {
+        case x: Ast =>
+          val thisAst = if (x.getName.equals(name)) Map(x -> trail) else Map.empty[Ast, Seq[AstNode]]
+          combine(x.getAttributes.values.asScala.flatMap{_.findAstsWithTrail(name, trail :+ x)}.toMap, thisAst)
+        case x: AstList => x.asScala.toVector.flatMap{_.findAstsWithTrail(name, trail :+ x)}.toMap
+        case x: Terminal => Map.empty[Ast, Seq[AstNode]]
+        case _ => Map.empty[Ast, Seq[AstNode]]
+      }
     }
     def findTerminalsWithTrail(terminalType: String, trail: Seq[AstNode] = Seq.empty): Map[Terminal, Seq[AstNode]] = {
       astNode match {
@@ -25,9 +33,16 @@ object AstTools {
         case _ => Map.empty[Terminal, Seq[AstNode]]
       }
     }
+    def findFirstTerminal: Option[Terminal] = {
+      Option(astNode) flatMap {
+        case l: AstList => l.astListAsVector.flatMap(_.findFirstTerminal).headOption
+        case a: Ast => a.getAttributes.asScala.toMap.flatMap({ case (k, v) => v.findFirstTerminal }).headOption
+        case t: Terminal => Option(t)
+      }
+    }
     def findTopLevelMemberAccesses(): Iterable[Ast] = AstTools.findTopLevelMemberAccesses(astNode)
     def sourceString: String = astNode.asInstanceOf[Terminal].getSourceString
-    def astListAsVector(): Seq[AstNode] = astNode.asInstanceOf[AstList].asScala.toVector
+    def astListAsVector: Seq[AstNode] = astNode.asInstanceOf[AstList].asScala.toVector
     def wdlType(wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): WdlType = {
       astNode match {
         case t: Terminal =>
@@ -40,10 +55,17 @@ object AstTools {
             case WdlObjectType.toWdlString => WdlObjectType
             case "Array" => throw new SyntaxError(wdlSyntaxErrorFormatter.arrayMustHaveATypeParameter(t))
           }
+        case a: Ast if isOptionalType(a) => optionalType(a, wdlSyntaxErrorFormatter)
+        case a: Ast if isNonEmptyType(a) => nonEmptyType(a, wdlSyntaxErrorFormatter)
         case a: Ast =>
-          val subtypes = a.getAttribute("subtype").astListAsVector()
+          val subtypes = a.getAttribute("subtype").astListAsVector
           val typeTerminal = a.getAttribute("name").asInstanceOf[Terminal]
           a.getAttribute("name").sourceString match {
+            case "Pair" =>
+              if (subtypes.size != 2) throw new SyntaxError(wdlSyntaxErrorFormatter.pairMustHaveExactlyTwoTypeParameters(typeTerminal))
+              val leftType = subtypes.head.wdlType(wdlSyntaxErrorFormatter)
+              val rightType = subtypes.tail.head.wdlType(wdlSyntaxErrorFormatter)
+              WdlPairType(leftType, rightType)
             case "Array" =>
               if (subtypes.size != 1) throw new SyntaxError(wdlSyntaxErrorFormatter.arrayMustHaveOnlyOneTypeParameter(typeTerminal))
               val member = subtypes.head.wdlType(wdlSyntaxErrorFormatter)
@@ -54,8 +76,19 @@ object AstTools {
               val valueType = subtypes.tail.head.wdlType(wdlSyntaxErrorFormatter)
               WdlMapType(keyType, valueType)
           }
-        case null => WdlStringType
-        case _ => throw new UnsupportedOperationException("Implement this later for compound types")
+        case _ => throw new UnsupportedOperationException(s"Unexpected WDL type AST: ${astNode.sourceString}")
+      }
+    }
+
+    def isOptionalType(a: Ast) = a.getName.equals("OptionalType")
+    def optionalType(a: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter) = WdlOptionalType(a.getAttribute("innerType").wdlType(wdlSyntaxErrorFormatter))
+
+    def isNonEmptyType(a: Ast) = a.getName.equals("NonEmptyType")
+    def nonEmptyType(a: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter) = {
+      val innerType = a.getAttribute("innerType").wdlType(wdlSyntaxErrorFormatter)
+      innerType match {
+        case arrayType: WdlArrayType => arrayType.asNonEmptyArrayType
+        case _ => throw new UnsupportedOperationException("Currently the only supported non-empty types are Array[X]+")
       }
     }
 
@@ -82,6 +115,19 @@ object AstTools {
         WdlObject(elements)
       }
 
+      def astTupleToValue(a: Ast): WdlValue = {
+        val subElements = a.getAttribute("values").astListAsVector
+        if (subElements.size == 1) {
+          // Tuple 1 is equivalent to the value inside it. Enables nesting parens, e.g. (1 + 2) + 3
+          a.wdlValue(wdlType, wdlSyntaxErrorFormatter)
+        } else if (subElements.size == 2 && wdlType.isInstanceOf[WdlPairType]) {
+          val pairType = wdlType.asInstanceOf[WdlPairType]
+          WdlPair(subElements.head.wdlValue(pairType.leftType, wdlSyntaxErrorFormatter), subElements(1).wdlValue(pairType.rightType, wdlSyntaxErrorFormatter))
+        } else {
+          throw new SyntaxError(s"Could not convert AST to a $wdlType (${Option(astNode).getOrElse("No AST").toString})")
+        }
+      }
+
       astNode match {
         case t: Terminal if t.getTerminalStr == "string" && wdlType == WdlStringType => WdlString(t.getSourceString)
         case t: Terminal if t.getTerminalStr == "string" && wdlType == WdlFileType => WdlFile(t.getSourceString)
@@ -98,6 +144,7 @@ object AstTools {
           val arrType = wdlType.asInstanceOf[WdlArrayType]
           val elements = a.getAttribute("values").astListAsVector map {node => node.wdlValue(arrType.memberType, wdlSyntaxErrorFormatter)}
           WdlArray(arrType, elements)
+        case a: Ast if a.getName == "TupleLiteral" => astTupleToValue(a)
         case a: Ast if a.getName == "MapLiteral" && wdlType.isInstanceOf[WdlMapType] => astToMap(a)
         case a: Ast if a.getName == "ObjectLiteral" && wdlType == WdlObjectType => astToObject(a)
         case _ => throw new SyntaxError(s"Could not convert AST to a $wdlType (${Option(astNode).getOrElse("No AST").toString})")
@@ -124,10 +171,14 @@ object AstTools {
     val Runtime = "Runtime"
     val RuntimeAttribute = "RuntimeAttribute"
     val Declaration = "Declaration"
-    val WorkflowOutput = "WorkflowOutput"
+    val WorkflowOutputWildcard = "WorkflowOutputWildcard"
+    val WorkflowOutputDeclaration = "WorkflowOutputDeclaration"
+    val WorkflowOutputs = "WorkflowOutputs"
     val Scatter = "Scatter"
     val Meta = "Meta"
     val ParameterMeta = "ParameterMeta"
+    val Namespace = "Namespace" // TODO: rename this in the grammar
+    val If = "If"
   }
 
   def getAst(wdlSource: WdlSource, resource: String): Ast = {
@@ -140,7 +191,8 @@ object AstTools {
 
   /**
    * Given a WDL file, this will simply parse it and return the syntax tree
-   * @param wdlFile The file to parse
+    *
+    * @param wdlFile The file to parse
    * @return an Abstract Syntax Tree (WdlParser.Ast) representing the structure of the code
    * @throws WdlParser.SyntaxError if there was a problem parsing the source code
    */
@@ -157,17 +209,6 @@ object AstTools {
     }
   }
 
-  def findAstsWithTrail(ast: AstNode, name: String, trail: Seq[AstNode] = Seq.empty): Map[Ast, Seq[AstNode]] = {
-    ast match {
-      case x: Ast =>
-        val thisAst = if (x.getName.equals(name)) Map(x -> trail) else Map.empty[Ast, Seq[AstNode]]
-        combine(x.getAttributes.values.asScala.flatMap{_.findAstsWithTrail(name, trail :+ x)}.toMap, thisAst)
-      case x: AstList => x.asScala.toVector.flatMap{_.findAstsWithTrail(name, trail :+ x)}.toMap
-      case x: Terminal => Map.empty[Ast, Seq[AstNode]]
-      case _ => Map.empty[Ast, Seq[AstNode]]
-    }
-  }
-
   def findTerminals(ast: AstNode): Seq[Terminal] = {
     ast match {
       case x: Ast => x.getAttributes.values.asScala.flatMap(findTerminals).toSeq
@@ -177,18 +218,39 @@ object AstTools {
     }
   }
 
-  /*
-    All MemberAccess ASTs that are not contained in other MemberAccess ASTs
-
-    The reason this returns a collection would be expressions such as "a.b.c + a.b.d", each one of those
-    would have its own MemberAccess - "a.b.c" and "a.b.d"
-  */
+  /**
+    * All MemberAccess ASTs that are not contained in other MemberAccess ASTs
+    *
+    * The reason this returns a collection would be expressions such as "a.b.c + a.b.d", each one of those
+    * would have its own MemberAccess - "a.b.c" and "a.b.d"
+    */
   def findTopLevelMemberAccesses(expr: AstNode): Iterable[Ast] = expr.findAstsWithTrail("MemberAccess").filterNot {
-    case(k, v) => v exists {
+    case (k, v) => v exists {
       case a: Ast => a.getName == "MemberAccess"
       case _ => false
     }
   }.keys
+
+  /**
+    * All variable references in the expression AstNode that are not part of MemberAccess ASTs
+    *
+    * These represent anything that would need to be have scope resolution done on it to determine the value
+    */
+  def findVariableReferences(expr: AstNode): Iterable[Terminal] = {
+    def isMemberAccessRhs(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
+      /** e.g. for MemberAccess ast representing source code A.B.C, this would return true for only B,C and not A */
+      trail.collect({ case a: Ast if a.isMemberAccess && a.getAttribute("rhs") == identifier => a }).nonEmpty
+    }
+    def isFunctionName(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
+      trail.lastOption match {
+        case Some(last: Ast) if last.isFunctionCall && last.getAttribute("name") == identifier => true
+        case _ => false
+      }
+    }
+    expr.findTerminalsWithTrail("identifier").collect({
+      case (terminal, trail) if !isMemberAccessRhs(terminal, trail) && !isFunctionName(terminal, trail) => terminal
+    })
+  }
 
   /**
    * Given a Call AST, this will validate that there is 0 or 1 'input' section with non-empty
@@ -216,13 +278,33 @@ object AstTools {
       case asts: Seq[Ast] if asts.isEmpty => Seq.empty[Ast]
       case asts: Seq[Ast] =>
         /* Uses of .head here are assumed by the above code that ensures that there are no empty maps */
-        val secondInputSectionIOMappings = asts(1).getAttribute("map").astListAsVector()
+        val secondInputSectionIOMappings = asts(1).getAttribute("map").astListAsVector
         val firstKeyTerminal = secondInputSectionIOMappings.head.asInstanceOf[Ast].getAttribute("key").asInstanceOf[Terminal]
         throw new SyntaxError(wdlSyntaxErrorFormatter.multipleInputStatementsOnCall(firstKeyTerminal))
     }
   }
 
   def terminalMap(ast: Ast, source: WdlSource) = (findTerminals(ast) map {(_, source)}).toMap
+
+  def wdlSectionToStringMap(ast: Ast, node: String, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Map[String, String] = {
+    ast.findAsts(node) match {
+      case a if a.isEmpty => Map.empty[String, String]
+      case a if a.size == 1 =>
+        // Yes, even 'meta {}' and 'parameter_meta {}' sections have RuntimeAttribute ASTs.
+        // In hindsight, this was a poor name for the AST.
+        a.head.findAsts(AstNodeName.RuntimeAttribute).map({ ast =>
+          val key = ast.getAttribute("key").asInstanceOf[Terminal]
+          val value = ast.getAttribute("value")
+          if (!value.isInstanceOf[Terminal] || value.asInstanceOf[Terminal].getTerminalStr != "string") {
+            // Keys are parsed as identifiers, but values are parsed as expressions.
+            // For now, only accept expressions that are strings
+            throw new SyntaxError(wdlSyntaxErrorFormatter.expressionExpectedToBeString(key))
+          }
+          key.sourceString -> value.sourceString
+        }).toMap
+      case _ => throw new SyntaxError(wdlSyntaxErrorFormatter.expectedAtMostOneSectionPerTask(node, ast.getAttribute("name").asInstanceOf[Terminal]))
+    }
+  }
 
   private def combine[T, U](map1: Map[T, Seq[U]], map2: Map[T, Seq[U]]): Map[T, Seq[U]] = {
     map1 ++ map2.map{ case (k,v) => k -> (v ++ map1.getOrElse(k, Seq.empty)) }

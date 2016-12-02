@@ -2,19 +2,26 @@ package wdl4s
 
 import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.WdlExpression._
-import wdl4s.expression.{FileEvaluator, TypeEvaluator, ValueEvaluator, WdlFunctions}
+import wdl4s.expression._
 import wdl4s.formatter.{NullSyntaxHighlighter, SyntaxHighlighter}
-import wdl4s.types._
-import wdl4s.values._
 import wdl4s.parser.WdlParser
 import wdl4s.parser.WdlParser.{Ast, AstList, AstNode, Terminal}
+import wdl4s.types._
+import wdl4s.values._
 
 import scala.collection.JavaConverters._
 import scala.language.postfixOps
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 class WdlExpressionException(message: String = null, cause: Throwable = null) extends RuntimeException(message, cause)
 case class VariableNotFoundException(variable: String, cause: Throwable = null) extends Exception(s"Variable '$variable' not found", cause)
+case class VariableLookupException(message: String, cause: Throwable = null) extends Exception(message, cause)
+case class ScatterIndexNotFound(message: String, cause: Throwable = null) extends Exception(message, cause)
+
+case object NoLookup extends ScopedLookupFunction {
+  def apply(value: String): WdlValue =
+    throw new UnsupportedOperationException(s"No identifiers should be looked up: $value")
+}
 
 object WdlExpression {
 
@@ -25,6 +32,7 @@ object WdlExpression {
     def functionName: String = ast.getAttribute("name").asInstanceOf[Terminal].getSourceString
     def isMemberAccess: Boolean = ast.getName == "MemberAccess"
     def isArrayLiteral: Boolean = ast.getName == "ArrayLiteral"
+    def isTupleLiteral: Boolean = ast.getName == "TupleLiteral"
     def isMapLiteral: Boolean = ast.getName == "MapLiteral"
     def isObjectLiteral: Boolean = ast.getName == "ObjectLiteral"
     def isArrayOrMapLookup: Boolean = ast.getName == "ArrayOrMapLookup"
@@ -81,52 +89,13 @@ object WdlExpression {
   def evaluateFiles(ast: AstNode, lookup: ScopedLookupFunction, functions: WdlFunctions[WdlValue], coerceTo: WdlType = WdlAnyType) =
     FileEvaluator(ValueEvaluator(lookup, functions), coerceTo).evaluate(ast)
 
-  def evaluateType(ast: AstNode, lookup: (String) => WdlType, functions: WdlFunctions[WdlType]) =
-    TypeEvaluator(lookup, functions).evaluate(ast)
-
-  /**
-   * Provides a lookup function that will attempt to resolve an identifier as follows:
-   *
-   * 1) Resolve as a task input parameter
-   * 2) Resolve as a declaration
-   *
-   * For example:
-   *
-   * task test {
-   *   String x = "x"
-   *   String y = x + "y"
-   *
-   *   command {
-   *     echo ${y + "z"}
-   *   }
-   * }
-   *
-   * when evaluating the expression `y + "z"`, lookup("y") will be called which first tries resolveParameter("y") and fails
-   * Then tries resolveDeclaration("y") which find declaration for String y and evaluate the expression `x + "y"`.  In
-   * the process of evaluating that it needs to call lookup("x") which gets it's value from resolveDeclaration("x") = WdlString("x")
-   *
-   * This will allow the expression `y + "z"` to evaluate to the string "xyz"
-   */
-  def standardLookupFunction(parameters: Map[String, WdlValue], declarations: Seq[Declaration], functions: WdlFunctions[WdlValue]): String => WdlValue = {
-    def resolveParameter(name: String): Try[WdlValue] = parameters.get(name) match {
-      case Some(value) => Success(value)
-      case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as an input parameter"))
-    }
-    def resolveDeclaration(lookup: ScopedLookupFunction)(name: String) = declarations.find(_.name == name) match {
-      case Some(d) => d.expression.map(_.evaluate(lookup, functions)).getOrElse(Failure(new WdlExpressionException(s"Could not evaluate declaration: $d")))
-      case None => Failure(new WdlExpressionException(s"Could not resolve variable '$name' as a declaration"))
-    }
-    def lookup(key: String): WdlValue = {
-      val attemptedResolution = Stream(resolveParameter _, resolveDeclaration(lookup) _) map { _(key) } find { _.isSuccess }
-      attemptedResolution.getOrElse(throw new VariableNotFoundException(key)).get
-    }
-    lookup
-  }
+  def evaluateType(ast: AstNode, lookup: (String) => WdlType, functions: WdlFunctions[WdlType], from: Option[Scope] = None) =
+    TypeEvaluator(lookup, functions, from).evaluate(ast)
 
   def fromString(expression: WdlSource): WdlExpression = {
     val tokens = parser.lex(expression, "string")
     val terminalMap = (tokens.asScala.toVector map {(_, expression)}).toMap
-    val parseTree = parser.parse_e(tokens, new WdlSyntaxErrorFormatter(terminalMap))
+    val parseTree = parser.parse_e(tokens, WdlSyntaxErrorFormatter(terminalMap))
     new WdlExpression(parseTree.toAst)
   }
 
@@ -162,6 +131,9 @@ object WdlExpression {
       case a: Ast if a.isArrayLiteral =>
         val evaluatedElements = a.getAttribute("values").astListAsVector map {x => toString(x, highlighter)}
         s"[${evaluatedElements.mkString(",")}]"
+      case a: Ast if a.isTupleLiteral =>
+        val evaluatedElements = a.getAttribute("values").astListAsVector map { x => toString(x, highlighter)}
+        s"(${evaluatedElements.mkString(", ")})"
       case a: Ast if a.isMapLiteral =>
         val evaluatedMap = a.getAttribute("map").astListAsVector map { kv =>
           val key = toString(kv.asInstanceOf[Ast].getAttribute("key"), highlighter)
@@ -186,7 +158,6 @@ object WdlExpression {
 
 case class WdlExpression(ast: AstNode) extends WdlValue {
   override val wdlType = WdlExpressionType
-  import WdlExpression.AstForExpressions
 
   def evaluate(lookup: ScopedLookupFunction, functions: WdlFunctions[WdlValue]): Try[WdlValue] =
     WdlExpression.evaluate(ast, lookup, functions)
@@ -194,8 +165,8 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
   def evaluateFiles(lookup: ScopedLookupFunction, functions: WdlFunctions[WdlValue], coerceTo: WdlType): Try[Seq[WdlFile]] =
     WdlExpression.evaluateFiles(ast, lookup, functions, coerceTo)
 
-  def evaluateType(lookup: (String) => WdlType, functions: WdlFunctions[WdlType]): Try[WdlType] =
-    WdlExpression.evaluateType(ast, lookup, functions)
+  def evaluateType(lookup: (String) => WdlType, functions: WdlFunctions[WdlType], from: Option[Scope] = None): Try[WdlType] =
+    WdlExpression.evaluateType(ast, lookup, functions, from)
 
   def containsFunctionCall = ast.containsFunctionCalls
 
@@ -205,20 +176,9 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
 
   override def toWdlString: String = toString(NullSyntaxHighlighter)
 
-  def prerequisiteCallNames: Set[LocallyQualifiedName] = this.toMemberAccesses map { _.lhs }
-  def toMemberAccesses: Set[MemberAccess] = AstTools.findTopLevelMemberAccesses(ast) map { MemberAccess(_) } toSet
-  def variableReferences: Iterable[Terminal] = {
-    ast.findTerminalsWithTrail("identifier") flatMap { case (terminal, trail) =>
-      // function calls have 'identifier' terminals to represent the name of the function
-      if (trail.nonEmpty && trail.last.isInstanceOf[Ast] && trail.last.asInstanceOf[Ast].isFunctionCall)
-        None
-      else
-        Option(terminal)
-    }
+  def prerequisiteCallNames: Set[FullyQualifiedName] = {
+    this.topLevelMemberAccesses map { _.lhs }
   }
-}
-
-case object NoLookup extends ScopedLookupFunction {
-  def apply(value: String): WdlValue =
-    throw new UnsupportedOperationException(s"No identifiers should be looked up: $value")
+  def topLevelMemberAccesses: Set[MemberAccess] = AstTools.findTopLevelMemberAccesses(ast) map { MemberAccess(_) } toSet
+  def variableReferences: Iterable[Terminal] = AstTools.findVariableReferences(ast)
 }

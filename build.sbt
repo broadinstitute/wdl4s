@@ -7,23 +7,36 @@ organization := "org.broadinstitute"
 
 scalaVersion := "2.11.8"
 
-// Upcoming release, or current if we're on the master branch
-git.baseVersion := "0.6"
+lazy val versionSettings = Seq(
+  // Upcoming release, or current if we're on the master branch
+  git.baseVersion := "0.7",
 
-// Shorten the git commit hash
-git.gitHeadCommit := git.gitHeadCommit.value map { _.take(7) }
+  // Shorten the git commit hash
+  git.gitHeadCommit := git.gitHeadCommit.value map { _.take(7) },
 
-// Travis will deploy tagged releases, add -SNAPSHOT for all local builds
-git.gitUncommittedChanges := true
+  // Travis will deploy tagged releases, add -SNAPSHOT for all local builds
+  git.gitUncommittedChanges := true,
 
-versionWithGit
+  // For now, obfuscate SNAPSHOTs from sbt's developers: https://github.com/sbt/sbt/issues/2687#issuecomment-236586241
+  git.uncommittedSignifier := Option("SNAP")
+)
+
+versionWithGit ++ versionSettings
 
 val sprayJsonV = "1.3.2"
 
 libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0",
   "io.spray" %% "spray-json" % sprayJsonV,
-  "org.typelevel" %% "cats" % "0.7.2",
+  /*
+  Exclude test framework cats-laws and its transitive dependency scalacheck.
+  If sbt detects scalacheck, it tries to run it.
+  Explicitly excluding the two problematic artifacts instead of including the three (or four?).
+  https://github.com/typelevel/cats/tree/v0.7.2#getting-started
+   */
+  "org.typelevel" %% "cats" % "0.7.2"
+    exclude("org.typelevel", "cats-laws_2.11")
+    exclude("org.typelevel", "cats-kernel-laws_2.11"),
   "commons-codec" % "commons-codec" % "1.10",
   "commons-io" % "commons-io" % "2.5",
   "org.apache.commons" % "commons-lang3" % "3.4",

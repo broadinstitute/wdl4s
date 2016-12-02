@@ -13,21 +13,36 @@ import scala.util.{Failure, Success, Try}
 case class ValueEvaluator(override val lookup: String => WdlValue, override val functions: WdlFunctions[WdlValue]) extends Evaluator {
   override type T = WdlValue
 
+  private val InterpolationTagPattern = "\\$\\{\\s*([^\\}]*)\\s*\\}".r
+
   private def replaceInterpolationTag(string: Try[WdlString], tag: String): Try[WdlString] = {
     val expr = WdlExpression.fromString(tag.substring(2, tag.length - 1))
     (expr.evaluate(lookup, functions), string) match {
-      case (Success(value), Success(str)) => Success(WdlString(str.value.replace(tag, value.valueString)))
+      case (Success(value), Success(str)) =>
+        value match {
+          case s: WdlString if InterpolationTagPattern.anchored.findFirstIn(s.valueString).isDefined =>
+            replaceInterpolationTag(Success(WdlString(str.value.replace(tag, s.valueString))), s.valueString)
+          case v => Success(WdlString(str.value.replace(tag, v.valueString)))
+        }
       case (Failure(ex), _) => Failure(ex)
       case (_, Failure(ex)) => Failure(ex)
     }
   }
 
-  private def interpolate(str: String): Try[WdlString] =
-    "\\$\\{\\s*([^\\}]*)\\s*\\}".r.findAllIn(str).foldLeft(Try(WdlString(str)))(replaceInterpolationTag)
+  private def interpolate(str: String): Try[WdlString] = {
+    InterpolationTagPattern.findAllIn(str).foldLeft(Try(WdlString(str)))(replaceInterpolationTag)
+  }
+
+  private def interpolate(value: WdlValue): Try[WdlValue] = {
+    value match {
+      case s: WdlString => interpolate(s.valueString)
+      case _ => Try(value)
+    }
+  }
 
   override def evaluate(ast: AstNode): Try[WdlValue] = {
     ast match {
-      case t: Terminal if t.getTerminalStr == "identifier" => Try(lookup(t.getSourceString))
+      case t: Terminal if t.getTerminalStr == "identifier" => Try(lookup(t.getSourceString)).flatMap(interpolate)
       case t: Terminal if t.getTerminalStr == "integer" => Success(WdlInteger(t.getSourceString.toInt))
       case t: Terminal if t.getTerminalStr == "float" => Success(WdlFloat(t.getSourceString.toDouble))
       case t: Terminal if t.getTerminalStr == "boolean" => Success(WdlBoolean(t.getSourceString == "true"))
@@ -65,6 +80,18 @@ case class ValueEvaluator(override val lookup: String => WdlValue, override val 
           elements <- TryUtil.sequence(evaluatedElements)
           subtype <- WdlType.homogeneousTypeFromValues(elements)
         } yield WdlArray(WdlArrayType(subtype), elements)
+      case a: Ast if a.isTupleLiteral =>
+        val unevaluatedElements = a.getAttribute("values").astListAsVector
+        if (unevaluatedElements.size == 1) {
+          evaluate(unevaluatedElements.head)
+        } else if (unevaluatedElements.size == 2) {
+          for {
+            left <- evaluate(unevaluatedElements.head)
+            right <- evaluate(unevaluatedElements(1))
+          } yield WdlPair(left, right)
+        } else {
+          Failure(new WdlExpressionException(s"WDL does not currently support tuples with n > 2: ${a.toPrettyString}"))
+        }
       case a: Ast if a.isMapLiteral =>
         val evaluatedMap = a.getAttribute("map").astListAsVector map { kv =>
           val key = evaluate(kv.asInstanceOf[Ast].getAttribute("key"))
@@ -88,7 +115,7 @@ case class ValueEvaluator(override val lookup: String => WdlValue, override val 
                   case Some(v:WdlValue) => Success(v)
                   case None => Failure(new WdlExpressionException(s"Could not find key ${rhs.getSourceString}"))
                 }
-              case a: WdlArray if a.wdlType == WdlArrayType(WdlObjectType) =>
+              case array: WdlArray if array.wdlType == WdlArrayType(WdlObjectType) =>
                 /**
                  * This case is for slicing an Array[Object], used mainly for scatter-gather.
                  * For example, if 'call foo' was in a scatter block, foo's outputs (e.g. Int x)
@@ -96,8 +123,13 @@ case class ValueEvaluator(override val lookup: String => WdlValue, override val 
                  * then 'foo' would evaluate to an Array[Objects] and foo.x would result in an
                  * Array[Int]
                  */
-                Success(a map {_.asInstanceOf[WdlObject].value.get(rhs.sourceString).get})
-              case ns: WdlNamespace => Success(lookup(ns.importedAs.map {n => s"$n.${rhs.getSourceString}"}.getOrElse(rhs.getSourceString)))
+                Success(array map {_.asInstanceOf[WdlObject].value.get(rhs.sourceString).get})
+              case p: WdlPair =>
+                val identifier = rhs.getSourceString
+                if (identifier.equals("left")) Success(p.left)
+                else if (identifier.equals("right")) Success(p.right)
+                else Failure(new WdlExpressionException("A pair only has the members: 'left' and 'right'"))
+              case ns: WdlNamespace => Success(lookup(ns.importedAs.map{ n => s"$n.${rhs.getSourceString}" }.getOrElse(rhs.getSourceString)))
               case _ => Failure(new WdlExpressionException("Left-hand side of expression must be a WdlObject or Namespace"))
             }
           case _ => Failure(new WdlExpressionException("Right-hand side of expression must be identifier"))

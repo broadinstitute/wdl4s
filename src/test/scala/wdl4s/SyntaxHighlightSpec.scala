@@ -1,11 +1,11 @@
 package wdl4s
 
 import wdl4s.formatter.{AnsiSyntaxHighlighter, HtmlSyntaxHighlighter, SyntaxFormatter}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{FlatSpec, Matchers, WordSpec}
 
-class SyntaxHighlightSpec extends Matchers with WordSpecLike {
+class SyntaxHighlightSpec extends WordSpec with Matchers {
   "SyntaxFormatter for simple workflow" should {
-    val namespace = WdlNamespace.load(
+    val namespace = WdlNamespace.loadUsingSource(
       """task t {
         |  String f
         |  Int p
@@ -41,8 +41,20 @@ class SyntaxHighlightSpec extends Matchers with WordSpecLike {
         |    t.p
         |    t.f
         |  }
-        |}""".stripMargin
-    )
+        |
+        |	parameter_meta {
+        |    memory_mb: "Amount of memory to allocate to the JVM"
+        |    param: "Some arbitrary parameter"
+        |    sample_id: "The ID of the sample in format foo_bar_baz"
+        |  }
+        |
+        |  meta {
+        |   author: "Joe Somebody"
+        |   email: "joe@company.org"
+        |  }
+        |
+        |}""".stripMargin,
+      None, None)
 
     val console =
       """\u001b[38;5;214mtask\u001b[0m \u001b[38;5;253mt\u001b[0m {
@@ -75,6 +87,15 @@ class SyntaxHighlightSpec extends Matchers with WordSpecLike {
         |    \u001b[38;5;214mcall\u001b[0m \u001b[38;5;253mt\u001b[0m as v {
         |      input: f=t, p=3
         |    }
+        |  }
+        |  \u001b[38;5;214mmeta\u001b[0m {
+        |    author: "Joe Somebody"
+        |    email: "joe@company.org"
+        |  }
+        |  \u001b[38;5;214mparameter_meta\u001b[0m {
+        |    memory_mb: "Amount of memory to allocate to the JVM"
+        |    param: "Some arbitrary parameter"
+        |    sample_id: "The ID of the sample in format foo_bar_baz"
         |  }
         |  \u001b[38;5;214moutput\u001b[0m {
         |    t.p
@@ -114,6 +135,15 @@ class SyntaxHighlightSpec extends Matchers with WordSpecLike {
         |      input: f=t, p=3
         |    }
         |  }
+        |  <span class="keyword">meta</span> {
+        |    author: "Joe Somebody"
+        |    email: "joe@company.org"
+        |  }
+        |  <span class="keyword">parameter_meta</span> {
+        |    memory_mb: "Amount of memory to allocate to the JVM"
+        |    param: "Some arbitrary parameter"
+        |    sample_id: "The ID of the sample in format foo_bar_baz"
+        |  }
         |  <span class="keyword">output</span> {
         |    t.p
         |    t.f
@@ -132,7 +162,26 @@ class SyntaxHighlightSpec extends Matchers with WordSpecLike {
   }
 
   "SyntaxFormatter for more feature-rich workflow" should {
-    val namespace = WdlNamespace.load(
+
+    val fooTaskWdl = """
+                       |task foo {
+                       |  command {
+                       |    echo "foo!"
+                       |  }
+                       |  output {
+                       |  File out = stdout()
+                       |  }
+                       |}
+                     """.stripMargin
+
+    def resolver(importUri: String): WdlSource = {
+      importUri match {
+        case "foo.wdl" => fooTaskWdl
+        case _ => throw new RuntimeException(s"Can't resolve $importUri")
+      }
+    }
+
+    val namespace = WdlNamespace.loadUsingSource(
       """import "foo.wdl" as foo_ns
         |
         |task t {
@@ -163,8 +212,7 @@ class SyntaxHighlightSpec extends Matchers with WordSpecLike {
         |  call t as u {
         |    input: f="abc", p=p
         |  }
-        |}""".stripMargin,
-      importResolver = (s:String) => ""
+        |}""".stripMargin, None, Option(Seq(resolver))
     )
 
     val console =

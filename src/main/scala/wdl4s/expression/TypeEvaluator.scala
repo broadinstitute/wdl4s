@@ -2,14 +2,14 @@ package wdl4s.expression
 
 import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.WdlExpression._
-import wdl4s.types._
-import wdl4s.{WdlExpressionException, WdlNamespace}
 import wdl4s.parser.WdlParser.{Ast, AstNode, Terminal}
+import wdl4s.types._
 import wdl4s.util.TryUtil
+import wdl4s._
 
 import scala.util.{Failure, Success, Try}
 
-case class TypeEvaluator(override val lookup: String => WdlType, override val functions: WdlFunctions[WdlType]) extends Evaluator {
+case class TypeEvaluator(override val lookup: String => WdlType, override val functions: WdlFunctions[WdlType], from: Option[Scope] = None) extends Evaluator {
   override type T = WdlType
 
   override def evaluate(ast: AstNode): Try[WdlType] = ast match {
@@ -51,6 +51,7 @@ case class TypeEvaluator(override val lookup: String => WdlType, override val fu
         elements <- TryUtil.sequence(evaluatedElements)
         subtype <- WdlType.homogeneousTypeFromTypes(elements)
       } yield WdlArrayType(subtype)
+    case a: Ast if a.isTupleLiteral => tupleAstToWdlType(a)
     case a: Ast if a.isMapLiteral =>
       val evaluatedMap = a.getAttribute("map").astListAsVector map { kv =>
         val key = evaluate(kv.asInstanceOf[Ast].getAttribute("key"))
@@ -74,11 +75,19 @@ case class TypeEvaluator(override val lookup: String => WdlType, override val fu
         case rhs: Terminal if rhs.getTerminalStr == "identifier" =>
           evaluate(a.getAttribute("lhs")).flatMap {
             case o: WdlCallOutputsObjectType =>
-              o.call.task.outputs.find(_.name == rhs.getSourceString) match {
-                case Some(taskOutput) => evaluate(taskOutput.requiredExpression.ast)
+              o.call.outputs.find(_.unqualifiedName == rhs.getSourceString) match {
+                case Some(taskOutput) => 
+                  from map { source =>
+                    evaluate(taskOutput.requiredExpression.ast) map { t => DeclarationInterface.relativeWdlType(source, taskOutput, t) }
+                  } getOrElse evaluate(taskOutput.requiredExpression.ast)
                 case None => Failure(new WdlExpressionException(s"Could not find key ${rhs.getSourceString}"))
               }
-            case ns: WdlNamespace => Success(lookup(ns.importedAs.map {n => s"$n.${rhs.getSourceString}"}.getOrElse(rhs.getSourceString)))
+            case WdlPairType(leftType, rightType) =>
+              rhs.sourceString match {
+                case "left" => Success(leftType)
+                case "right" => Success(rightType)
+              }
+            case ns: WdlNamespace => Success(lookup(ns.importedAs.map{ n => s"$n.${rhs.getSourceString}" }.getOrElse(rhs.getSourceString)))
             case _ => Failure(new WdlExpressionException("Left-hand side of expression must be a WdlObject or Namespace"))
           }
         case _ => Failure(new WdlExpressionException("Right-hand side of expression must be identifier"))
@@ -95,6 +104,21 @@ case class TypeEvaluator(override val lookup: String => WdlType, override val fu
       val name = a.getAttribute("name").sourceString
       val params = a.params map evaluate
       functions.getFunction(name)(params)
+  }
+
+  def tupleAstToWdlType(a: Ast): Try[WdlType] = {
+    val unevaluatedElements = a.getAttribute("values").astListAsVector
+    // Tuple 1 is equivalent to the value inside it. Enables nesting parens, e.g. (1 + 2) + 3
+    if (unevaluatedElements.size == 1) {
+      evaluate(unevaluatedElements.head)
+    } else if (unevaluatedElements.size == 2) {
+      for {
+        left <- evaluate(unevaluatedElements.head)
+        right <- evaluate(unevaluatedElements(1))
+      } yield WdlPairType(left, right)
+    } else {
+      Failure(new WdlExpressionException(s"WDL does not currently support tuples with n > 2: ${a.toPrettyString}"))
+    }
   }
 }
 

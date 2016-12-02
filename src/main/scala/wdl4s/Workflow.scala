@@ -1,100 +1,28 @@
 package wdl4s
 
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
-import wdl4s.types.WdlType
-import wdl4s.parser.WdlParser.{Ast, AstList, SyntaxError, Terminal}
+import wdl4s.expression.WdlFunctions
+import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
+import wdl4s.types.{WdlArrayType, WdlType}
+import wdl4s.util.TryUtil
+import wdl4s.values.WdlValue
 
-import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.language.postfixOps
+import scala.util.Try
 
 object Workflow {
-
-  def apply(ast: Ast,
-            namespaces: Seq[WdlNamespace],
-            tasks: Seq[Task],
-            wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Workflow = {
-    ast.getName match {
-      case AstNodeName.Workflow =>
-        generateWorkflowScopes(ast, namespaces, tasks, wdlSyntaxErrorFormatter)
-      case nonWorkflowAst =>
-        throw new UnsupportedOperationException(s"Ast is not a 'Workflow Ast' but a '$nonWorkflowAst Ast'")
+  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Workflow = {
+    if (ast.getName != AstNodeName.Workflow) {
+      throw new UnsupportedOperationException(s"Expecting Workflow AST, got a ${ast.getName} AST")
     }
-  }
-
-  private def generateWorkflowScopes(workflowAst: Ast,
-                                     namespaces: Seq[WdlNamespace],
-                                     tasks: Seq[Task],
-                                     wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Workflow = {
-
-    /**
-     * Incremented indexes per type of class. Currently only used by Scatter.
-     * Indexes are incremented just before use + recursion (prefix, vs. infix or postfix),
-     * thus "start" at zero, but default to -1.
-     */
-    val scopeIndexes: mutable.Map[Class[_ <: Scope], Int] = mutable.HashMap.empty.withDefaultValue(-1)
-
-    /**
-     * Retrieve the list of children ASTs from the AST body.
-     * Return empty seq if body is null or is not a list.
-     */
-    def getChildrenList(ast: Ast): Seq[Ast] = {
-      val body = Option(ast.getAttribute("body")).filter(_.isInstanceOf[AstList]).map(_.astListAsVector)
-      body match {
-        case Some(asts) => asts collect { case node: Ast if Seq(AstNodeName.Call, AstNodeName.Scatter).contains(node.getName) => node }
-        case None => Seq.empty[Ast]
-      }
-    }
-
-    /**
-     * Sets the child scopes on this parent from the ast.
-     * @param parentAst Parent ast.
-     * @param parentScope Parent scope.
-     */
-    def setChildScopes(parentAst: Ast, parentScope: Scope): Unit = {
-      parentScope.children = for {
-        child <- getChildrenList(parentAst)
-        scope = generateScopeTree(child, namespaces, tasks, wdlSyntaxErrorFormatter, parentScope)
-      } yield scope
-    }
-
-    /**
-     * Generate a scope from the ast parameter and all its descendants recursively.
-     * @return Scope equivalent
-     */
-    def generateScopeTree(node: Ast,
-                          namespaces: Seq[WdlNamespace],
-                          tasks: Seq[Task],
-                          wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
-                          parent: Scope): Scope = {
-
-      val scope: Scope = node.getName match {
-        case AstNodeName.Call =>
-          Call(node, namespaces, tasks, wdlSyntaxErrorFormatter, Option(parent))
-        case AstNodeName.Scatter =>
-          scopeIndexes(classOf[Scatter]) += 1
-          Scatter(node, scopeIndexes(classOf[Scatter]), Option(parent))
-      }
-      // Generate and set children recursively
-      setChildScopes(node, scope)
-      scope
-    }
-
-    val workflow = Workflow(workflowAst, wdlSyntaxErrorFormatter)
-    setChildScopes(workflowAst, workflow)
-    workflow
-  }
-
-  private def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Workflow = {
     val name = ast.getAttribute("name").asInstanceOf[Terminal].getSourceString
-    val declarations = ast.findAsts(AstNodeName.Declaration).map(Declaration(_, wdlSyntaxErrorFormatter))
     val callNames = ast.findAsts(AstNodeName.Call).map {call =>
       Option(call.getAttribute("alias")).getOrElse(call.getAttribute("task"))
     }
-    val workflowOutputsDecls = ast.findAsts(AstNodeName.WorkflowOutput) map { wfOutput =>
+    val workflowOutputsWildcards = ast.findAsts(AstNodeName.WorkflowOutputWildcard) map { wfOutput =>
       val wildcard = Option(wfOutput.getAttribute("wildcard")).map(_.sourceString).getOrElse("").nonEmpty
       val outputFqn = name + "." + wfOutput.getAttribute("fqn").sourceString
-      WorkflowOutputDeclaration(outputFqn, wildcard)
+      WorkflowOutputWildcard(outputFqn, wildcard, wfOutput)
     }
 
     callNames groupBy { _.sourceString } foreach {
@@ -103,23 +31,19 @@ object Workflow {
       case _ =>
     }
 
-    new Workflow(name, declarations, workflowOutputsDecls)
+    val meta = AstTools.wdlSectionToStringMap(ast, AstNodeName.Meta, wdlSyntaxErrorFormatter)
+    val parameterMeta = AstTools.wdlSectionToStringMap(ast, AstNodeName.ParameterMeta, wdlSyntaxErrorFormatter)
+
+    new Workflow(name, workflowOutputsWildcards, wdlSyntaxErrorFormatter, meta, parameterMeta, ast)
   }
 }
 
-/**
- * Represents a `workflow` definition in WDL which currently
- * only supports a set of `call` declarations and a name for
- * the workflow
- *
- * @param unqualifiedName The name of the workflow
- */
 case class Workflow(unqualifiedName: String,
-                    declarations: Seq[Declaration],
-                    workflowOutputDecls: Seq[WorkflowOutputDeclaration]) extends Executable with Scope {
-  override val prerequisiteScopes = Set.empty[Scope]
-  override val prerequisiteCallNames = Set.empty[String]
-  override val parent: Option[Scope] = None
+                    workflowOutputWildcards: Seq[WorkflowOutputWildcard],
+                    wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
+                    meta: Map[String, String],
+                    parameterMeta: Map[String, String],
+                    ast: Ast) extends Callable {
 
   /**
    * FQNs for all inputs to this workflow and their associated types and possible postfix quantifiers.
@@ -134,11 +58,18 @@ case class Workflow(unqualifiedName: String,
     } yield input
 
     val declarationInputs = for {
-      declaration <- scopedDeclarations
+      declaration <- declarations
       input <- declaration.asWorkflowInput
     } yield input
 
     (callInputs ++ declarationInputs) map { input => input.fqn -> input } toMap
+  }
+
+  /** First tries to find any Call with name `name`.  If not found,
+    * Fallback to looking at immediate children or delegating to parent node
+    */
+  override def resolveVariable(name: String, relativeTo: Scope = this): Option[GraphNode] = {
+    findCallByName(name) orElse findDeclarationByName(name) orElse findWorkflowOutputByName(name, relativeTo) orElse super.resolveVariable(name, relativeTo)
   }
 
   /**
@@ -159,9 +90,33 @@ case class Workflow(unqualifiedName: String,
   def findCallByName(name: String): Option[Call] = calls.find(_.unqualifiedName == name)
 
   /**
-    * @return Seq[ScopedDeclaration] which are scoped to this Workflow
+    * Declarations within the workflow scope (including inside scatters and ifs)
     */
-  def scopedDeclarations: Seq[ScopedDeclaration] = declarations.map(decl => ScopedDeclaration(this, decl))
+  lazy val transitiveDeclarations = {
+    def isValid(d: Declaration) = {
+      d.parent match {
+        case Some(w: Workflow) if w == this => true
+        case Some(_: Scatter) => true
+        case Some(_: If) => true
+        case _ => false
+      }
+    }
+    
+    descendants collect {
+      case declaration: Declaration if isValid(declaration) => declaration
+    }
+  }
+  
+  def findDeclarationByName(name: String): Option[Declaration] = {
+    transitiveDeclarations.find(_.unqualifiedName == name)
+  }
+  
+  def findWorkflowOutputByName(name: String, relativeTo: Scope) = {
+    val leftOutputs = if (outputs.contains(relativeTo))
+      outputs.dropRight(outputs.size - outputs.indexOf(relativeTo))
+    else outputs
+    leftOutputs.find(_.unqualifiedName == name)
+  }
 
   /**
    * All outputs for this workflow and their associated types
@@ -169,35 +124,73 @@ case class Workflow(unqualifiedName: String,
    * @return a Map[FullyQualifiedName, WdlType] representing the union
    *         of all outputs from all `call`s within this workflow
    */
-  lazy val outputs: Seq[ReportableSymbol] = {
+  lazy val expandedWildcardOutputs: Seq[WorkflowOutput] = {
 
-    case class PotentialReportableSymbol(name: String, wdlType: WdlType, matchWorkflowOutputWildcards: Boolean)
-
-    // Build a list of ALL potentially reportable symbols, and whether they're allowed to match
-    // wildcards in the workflow's output {...} spec.
-    val outputs: Seq[PotentialReportableSymbol] = for {
-      call: Call <- calls
-      output <- call.task.outputs
-    } yield PotentialReportableSymbol(s"${call.fullyQualifiedName}.${output.name}", output.wdlType, matchWorkflowOutputWildcards = true)
-
-    val inputs: Seq[PotentialReportableSymbol] = for {
-      call: Call <- calls
-      input <- call.task.declarations
-    } yield PotentialReportableSymbol(s"${call.fullyQualifiedName}.${input.name}", input.wdlType, matchWorkflowOutputWildcards = false)
-
-    val filtered = if (workflowOutputDecls isEmpty) {
-      outputs
-    } else {
-      (outputs ++ inputs) filter {
-        case PotentialReportableSymbol(fqn, wdlType, wildcardsAllowed) =>
-          workflowOutputDecls.isEmpty || workflowOutputDecls.exists(_.outputMatchesDeclaration(fqn, wildcardsAllowed))
+    def sanitizeFqn(fqn: FullyQualifiedName) = fqn.replaceAll("\\.", "_")
+    
+    def toWorkflowOutput(output: DeclarationInterface, wdlType: WdlType) = {
+      val locallyQualifiedName = output.parent map { parent => output.locallyQualifiedName(parent) } getOrElse { 
+        throw new RuntimeException(s"output ${output.fullyQualifiedName} has no parent Scope") 
       }
+      
+      new WorkflowOutput(sanitizeFqn(output.fullyQualifiedName), wdlType, WdlExpression.fromString(locallyQualifiedName), output.ast, Option(this))
     }
 
-    filtered map { case PotentialReportableSymbol(fqn, value, wildcardAllowed) => ReportableSymbol(fqn, value) }
-  }
+    def toWorkflowOutputs(scope: Scope) = {
+      // Find out the number of parent scatters
+      val outputs = scope match {
+        case call: Call => call.outputs
+        case outputDeclaration: Output => Seq(outputDeclaration)
+          // For non output declaration, don't return an array but return the raw value
+        case otherDeclaration: DeclarationInterface => Seq(otherDeclaration)
+        case _ => Seq.empty
+      }
+      
+      outputs map { output => toWorkflowOutput(output, output.relativeWdlType(this)) }
+    }
+    
+    // No outputs means all outputs
+    val effectiveOutputWildcards = if (workflowOutputWildcards.isEmpty && children.collect({ case o: WorkflowOutput => o }).isEmpty) {
+      calls map { call => WorkflowOutputWildcard(unqualifiedName + "." + call.unqualifiedName, wildcard = true, call.ast) } toSeq
+    } else workflowOutputWildcards
 
-  override def rootWorkflow: Workflow = this
+    effectiveOutputWildcards flatMap { output =>
+      // Prepend the namespace name in case it's an imported subworkflow so it can be resolved
+      val outputFqn = namespace.unqualifiedName match {
+        case empty if empty.isEmpty => output.fqn
+        case alias => alias + "." + output.fqn
+      }
+      namespace.resolveCallOrOutputOrDeclaration(outputFqn) match {
+        case Some(call: Call) if output.wildcard && calls.contains(call) => toWorkflowOutputs(call)
+        case Some(declaration: DeclarationInterface) if descendants.contains(declaration) => toWorkflowOutputs(declaration)
+        case e => throw new SyntaxError(wdlSyntaxErrorFormatter.memberAccessReferencesBadCallOutput(output.ast))
+      }
+    }
+  }
+  
+  override lazy val outputs: Seq[WorkflowOutput] = expandedWildcardOutputs ++ children collect { case o: WorkflowOutput => o }
+  
+  override def toString = s"[Workflow $fullyQualifiedName]"
+
+  def evaluateOutputs(knownInputs: WorkflowCoercedInputs,
+                      wdlFunctions: WdlFunctions[WdlValue],
+                      outputResolver: OutputResolver = NoOutputResolver,
+                      shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): Try[Map[LocallyQualifiedName, WdlValue]] = {
+    
+    val evaluatedOutputs = outputs.foldLeft(Map.empty[WorkflowOutput, Try[WdlValue]])((outputMap, output) => {
+      val currentOutputs = outputMap collect {
+        case (outputName, value) if value.isSuccess => outputName.fullyQualifiedName -> value.get
+      }
+      def knownValues = currentOutputs ++ knownInputs
+      val lookup = lookupFunction(knownValues, wdlFunctions, outputResolver, shards, output)
+      val coerced = output.requiredExpression.evaluate(lookup, wdlFunctions) flatMap output.wdlType.coerceRawValue
+      val workflowOutput = output -> coerced
+
+      outputMap + workflowOutput
+    }) map { case (k, v) => k.unqualifiedName -> v }
+
+    TryUtil.sequenceMap(evaluatedOutputs, "Failed to evaluate workflow outputs.\n")
+  }
 }
 
 case class ReportableSymbol(fullyQualifiedName: FullyQualifiedName, wdlType: WdlType)

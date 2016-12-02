@@ -23,7 +23,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
     val expectedTokens = expected.asScala.map(_.string).mkString(", ")
     s"""ERROR: Unexpected symbol (line ${actual.getLine}, col ${actual.getColumn}) when parsing '$method'.
         |
-        |Expected $expectedTokens, got ${actual.toPrettyString}.
+        |Expected $expectedTokens, got ${actual.getSourceString}.
         |
         |${pointToSource(actual)}
         |
@@ -124,7 +124,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
 
   def workflowAndNamespaceHaveSameName(workflowAst: Ast, namespace: Terminal): String = {
     val workflowName = workflowAst.getAttribute("name").asInstanceOf[Terminal]
-    s"""ERROR: Task and namespace have the same name:
+    s"""ERROR: Workflow and namespace have the same name:
      |
      |Task defined here (line ${workflowName.getLine}, col ${workflowName.getColumn}):
      |
@@ -133,6 +133,19 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
      |Import statement defined here (line ${namespace.getLine}, col ${namespace.getColumn}):
      |
      |${pointToSource(namespace)}
+     """.stripMargin
+  }
+
+  def twoSiblingScopesHaveTheSameName(firstScopeType: String, firstScopeName: Terminal, secondScopeType: String, secondScopeName: Terminal): String = {
+    s"""ERROR: Sibling nodes have conflicting names:
+       |
+       |$firstScopeType defined here (line ${firstScopeName.getLine}, col ${firstScopeName.getColumn}):
+       |
+       |${pointToSource(firstScopeName)}
+       |
+       |$secondScopeType statement defined here (line ${secondScopeName.getLine}, col ${secondScopeName.getColumn}):
+       |
+       |${pointToSource(secondScopeName)}
      """.stripMargin
   }
 
@@ -174,11 +187,34 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
      """.stripMargin
   }
 
-  def memberAccessReferencesBadTaskInput(ast: Ast): String = {
+  def memberAccessReferencesBadCallInput(ast: Ast, call: Call): String = {
     val rhsAst = ast.getAttribute("rhs").asInstanceOf[Terminal]
-    s"""ERROR: Expression reference input on task that doesn't exist (line ${rhsAst.getLine}, col ${rhsAst.getColumn}):
+    s"""ERROR: Expression references input on ${call.callType} that doesn't exist (line ${rhsAst.getLine}, col ${rhsAst.getColumn}):
      |
      |${pointToSource(rhsAst)}
+     """.stripMargin
+  }
+  
+  def memberAccessReferencesBadCallOutput(ast: Ast): String = {
+    val rhsAst = ast.getAttribute("fqn").asInstanceOf[Terminal]
+    s"""ERROR: Expression references output on call that doesn't exist (line ${rhsAst.getLine}, col ${rhsAst.getColumn}):
+        |
+     |${pointToSource(rhsAst)}
+     """.stripMargin
+  }
+
+  def variableIsNotAnObject(ast: Ast): String = {
+    val lhsAst = ast.getAttribute("lhs").asInstanceOf[Terminal]
+    s"""ERROR: Variable is not an object (line ${lhsAst.getLine}, col ${lhsAst.getColumn}):
+        |
+     |${pointToSource(lhsAst)}
+     """.stripMargin
+  }
+
+  def pairMustHaveExactlyTwoTypeParameters(arrayDecl: Terminal): String = {
+    s"""ERROR: Pair type should have exactly two parameterized types (line ${arrayDecl.getLine}, col ${arrayDecl.getColumn}):
+        |
+     |${pointToSource(arrayDecl)}
      """.stripMargin
   }
 
@@ -253,7 +289,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
   }
 
   def commandExpressionContainsInvalidVariableReference(taskName: Terminal, variable: Terminal) = {
-    s"""ERROR: Variable does not reference any declaration in the task (line ${variable.getLine}, col ${variable.getColumn}):
+    s"""ERROR: Variable ${variable.getSourceString} does not reference any declaration in the task (line ${variable.getLine}, col ${variable.getColumn}):
         |
         |${pointToSource(variable)}
         |
@@ -264,7 +300,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
   }
 
   def declarationContainsInvalidVariableReference(declarationName: Terminal, variable: Terminal) = {
-    s"""ERROR: Variable does not reference any declaration in the task (line ${variable.getLine}, col ${variable.getColumn}):
+    s"""ERROR: Variable ${variable.getSourceString} does not reference any declaration in the task (line ${variable.getLine}, col ${variable.getColumn}):
         |
         |${pointToSource(variable)}
         |
@@ -274,16 +310,12 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
      """.stripMargin
   }
 
-  def variableDeclaredMultipleTimes(first: Terminal, second: Terminal) = {
-    s"""ERROR: Variable '${first.getSourceString}' is declared more than once.
+  def memoryRuntimeAttributeInvalid(expressionStart: Terminal) = {
+    s"""ERROR: 'memory' runtime attribute should have the format "size unit" (e.g. "8 GB").
         |
-        |First occurrence (line ${first.getLine}, col ${first.getColumn}):
+        |Expression starts here (line ${expressionStart.getLine}, col ${expressionStart.getColumn}):
         |
-        |${pointToSource(first)}
-        |
-        |Second occurrence (line ${second.getLine}, col ${second.getColumn}):
-        |
-        |${pointToSource(second)}
+        |${pointToSource(expressionStart)}
      """.stripMargin
   }
 }
