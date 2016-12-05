@@ -1,7 +1,9 @@
 package wdl4s
 
+import cats.data.NonEmptyList
 import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.WdlExpression._
+import wdl4s.exception.ThrowableAggregation
 import wdl4s.expression._
 import wdl4s.formatter.{NullSyntaxHighlighter, SyntaxHighlighter}
 import wdl4s.parser.WdlParser
@@ -14,8 +16,11 @@ import scala.language.postfixOps
 import scala.util.Try
 
 class WdlExpressionException(message: String = null, cause: Throwable = null) extends RuntimeException(message, cause)
-case class VariableNotFoundException(variable: String, cause: Throwable = null) extends Exception(s"Variable '$variable' not found", cause)
-case class VariableLookupException(message: String, cause: Throwable = null) extends Exception(message, cause)
+
+case class VariableNotFoundException(variable: String) extends RuntimeException(s"Variable '$variable' not found")
+
+case class VariableLookupException(exceptionContext: String, throwables: List[Throwable] = List.empty) extends ThrowableAggregation
+
 case class ScatterIndexNotFound(message: String, cause: Throwable = null) extends Exception(message, cause)
 
 case object NoLookup extends ScopedLookupFunction {

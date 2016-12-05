@@ -3,9 +3,9 @@ package wdl4s
 import java.nio.file.{Path, Paths}
 
 import better.files._
-import cats.data.NonEmptyList
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.command.ParameterCommandPart
+import wdl4s.exception.{UnsatisfiedInputsException, ValidationException}
 import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStandardLibraryFunctionsType}
 import wdl4s.parser.WdlParser._
 import wdl4s.types._
@@ -106,9 +106,9 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
         (key, tryValue) <- successes
       } yield key -> tryValue.get)
     } else {
-      val errors = failures.values.collect { case f: Failure[_] => f.exception.getMessage }
+      val errors = failures.values.toList.collect { case f: Failure[_] => f.exception }
       // Fine to use .fromListUnsafe because failures is guaranteed to be nonEmpty
-      Failure(new ValidationException("Workflow input processing failed.", NonEmptyList.fromListUnsafe(errors.toList)))
+      Failure(ValidationException("Workflow input processing failed.", errors))
     }
   }
 
@@ -190,10 +190,9 @@ object WdlNamespace {
             case Failure(f) => tryResolve(str, tail, errors :+ f)
           }
         case Nil =>
-          val collectedErrors = errors.map(_.getMessage)
-          collectedErrors match {
+          errors match {
             case Nil => throw new UnsatisfiedInputsException("Failed to import workflow, no import sources provided.")
-            case _ => throw new ValidationException(s"Failed to import workflow $str.", NonEmptyList.fromListUnsafe(collectedErrors))
+            case _ => throw ValidationException(s"Failed to import workflow $str.", errors)
           }
       }
     }
