@@ -115,7 +115,7 @@ class CallSpec extends WordSpec with Matchers {
   }
   
   "bubble up evaluation exception" in {
-    val task =
+    val wdl =
       """
         |task hello {
         |  String addressee
@@ -128,19 +128,21 @@ class CallSpec extends WordSpec with Matchers {
         |  output {
         |    String salutation = read_string(stdout())
         |  }
-        |}""".stripMargin
-    
-      val workflow = """
+        |}
+        |
         |workflow wf_hello {
         |  File wf_hello_input
+        |  File wf_hello_input2
+        |  String read = read_string(wf_hello_input)
+        |  String read2 = read_string(wf_hello_input2)
         |  
         |  call hello {input: addressee = read_string(wf_hello_input) }
+        |  call hello as hello2 {input: addressee = read }
         |  
         |  output {
         |    String salutation = hello.salutation
         |  }
-        |}
-      """.stripMargin
+        |}""".stripMargin
     
     
     val functionsWithRead = new PureStandardLibraryFunctionsLike {
@@ -150,32 +152,22 @@ class CallSpec extends WordSpec with Matchers {
       }
     }
 
-    val ns = WdlNamespaceWithWorkflow.load(workflow + task, Seq.empty)
+    val ns = WdlNamespaceWithWorkflow.load(wdl, Seq.empty)
     val exception = intercept[ValidationException] {
         ns.workflow.calls.head.evaluateTaskInputs(Map("wf_hello.wf_hello_input" -> WdlFile("/do/not/exist")), functionsWithRead)
     }
-    
-    exception.getMessage shouldBe "Input evaluation for Call wf_hello.hello failed.\naddressee: File not found /do/not/exist"
+    println(exception.getMessage)
+    exception.getMessage shouldBe "Input evaluation for Call wf_hello.hello2 failed.\naddressee: File not found /do/not/exist"
 
-    val workflow2 = """
-     |workflow wf_hello {
-     |  File wf_hello_input
-     |  String read = read_string(wf_hello_input)
-     |  
-     |  call hello {input: addressee = read }
-     |  
-     |  output {
-     |    String salutation = hello.salutation
-     |  }
-     |}
-   """.stripMargin
-
-    val ns2 = WdlNamespaceWithWorkflow.load(workflow2 + task, Seq.empty)
-    val exception2 = intercept[ValidationException] {
-      ns.workflow.calls.head.evaluateTaskInputs(Map("wf_hello.wf_hello_input" -> WdlFile("/do/not/exist")), functionsWithRead)
-    }
+    val staticEvaluation = ns.staticDeclarationsRecursive(Map(
+      "wf_hello.wf_hello_input" -> WdlFile("/do/not/exist"),
+      "wf_hello.wf_hello_input2" -> WdlFile("/do/not/exist2")
+    ), functionsWithRead)
     
-    exception2.getMessage shouldBe "Input evaluation for Call wf_hello.hello failed.\naddressee: File not found /do/not/exist"
+    staticEvaluation.isFailure shouldBe true
+    val exception2 = staticEvaluation.failed.get
+    println(exception2.getMessage)
+    exception2.getMessage shouldBe "Could not evaluate workflow declarations\nwf_hello.read: File not found /do/not/exist\nwf_hello.read2: File not found /do/not/exist2"
   }
 
 }

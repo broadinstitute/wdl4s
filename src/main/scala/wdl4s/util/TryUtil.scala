@@ -2,17 +2,9 @@ package wdl4s.util
 
 import java.io.{PrintWriter, StringWriter}
 
-import scala.util.{Success, Failure, Try}
+import wdl4s.exception.AggregatedException
 
-/**
-  * FIXME: To the extent this stuff remains, overlap w/ lenthall
-  */
-
-case class AggregatedException(exceptions: Seq[Throwable], prefixError: String = "") extends Exception {
-  override def getMessage: String = {
-    prefixError + ": " + exceptions.map(x => x.getClass.getSimpleName + ": " +  x.getMessage).mkString("\n")
-  }
-}
+import scala.util.{Failure, Success, Try}
 
 object TryUtil {
   private def stringifyFailure[T](failure: Try[T]): String = {
@@ -31,7 +23,7 @@ object TryUtil {
     tries collect { case f: Failure[_] => f } match {
       case failures if failures.nonEmpty =>
         val exceptions = failures.toSeq.map(_.exception)
-        Failure(AggregatedException(exceptions, prefixErrorMessage))
+        Failure(AggregatedException(prefixErrorMessage, exceptions.toList))
       case _ => Success(unbox())
     }
   }

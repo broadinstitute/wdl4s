@@ -5,11 +5,11 @@ import java.nio.file.{Path, Paths}
 import better.files._
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.command.ParameterCommandPart
-import wdl4s.exception.{UnsatisfiedInputsException, ValidationException}
+import wdl4s.exception.{AggregatedException, UnsatisfiedInputsException, ValidationException}
 import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStandardLibraryFunctionsType}
 import wdl4s.parser.WdlParser._
 import wdl4s.types._
-import wdl4s.util.{AggregatedException, TryUtil}
+import wdl4s.util.TryUtil
 import wdl4s.values._
 
 import scala.collection.JavaConverters._
@@ -140,11 +140,14 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
     // as this method is meant for pre-execution validation
     val filtered = evalScope filterNot {
       case (_, Failure(ex)) if filteredExceptions.contains(ex.getClass) => true
-      case (_, Failure(e: AggregatedException)) => e.exceptions forall { ex => filteredExceptions.contains(ex.getClass) }
+      case (_, Failure(e: AggregatedException)) => e.throwables forall { ex => filteredExceptions.contains(ex.getClass) }
       case _ => false
+    } map {
+      case (name, Failure(f)) => name -> Failure(ValidationException(name, List(f)))
+      case other => other
     }
     
-    TryUtil.sequenceMap(filtered)
+    TryUtil.sequenceMap(filtered, "Could not evaluate workflow declarations")
   }
 }
 
