@@ -3,9 +3,10 @@ package wdl4s
 import java.nio.file.{Path, Paths}
 
 import better.files._
+import lenthall.exception.AggregatedException
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.command.ParameterCommandPart
-import wdl4s.exception.{AggregatedException, UnsatisfiedInputsException, ValidationException}
+import wdl4s.exception._
 import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStandardLibraryFunctionsType}
 import wdl4s.parser.WdlParser._
 import wdl4s.types._
@@ -89,12 +90,12 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
         val rawValue = rawInputs(input.fqn)
         input.wdlType.coerceRawValue(rawValue) match {
           case Success(value) => Success(value)
-          case _ => Failure(new UnsatisfiedInputsException(s"Could not coerce ${rawValue.getClass.getSimpleName} value for '${input.fqn}' ($rawValue) into: ${input.wdlType}"))
+          case _ => Failure(new UnsatisfiedInputException(s"Could not coerce ${rawValue.getClass.getSimpleName} value for '${input.fqn}' ($rawValue) into: ${input.wdlType}"))
         }
       case _ =>
         input.optional match {
           case true => Success(WdlOptionalValue(input.wdlType.asInstanceOf[WdlOptionalType].memberType, None))
-          case _ => Failure(new UnsatisfiedInputsException(s"Required workflow input '${input.fqn}' not specified."))
+          case _ => Failure(new UnsatisfiedInputException(s"Required workflow input '${input.fqn}' not specified."))
         }
     }
 
@@ -194,7 +195,7 @@ object WdlNamespace {
           }
         case Nil =>
           errors match {
-            case Nil => throw new UnsatisfiedInputsException("Failed to import workflow, no import sources provided.")
+            case Nil => throw new UnsatisfiedInputException("Failed to import workflow, no import sources provided.")
             case _ => throw ValidationException(s"Failed to import workflow $str.", errors)
           }
       }
@@ -430,10 +431,10 @@ object WdlNamespace {
       case Some(c: Call) => WdlCallOutputsObjectType(c)
       case Some(s: Scatter) => s.collection.evaluateType(lookupType(s), new WdlStandardLibraryFunctionsType, Option(from)) match {
         case Success(a: WdlArrayType) => a.memberType
-        case _ => throw VariableLookupException(s"Variable $n references a scatter block ${s.fullyQualifiedName}, but the collection does not evaluate to an array")
+        case _ => throw new VariableLookupException(s"Variable $n references a scatter block ${s.fullyQualifiedName}, but the collection does not evaluate to an array")
       }
       case Some(ns: WdlNamespace) => WdlNamespaceType
-      case _ => throw VariableLookupException(s"Could not resolve $n from scope ${from.fullyQualifiedName}")
+      case _ => throw new VariableLookupException(s"Could not resolve $n from scope ${from.fullyQualifiedName}")
     }
   }
   

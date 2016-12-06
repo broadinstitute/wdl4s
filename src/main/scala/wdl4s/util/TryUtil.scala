@@ -2,7 +2,7 @@ package wdl4s.util
 
 import java.io.{PrintWriter, StringWriter}
 
-import wdl4s.exception.AggregatedException
+import lenthall.exception.AggregatedException
 
 import scala.util.{Failure, Success, Try}
 

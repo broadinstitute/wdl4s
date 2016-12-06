@@ -1,8 +1,7 @@
 package wdl4s
 
-import cats.data.NonEmptyList
 import wdl4s.AstTools.EnhancedAstNode
-import wdl4s.exception.ValidationException
+import wdl4s.exception.{ValidationException, VariableLookupException, VariableNotFoundException}
 import wdl4s.expression.WdlFunctions
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.types.WdlOptionalType
@@ -209,7 +208,7 @@ sealed abstract class Call(val alias: Option[String],
             case _ => None
           }) match {
             case Nil => throw VariableNotFoundException(name)
-            case exs => throw VariableLookupException(name, exs)
+            case exs => throw new VariableLookupException(name, exs)
           }
       }
     }

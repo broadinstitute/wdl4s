@@ -64,7 +64,7 @@ class CallSpec extends WordSpec with Matchers {
     val exception = the[ValidationException] thrownBy {
       callT.evaluateTaskInputs(Map.empty, NoFunctions)
     }
-    exception.getMessage shouldBe "Input evaluation for Call w.t failed.\ns1: Could not find s1 in input section of call w.t\ns2: Could not find s2 in input section of call w.t"
+    exception.getMessage shouldBe "Input evaluation for Call w.t failed.:\ns1:\n\tCould not find s1 in input section of call w.t\ns2:\n\tCould not find s2 in input section of call w.t"
   }
   
   "find workflows" in {
@@ -156,8 +156,7 @@ class CallSpec extends WordSpec with Matchers {
     val exception = intercept[ValidationException] {
         ns.workflow.findCallByName("hello2").get.evaluateTaskInputs(Map("wf_hello.wf_hello_input" -> WdlFile("/do/not/exist")), functionsWithRead)
     }
-    println(exception.getMessage)
-    exception.getMessage shouldBe "Input evaluation for Call wf_hello.hello2 failed.\naddressee: File not found /do/not/exist"
+    exception.getMessage shouldBe "Input evaluation for Call wf_hello.hello2 failed.:\naddressee:\n\tFile not found /do/not/exist"
 
     val staticEvaluation = ns.staticDeclarationsRecursive(Map(
       "wf_hello.wf_hello_input" -> WdlFile("/do/not/exist"),
@@ -166,8 +165,7 @@ class CallSpec extends WordSpec with Matchers {
     
     staticEvaluation.isFailure shouldBe true
     val exception2 = staticEvaluation.failed.get
-    println(exception2.getMessage)
-    exception2.getMessage shouldBe "Could not evaluate workflow declarations\nwf_hello.read: File not found /do/not/exist\nwf_hello.read2: File not found /do/not/exist2"
+    exception2.getMessage shouldBe "Could not evaluate workflow declarations:\nwf_hello.read:\n\tFile not found /do/not/exist\nwf_hello.read2:\n\tFile not found /do/not/exist2"
   }
 
 }
