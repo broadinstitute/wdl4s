@@ -12,7 +12,8 @@ trait MessageAggregation extends Throwable {
   def errorMessages: Traversable[String]
 
   override def getMessage = {
-    s"""$exceptionContext\n${errorMessages.mkString("\n")}"""
+    val messages = if(errorMessages.nonEmpty) s"\n${errorMessages.mkString("\n")}" else ""
+    s"""$exceptionContext$messages"""
   }
 }
 
