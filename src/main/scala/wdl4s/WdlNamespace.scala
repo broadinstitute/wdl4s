@@ -4,13 +4,13 @@ import java.nio.file.{Path, Paths}
 
 import better.files._
 import lenthall.exception.AggregatedException
+import lenthall.util.TryUtil
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.command.ParameterCommandPart
 import wdl4s.exception._
 import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStandardLibraryFunctionsType}
 import wdl4s.parser.WdlParser._
 import wdl4s.types._
-import wdl4s.util.TryUtil
 import wdl4s.values._
 
 import scala.collection.JavaConverters._

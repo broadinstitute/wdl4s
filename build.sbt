@@ -25,7 +25,7 @@ versionWithGit ++ versionSettings
 
 val sprayJsonV = "1.3.2"
 
-val lenthallV = "0.20-5fc4cad-SNAP"
+val lenthallV = "0.20-e969a39-SNAP"
 
 libraryDependencies ++= Seq(
   "org.broadinstitute" %% "lenthall" % lenthallV,
