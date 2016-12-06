@@ -154,7 +154,7 @@ class CallSpec extends WordSpec with Matchers {
 
     val ns = WdlNamespaceWithWorkflow.load(wdl, Seq.empty)
     val exception = intercept[ValidationException] {
-        ns.workflow.calls.head.evaluateTaskInputs(Map("wf_hello.wf_hello_input" -> WdlFile("/do/not/exist")), functionsWithRead)
+        ns.workflow.findCallByName("hello2").get.evaluateTaskInputs(Map("wf_hello.wf_hello_input" -> WdlFile("/do/not/exist")), functionsWithRead)
     }
     println(exception.getMessage)
     exception.getMessage shouldBe "Input evaluation for Call wf_hello.hello2 failed.\naddressee: File not found /do/not/exist"
