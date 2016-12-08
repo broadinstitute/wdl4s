@@ -108,7 +108,6 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
       } yield key -> tryValue.get)
     } else {
       val errors = failures.values.toList.collect { case f: Failure[_] => f.exception }
-      // Fine to use .fromListUnsafe because failures is guaranteed to be nonEmpty
       Failure(ValidationException("Workflow input processing failed.", errors))
     }
   }
