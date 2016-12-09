@@ -16,6 +16,7 @@ task summary {
 }
 
 workflow test1 {
+  File bfile
   call summary {
      input: bfile = bfile
   }
