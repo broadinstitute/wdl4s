@@ -19,36 +19,31 @@ class WdlBoolean private(val value: Boolean) extends WdlPrimitive {
 
   override def equals(rhs: WdlValue): Try[WdlBoolean] = rhs match {
     case r:WdlBoolean => Success(WdlBoolean(value == r.value))
-    case WdlOptionalValue(_, Some(r)) => equals(r)
-    case r: WdlOptionalValue => emptyValue(r)
+    case r: WdlOptionalValue => evaluateIfDefined(r, equals)
     case _ => invalid(s"$value || $rhs")
   }
 
   override def lessThan(rhs: WdlValue): Try[WdlBoolean] = rhs match {
     case r:WdlBoolean => Success(WdlBoolean(value < r.value))
-    case WdlOptionalValue(_, Some(r)) => lessThan(r)
-    case r: WdlOptionalValue => emptyValue(r)
+    case r: WdlOptionalValue => evaluateIfDefined(r, lessThan)
     case _ => invalid(s"$value < $rhs")
   }
 
   override def greaterThan(rhs: WdlValue): Try[WdlBoolean] = rhs match {
     case r:WdlBoolean => Success(WdlBoolean(value > r.value))
-    case WdlOptionalValue(_, Some(r)) => greaterThan(r)
-    case r: WdlOptionalValue => emptyValue(r)
+    case r: WdlOptionalValue => evaluateIfDefined(r, greaterThan)
     case _ => invalid(s"$value > $rhs")
   }
 
   override def or(rhs: WdlValue): Try[WdlBoolean] = rhs match {
     case r:WdlBoolean => Success(WdlBoolean(value || r.value))
-    case WdlOptionalValue(_, Some(r)) => or(r)
-    case r: WdlOptionalValue => emptyValue(r)
+    case r: WdlOptionalValue => evaluateIfDefined(r, or)
     case _ => invalid(s"$value || $rhs")
   }
 
   override def and(rhs: WdlValue): Try[WdlBoolean] = rhs match {
     case r:WdlBoolean => Success(WdlBoolean(value && r.value))
-    case WdlOptionalValue(_, Some(r)) => and(r)
-    case r: WdlOptionalValue => emptyValue(r)
+    case r: WdlOptionalValue => evaluateIfDefined(r, and)
     case _ => invalid(s"$value && $rhs")
   }
 
