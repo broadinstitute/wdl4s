@@ -1,12 +1,12 @@
 package wdl4s.expression
 
+import lenthall.util.TryUtil
 import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.WdlExpression._
 import wdl4s.types._
 import wdl4s.values.{WdlValue, _}
 import wdl4s.{WdlExpression, WdlExpressionException, WdlNamespace}
 import wdl4s.parser.WdlParser.{Ast, AstNode, Terminal}
-import wdl4s.util.TryUtil
 
 import scala.util.{Failure, Success, Try}
 
@@ -78,8 +78,8 @@ case class ValueEvaluator(override val lookup: String => WdlValue, override val 
         val evaluatedElements = a.getAttribute("values").astListAsVector map evaluate
         for {
           elements <- TryUtil.sequence(evaluatedElements)
-          subtype <- WdlType.homogeneousTypeFromValues(elements)
-        } yield WdlArray(WdlArrayType(subtype), elements)
+          subtype = WdlType.homogeneousTypeFromValues(elements)
+        } yield WdlArray(WdlArrayType(subtype), elements.map(subtype.coerceRawValue(_).get))
       case a: Ast if a.isTupleLiteral =>
         val unevaluatedElements = a.getAttribute("values").astListAsVector
         if (unevaluatedElements.size == 1) {

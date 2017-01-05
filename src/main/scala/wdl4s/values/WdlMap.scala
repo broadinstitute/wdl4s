@@ -1,8 +1,9 @@
 package wdl4s.values
 
+import lenthall.util.TryUtil
 import wdl4s.TsvSerializable
 import wdl4s.types.{WdlAnyType, WdlMapType, WdlPrimitiveType, WdlType}
-import wdl4s.util.{FileUtil, TryUtil}
+import wdl4s.util.FileUtil
 
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
@@ -17,9 +18,8 @@ object WdlMap {
       case _ =>
         val mapCoerced = coerced map { case (k, v) => k.get -> v.get }
 
-        // Yes, throw an exception if keyType or valueType can't be determined
-        val keyType = WdlType.homogeneousTypeFromValues(mapCoerced map { case (k, v) => k }).get
-        val valueType = WdlType.homogeneousTypeFromValues(mapCoerced map { case (k, v) => v }).get
+        val keyType = WdlType.homogeneousTypeFromValues(mapCoerced map { case (k, v) => k })
+        val valueType = WdlType.homogeneousTypeFromValues(mapCoerced map { case (k, v) => v })
 
         WdlMap(WdlMapType(keyType, valueType), mapCoerced)
     }
