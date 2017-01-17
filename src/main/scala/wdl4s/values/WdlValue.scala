@@ -11,10 +11,10 @@ import scala.util.{Failure, Try}
 trait WdlValue {
   val wdlType: WdlType
   def invalid(operation: String) = Failure(new WdlExpressionException(s"Cannot perform operation: $operation"))
-  def emptyValue(value: WdlOptionalValue) = Failure(VariableNotFoundException(value.toString))
-  def evaluateIfDefined[A <: WdlValue](optionalValue: WdlOptionalValue, operation: WdlValue => Try[A]): Try[A] = optionalValue match {
+  def emptyValueFailure(operationName: String) = Failure(new UnsupportedOperationException(s"Sorry! Operation $operationName is not supported on empty optional values. You might resolve this using select_first(optional, default) to guarantee that you have a filled value."))
+  def evaluateIfDefined[A <: WdlValue](operationName: String, optionalValue: WdlOptionalValue, operation: WdlValue => Try[A]): Try[A] = optionalValue match {
     case WdlOptionalValue(_, Some(v)) => operation(v)
-    case _ => emptyValue(optionalValue)
+    case _ => emptyValueFailure(operationName)
   }
   
   def add(rhs: WdlValue): Try[WdlValue] = invalid(s"$this + $rhs")

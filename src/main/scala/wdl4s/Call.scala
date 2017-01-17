@@ -4,7 +4,7 @@ import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.exception.{ValidationException, VariableLookupException, VariableNotFoundException}
 import wdl4s.expression.WdlFunctions
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
-import wdl4s.types.WdlOptionalType
+import wdl4s.types.{WdlAnyType, WdlOptionalType}
 import wdl4s.values.{WdlOptionalValue, WdlValue}
 
 import scala.language.postfixOps
@@ -151,12 +151,12 @@ sealed abstract class Call(val alias: Option[String],
 
       val declarationLookup = for {
         declaration <- declarationsWithMatchingName
-        inputsLookup <- Try(inputs.getOrElse(declaration.fullyQualifiedName, throw VariableNotFoundException(s"No input for ${declaration.fullyQualifiedName}")))
+        inputsLookup <- Try(inputs.getOrElse(declaration.fullyQualifiedName, throw VariableNotFoundException(declaration)))
       } yield inputsLookup
 
       val declarationExprLookup = for {
         declaration <- declarationsWithMatchingName
-        declarationExpr <- Try(declaration.expression.getOrElse(throw VariableNotFoundException(s"No expression defined for declaration ${declaration.fullyQualifiedName}")))
+        declarationExpr <- Try(declaration.expression.getOrElse(throw VariableNotFoundException(declaration)))
         evaluatedExpr <- declarationExpr.evaluate(lookupFunction(inputs, wdlFunctions, outputResolver, shards, relativeTo), wdlFunctions)
       } yield evaluatedExpr
 

@@ -1,14 +1,20 @@
 package wdl4s.exception
 
 import lenthall.exception.ThrowableAggregation
-import wdl4s.GraphNode
+import wdl4s.{Declaration, GraphNode}
+import wdl4s.types.WdlType
 
 sealed trait LookupException { this: Exception => }
 
 /**
   * When a variable does not reference any known scope in the namespace.
   */
-final case class VariableNotFoundException(variable: String) extends Exception(s"Variable '$variable' not found") with LookupException
+final case class VariableNotFoundException(variable: String) extends Exception(s"Variable $variable not found") with LookupException
+
+object VariableNotFoundException {
+  def apply(declaration: Declaration): VariableNotFoundException = VariableNotFoundException.apply(declaration.fullyQualifiedName, declaration.wdlType)
+  def apply(variable: String, variableType: WdlType): VariableNotFoundException= VariableNotFoundException(variable + variableType.toWdlString)
+}
 
 /**
   * When an unexpected exception occurred while attempting to resolve a variable.

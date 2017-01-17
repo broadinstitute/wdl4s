@@ -44,8 +44,8 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
         case v: VariableNotFoundException => declarations.find(_.unqualifiedName == v.variable) match {
           /* Allow an expression to fail evaluation if one of the variables that it requires is optional (the type has ? after it, e.g. String?) */
           case Some(d) if d.wdlType.isInstanceOf[WdlOptionalType] => defaultString(d.wdlType.asInstanceOf[WdlOptionalType].memberType)
-          case Some(d) => throw new UnsupportedOperationException(s"Parameter ${v.variable} is required, but no value is specified")
-          case None => throw new UnsupportedOperationException(s"Could not find declaration for ${v.variable}")
+          case Some(d) => throw new UnsupportedOperationException(s"Parameter ${v.variable} is required, but no value is specified", f)
+          case None => throw new UnsupportedOperationException(s"Could not find declaration for ${v.variable}", f)
         }
         case e => throw new UnsupportedOperationException(s"Could not evaluate expression: ${expression.toWdlString}", e)
       }
