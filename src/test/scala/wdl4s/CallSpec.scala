@@ -30,7 +30,7 @@ class CallSpec extends WordSpec with Matchers {
     
     val shardMap = Map(namespace.scatters.head -> 2)
 
-    val declarations = callV.evaluateTaskInputs(inputs, NoFunctions, outputResolver, shardMap)
+    val declarations = callV.evaluateTaskInputs(inputs, NoFunctions, outputResolver, shardMap).get
     declarations.size shouldBe 11
     declarations.find(_._1.unqualifiedName == "a").get._2 shouldBe WdlString("a")
     declarations.find(_._1.unqualifiedName == "b").get._2 shouldBe WdlString("b")
