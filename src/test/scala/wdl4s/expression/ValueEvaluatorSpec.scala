@@ -509,6 +509,10 @@ class ValueEvaluatorSpec extends FlatSpec with Matchers {
   "Optional values" should "fail with VariableNotFound if they're None" in {
     val hello = WdlString("hello ")
     val noneWorld = WdlOptionalValue.none(WdlStringType)
-    hello.add(noneWorld) shouldBe Failure(VariableNotFoundException(noneWorld.toString))
+    val expectedMessage = "Sorry! Operation + is not supported on empty optional values. You might resolve this using select_first(optional, default) to guarantee that you have a filled value."
+    hello.add(noneWorld) match {
+      case Failure(uoe: UnsupportedOperationException) => uoe.getMessage shouldBe expectedMessage
+      case other => fail(s"""Expected Failure(UnsupportedOperationException("$expectedMessage")) but got $other""")
+    }
   }
 }
