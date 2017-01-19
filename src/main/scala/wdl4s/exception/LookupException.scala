@@ -9,11 +9,12 @@ sealed trait LookupException { this: Exception => }
 /**
   * When a variable does not reference any known scope in the namespace.
   */
-final case class VariableNotFoundException(variable: String) extends Exception(s"Variable $variable not found") with LookupException
+sealed abstract case class VariableNotFoundException(variable: String, quoteName: Boolean = true) extends Exception(s"Variable $variable not found") with LookupException
 
 object VariableNotFoundException {
+  def apply(variable: String): VariableNotFoundException = new VariableNotFoundException(s"'$variable'") {}
+  def apply(variable: String, variableType: WdlType): VariableNotFoundException= new VariableNotFoundException(s"'$variable': ${variableType.toWdlString}") {}
   def apply(declaration: Declaration): VariableNotFoundException = VariableNotFoundException.apply(declaration.fullyQualifiedName, declaration.wdlType)
-  def apply(variable: String, variableType: WdlType): VariableNotFoundException= VariableNotFoundException(variable + variableType.toWdlString)
 }
 
 /**
