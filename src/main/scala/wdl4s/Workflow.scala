@@ -126,14 +126,12 @@ case class Workflow(unqualifiedName: String,
    */
   lazy val expandedWildcardOutputs: Seq[WorkflowOutput] = {
 
-    def sanitizeFqn(fqn: FullyQualifiedName) = fqn.replaceAll("\\.", "_")
-    
     def toWorkflowOutput(output: DeclarationInterface, wdlType: WdlType) = {
       val locallyQualifiedName = output.parent map { parent => output.locallyQualifiedName(parent) } getOrElse { 
         throw new RuntimeException(s"output ${output.fullyQualifiedName} has no parent Scope") 
       }
       
-      new WorkflowOutput(sanitizeFqn(output.fullyQualifiedName), wdlType, WdlExpression.fromString(locallyQualifiedName), output.ast, Option(this))
+      new WorkflowOutput(output.fullyQualifiedName, wdlType, WdlExpression.fromString(locallyQualifiedName), output.ast, Option(this))
     }
 
     def toWorkflowOutputs(scope: Scope) = {
