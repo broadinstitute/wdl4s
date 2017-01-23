@@ -343,9 +343,9 @@ object WdlNamespace {
     )
     
     val workflowOutputErrors = workflows flatMap { _.workflowCalls map { _.calledWorkflow } } collect {
-      case workflow if workflow.workflowOutputWildcards.nonEmpty => 
+      case calledWorkflow if calledWorkflow.workflowOutputWildcards.nonEmpty => 
         new SyntaxError(
-          s"""Workflow ${workflow.unqualifiedName} is used as a sub workflow but has outputs declared with a deprecated syntax not compatible with sub workflows.
+          s"""Workflow ${calledWorkflow.unqualifiedName} is used as a sub workflow but has outputs declared with a deprecated syntax not compatible with sub workflows.
              |To use this workflow as a sub workflow please update the workflow outputs section to the latest WDL specification.
              |See https://github.com/broadinstitute/wdl/blob/develop/SPEC.md#outputs""".stripMargin
         )

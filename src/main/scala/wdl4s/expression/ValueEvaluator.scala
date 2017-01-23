@@ -130,9 +130,9 @@ case class ValueEvaluator(override val lookup: String => WdlValue, override val 
                               s"""${rhs.getSourceString} is not declared as an output of the task ${taskCall.task.fullyQualifiedName}.
                                  |Make sure to declare it as an output to be able to use it in the workflow.""".stripMargin
                             ))
-                          case unkownCall => 
+                          case unknownCall => 
                             Failure(new WdlExpressionException(
-                              s"Could not find key ${rhs.getSourceString} in Call ${unkownCall.fullyQualifiedName} of unknown type."
+                              s"Could not find key ${rhs.getSourceString} in Call ${unknownCall.fullyQualifiedName} of unknown type."
                             ))
                         }
                       case _ => Failure(new WdlExpressionException(s"Could not find key ${rhs.getSourceString} in WdlObject"))
