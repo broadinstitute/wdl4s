@@ -8,7 +8,7 @@ import wdl4s.parser.WdlParser.SyntaxError
 import wdl4s.types._
 import wdl4s.values._
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 class WorkflowSpec extends WordSpec with Matchers {
 
@@ -28,7 +28,6 @@ class WorkflowSpec extends WordSpec with Matchers {
         |  
         |  call sub_task
         |  output {
-        |    sub_task.*
         |    String sub_o1 = sub_task.sub_task_o1
         |  }
         |}
@@ -452,6 +451,41 @@ class WorkflowSpec extends WordSpec with Matchers {
       }
       
       verifyOutputsForNamespace(ns, expectedDeclarations, expectedEvaluatedOutputs, outputResolver)
+    }
+    
+    "Throw a clear error when trying to use outputs declared with the old syntax in a parent workflow" in {
+      val subWorkflow =
+        """
+          |task sub_task {
+          |  command { ... }
+          |  output {
+          |    String so = "doesn't matter"
+          |  }
+          |}
+          |
+          |workflow sub_workflow {
+          |  String i = "o"
+          |  call sub_task
+          |  
+          |  output {
+          |    sub_task.so
+          |  }
+          |}
+        """.stripMargin
+
+      val parentWorkflow =
+        """
+          |import "a" as sub 
+          |
+          |workflow main_workflow {
+          |  call sub.sub_workflow
+          |}
+        """.stripMargin
+      
+      val exception = the[SyntaxError] thrownBy WdlNamespaceWithWorkflow.load(parentWorkflow, importResolver = (uri: String) => subWorkflow)
+      exception.getMessage shouldBe s"""Workflow sub_workflow is used as a sub workflow but has outputs declared with a deprecated syntax not compatible with sub workflows.
+                                        |To use this workflow as a sub workflow please update the workflow outputs section to the latest WDL specification.
+                                        |See https://github.com/broadinstitute/wdl/blob/develop/SPEC.md#outputs""".stripMargin
     }
   }
 }

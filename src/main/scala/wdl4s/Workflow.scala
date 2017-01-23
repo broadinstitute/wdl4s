@@ -117,6 +117,8 @@ case class Workflow(unqualifiedName: String,
     else outputs
     leftOutputs.find(_.unqualifiedName == name)
   }
+  
+  lazy val hasEmptyOutputSection = workflowOutputWildcards.isEmpty && children.collect({ case o: WorkflowOutput => o }).isEmpty
 
   /**
    * All outputs for this workflow and their associated types
@@ -131,7 +133,7 @@ case class Workflow(unqualifiedName: String,
         throw new RuntimeException(s"output ${output.fullyQualifiedName} has no parent Scope") 
       }
       
-      new WorkflowOutput(output.fullyQualifiedName, wdlType, WdlExpression.fromString(locallyQualifiedName), output.ast, Option(this))
+      new WorkflowOutput(output.locallyQualifiedName(this), wdlType, WdlExpression.fromString(locallyQualifiedName), output.ast, Option(this))
     }
 
     def toWorkflowOutputs(scope: Scope) = {
@@ -148,7 +150,7 @@ case class Workflow(unqualifiedName: String,
     }
     
     // No outputs means all outputs
-    val effectiveOutputWildcards = if (workflowOutputWildcards.isEmpty && children.collect({ case o: WorkflowOutput => o }).isEmpty) {
+    val effectiveOutputWildcards = if (hasEmptyOutputSection) {
       calls map { call => WorkflowOutputWildcard(unqualifiedName + "." + call.unqualifiedName, wildcard = true, call.ast) } toSeq
     } else workflowOutputWildcards
 
