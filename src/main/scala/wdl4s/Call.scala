@@ -4,8 +4,8 @@ import wdl4s.AstTools.EnhancedAstNode
 import wdl4s.exception.{ValidationException, VariableLookupException, VariableNotFoundException}
 import wdl4s.expression.WdlFunctions
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
-import wdl4s.types.WdlOptionalType
-import wdl4s.values.WdlValue
+import wdl4s.types.{WdlAnyType, WdlOptionalType}
+import wdl4s.values.{WdlOptionalValue, WdlValue}
 
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
@@ -97,30 +97,33 @@ sealed abstract class Call(val alias: Option[String],
   def evaluateTaskInputs(inputs: WorkflowCoercedInputs,
                          wdlFunctions: WdlFunctions[WdlValue],
                          outputResolver: OutputResolver = NoOutputResolver,
-                         shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): EvaluatedTaskInputs = {
+                         shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): Try[EvaluatedTaskInputs] = {
     val declarationAttempts = callable.declarations map { declaration =>
       val lookup = lookupFunction(inputs, wdlFunctions, outputResolver, shards, relativeTo = declaration)
       val evaluatedDeclaration = Try(lookup(declaration.unqualifiedName))
-      val coercedDeclaration = evaluatedDeclaration flatMap { declaration.wdlType.coerceRawValue(_) }
-      
+
+      val coercedDeclaration: Try[WdlValue] = evaluatedDeclaration match {
+        case Success(ed) => declaration.wdlType.coerceRawValue(ed)
+        case Failure(_: VariableNotFoundException) if declaration.wdlType.isInstanceOf[WdlOptionalType] =>
+          val innerType = declaration.wdlType.asInstanceOf[WdlOptionalType].memberType
+          Success(WdlOptionalValue(innerType, None))
+        case Failure(f) => Failure(f)
+      }
+
       declaration -> coercedDeclaration
     }
-    
+
     val (success, errors) = declarationAttempts partition {
       case (_, Success(_)) => true
-      case (d, Failure(_: VariableNotFoundException)) if d.wdlType.isInstanceOf[WdlOptionalType] => true
       case _ => false
     }
-    
+
     if (errors.nonEmpty) {
       val throwables = errors.toList map { _._2.failed.get }
-      throw ValidationException(
-        s"Input evaluation for Call $fullyQualifiedName failed.", throwables
-      )
+      Failure(ValidationException(s"Input evaluation for Call $fullyQualifiedName failed.", throwables))
+    } else {
+      Success(success map { case (d, v) => d -> v.get } toMap)
     }
-
-    val successfulDeclarations = success map { case (d, v) => v.toOption map { d -> _ } }
-    successfulDeclarations.flatten.toMap
   }
 
   /**
@@ -148,12 +151,12 @@ sealed abstract class Call(val alias: Option[String],
 
       val declarationLookup = for {
         declaration <- declarationsWithMatchingName
-        inputsLookup <- Try(inputs.getOrElse(declaration.fullyQualifiedName, throw VariableNotFoundException(s"No input for ${declaration.fullyQualifiedName}")))
+        inputsLookup <- Try(inputs.getOrElse(declaration.fullyQualifiedName, throw VariableNotFoundException(declaration)))
       } yield inputsLookup
 
       val declarationExprLookup = for {
         declaration <- declarationsWithMatchingName
-        declarationExpr <- Try(declaration.expression.getOrElse(throw VariableNotFoundException(s"No expression defined for declaration ${declaration.fullyQualifiedName}")))
+        declarationExpr <- Try(declaration.expression.getOrElse(throw VariableNotFoundException(declaration)))
         evaluatedExpr <- declarationExpr.evaluate(lookupFunction(inputs, wdlFunctions, outputResolver, shards, relativeTo), wdlFunctions)
       } yield evaluatedExpr
 
