@@ -172,8 +172,8 @@ class WorkflowSpec extends WordSpec with Matchers {
           WorkflowOutputExpectation("main_task.task_o2", WdlArrayType(WdlIntegerType), "main_task.task_o2")
         ),
         Map(
-          "main_workflow.main_task.task_o1" -> WdlString("MainTaskOutputString"),
-          "main_workflow.main_task.task_o2" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(WdlInteger(8)))
+          "main_task.task_o1" -> WdlString("MainTaskOutputString"),
+          "main_task.task_o2" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(WdlInteger(8)))
         )
       ),
       WorkflowOutputTestCase(
@@ -184,8 +184,8 @@ class WorkflowSpec extends WordSpec with Matchers {
           WorkflowOutputExpectation("main_task2.task_o2", WdlArrayType(WdlIntegerType), "main_task2.task_o2")
         ),
         Map(
-          "main_workflow.main_task2.task_o1" -> WdlString("MainTask2OutputString"),
-          "main_workflow.main_task2.task_o2" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(WdlInteger(16)))
+          "main_task2.task_o1" -> WdlString("MainTask2OutputString"),
+          "main_task2.task_o2" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(WdlInteger(16)))
         )
       ),
       WorkflowOutputTestCase(
@@ -389,9 +389,9 @@ class WorkflowSpec extends WordSpec with Matchers {
           WorkflowOutputExpectation("o1", WdlStringType, "main_task.task_o1")
         ),
         Map(
-          "main_workflow.main_task.task_o1" -> WdlString("MainTaskOutputString"),
-          "main_workflow.main_task.task_o2" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(WdlInteger(8))),
-          "main_workflow.o1" -> WdlString("MainTaskOutputString")
+          "main_task.task_o1" -> WdlString("MainTaskOutputString"),
+          "main_task.task_o2" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(WdlInteger(8))),
+          "o1" -> WdlString("MainTaskOutputString")
         )
       )
     ) foreach { test =>
@@ -433,8 +433,8 @@ class WorkflowSpec extends WordSpec with Matchers {
       )
       
       val expectedEvaluatedOutputs = Map(
-        "w.t.o1" -> WdlString("o1"),
-        "w.t.o2" -> WdlString("o2")
+        "t.o1" -> WdlString("o1"),
+        "t.o2" -> WdlString("o2")
       )
 
       val ns = WdlNamespaceWithWorkflow.load(wdl)
