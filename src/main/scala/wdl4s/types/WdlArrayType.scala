@@ -1,7 +1,7 @@
 package wdl4s.types
 
+import lenthall.util.TryUtil
 import wdl4s.values.{WdlArray, WdlFile, WdlString, WdlValue}
-import wdl4s.util.TryUtil
 import spray.json.JsArray
 
 import scala.util.{Failure, Success}
@@ -40,7 +40,7 @@ sealed trait WdlArrayType extends WdlType {
   }
 
   override def isCoerceableFrom(otherType: WdlType): Boolean = otherType match {
-    case a: WdlArrayType => memberType.isCoerceableFrom(a.memberType)
+    case WdlArrayType(otherMemberType) => otherMemberType == WdlAnyType || memberType.isCoerceableFrom(otherMemberType)
     case _ => false
   }
 

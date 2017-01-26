@@ -1,7 +1,7 @@
 package wdl4s
 
-import cats.data.NonEmptyList
 import wdl4s.AstTools.EnhancedAstNode
+import wdl4s.exception.{ValidationException, VariableLookupException, VariableNotFoundException}
 import wdl4s.expression.WdlFunctions
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.types.WdlOptionalType
@@ -60,7 +60,7 @@ object Call {
 sealed abstract class Call(val alias: Option[String],
                     val callable: Callable,
                     val inputMappings: Map[String, WdlExpression],
-                    val ast: Ast) extends GraphNode with WorkflowScoped {
+                    val ast: Ast) extends GraphNodeWithInputs with WorkflowScoped {
   val unqualifiedName: String = alias getOrElse callable.unqualifiedName
   
   def callType: String
@@ -74,41 +74,6 @@ sealed abstract class Call(val alias: Option[String],
   lazy val outputs: Seq[CallOutput] = callable.outputs map toCallOutput
   
   override def children: Seq[Scope] = super.children ++ outputs
-  
-  lazy val upstream: Set[GraphNode] = {
-    val dependentNodes = for {
-      expr <- inputMappings.values
-      variable <- expr.variableReferences
-      node <- parent.flatMap(_.resolveVariable(variable.sourceString))
-    } yield node
-
-    val firstScatterOrIf = ancestry.collectFirst({
-      case s: Scatter with GraphNode => s
-      case i: If with GraphNode => i
-    })
-
-    (dependentNodes ++ firstScatterOrIf.toSeq).toSet
-  }
-
-  lazy val downstream: Set[GraphNode] = {
-    def expressions(node: GraphNode): Iterable[WdlExpression] = node match {
-      case scatter: Scatter => Set(scatter.collection)
-      case call: TaskCall => call.inputMappings.values
-      case ifStatement: If => Set(ifStatement.condition)
-      case declaration: Declaration => declaration.expression.toSet
-      case _ => Set.empty
-    }
-
-    for {
-      node <- namespace.descendants.collect({ 
-        case n: GraphNode if n.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes => n 
-      })
-      expression <- expressions(node)
-      variable <- expression.variableReferences
-      referencedNode = resolveVariable(variable.sourceString)
-      if referencedNode == Option(this)
-    } yield node
-  }
 
   /**
    * Returns a Seq[WorkflowInput] representing the inputs to the call that are
@@ -148,9 +113,9 @@ sealed abstract class Call(val alias: Option[String],
     }
     
     if (errors.nonEmpty) {
-      val errorsMessage = errors map { _._2.failed.get.getMessage }
-      throw new ValidationException(
-        s"Input evaluation for Call $fullyQualifiedName failed.", NonEmptyList.fromListUnsafe(errorsMessage.toList)
+      val throwables = errors.toList map { _._2.failed.get }
+      throw ValidationException(
+        s"Input evaluation for Call $fullyQualifiedName failed.", throwables
       )
     }
 
@@ -183,12 +148,12 @@ sealed abstract class Call(val alias: Option[String],
 
       val declarationLookup = for {
         declaration <- declarationsWithMatchingName
-        inputsLookup <- Try(inputs.getOrElse(declaration.fullyQualifiedName, throw new Exception(s"No input for ${declaration.fullyQualifiedName}")))
+        inputsLookup <- Try(inputs.getOrElse(declaration.fullyQualifiedName, throw VariableNotFoundException(s"No input for ${declaration.fullyQualifiedName}")))
       } yield inputsLookup
 
       val declarationExprLookup = for {
         declaration <- declarationsWithMatchingName
-        declarationExpr <- Try(declaration.expression.getOrElse(throw new Exception(s"No expression defined for declaration ${declaration.fullyQualifiedName}")))
+        declarationExpr <- Try(declaration.expression.getOrElse(throw VariableNotFoundException(s"No expression defined for declaration ${declaration.fullyQualifiedName}")))
         evaluatedExpr <- declarationExpr.evaluate(lookupFunction(inputs, wdlFunctions, outputResolver, shards, relativeTo), wdlFunctions)
       } yield evaluatedExpr
 
@@ -201,9 +166,18 @@ sealed abstract class Call(val alias: Option[String],
 
       resolutions.collectFirst({ case s: Success[WdlValue] => s}) match {
         case Some(Success(value)) => value
-        case None => throw new VariableNotFoundException(name)
+        case None =>
+          resolutions.toList.flatMap({
+            case Failure(ex: VariableNotFoundException) => None
+            case Failure(ex) => Option(ex) // Only take failures that are not VariableNotFoundExceptions
+            case _ => None
+          }) match {
+            case Nil => throw VariableNotFoundException(name)
+            case exs => throw new VariableLookupException(name, exs)
+          }
       }
     }
+    
     lookup
   }
 }

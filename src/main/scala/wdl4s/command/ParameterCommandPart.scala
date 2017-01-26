@@ -2,6 +2,7 @@ package wdl4s.command
 
 import wdl4s.AstTools.EnhancedAstNode
 import wdl4s._
+import wdl4s.exception.VariableNotFoundException
 import wdl4s.expression.WdlFunctions
 import wdl4s.values._
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
@@ -32,7 +33,7 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
 
   override def instantiate(declarations: Seq[Declaration], inputsMap: EvaluatedTaskInputs, functions: WdlFunctions[WdlValue], valueMapper: (WdlValue) => WdlValue): String = {
     val inputs = inputsMap map { case (d, v) => d.unqualifiedName -> v }
-    val lookup = (s: String) => inputs.getOrElse(s, throw new VariableNotFoundException(s))
+    val lookup = (s: String) => inputs.getOrElse(s, throw VariableNotFoundException(s))
 
     val value = expression.evaluate(lookup, functions) match {
       case Success(v) => v match {

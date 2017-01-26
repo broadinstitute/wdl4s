@@ -1,10 +1,10 @@
 package wdl4s
 
+import lenthall.util.TryUtil
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.expression.WdlFunctions
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
-import wdl4s.types.{WdlArrayType, WdlType}
-import wdl4s.util.TryUtil
+import wdl4s.types.WdlType
 import wdl4s.values.WdlValue
 
 import scala.language.postfixOps
@@ -117,6 +117,8 @@ case class Workflow(unqualifiedName: String,
     else outputs
     leftOutputs.find(_.unqualifiedName == name)
   }
+  
+  lazy val hasEmptyOutputSection = workflowOutputWildcards.isEmpty && children.collect({ case o: WorkflowOutput => o }).isEmpty
 
   /**
    * All outputs for this workflow and their associated types
@@ -126,14 +128,12 @@ case class Workflow(unqualifiedName: String,
    */
   lazy val expandedWildcardOutputs: Seq[WorkflowOutput] = {
 
-    def sanitizeFqn(fqn: FullyQualifiedName) = fqn.replaceAll("\\.", "_")
-    
     def toWorkflowOutput(output: DeclarationInterface, wdlType: WdlType) = {
       val locallyQualifiedName = output.parent map { parent => output.locallyQualifiedName(parent) } getOrElse { 
         throw new RuntimeException(s"output ${output.fullyQualifiedName} has no parent Scope") 
       }
       
-      new WorkflowOutput(sanitizeFqn(output.fullyQualifiedName), wdlType, WdlExpression.fromString(locallyQualifiedName), output.ast, Option(this))
+      new WorkflowOutput(locallyQualifiedName, wdlType, WdlExpression.fromString(locallyQualifiedName), output.ast, Option(this))
     }
 
     def toWorkflowOutputs(scope: Scope) = {
@@ -150,7 +150,7 @@ case class Workflow(unqualifiedName: String,
     }
     
     // No outputs means all outputs
-    val effectiveOutputWildcards = if (workflowOutputWildcards.isEmpty && children.collect({ case o: WorkflowOutput => o }).isEmpty) {
+    val effectiveOutputWildcards = if (hasEmptyOutputSection) {
       calls map { call => WorkflowOutputWildcard(unqualifiedName + "." + call.unqualifiedName, wildcard = true, call.ast) } toSeq
     } else workflowOutputWildcards
 
@@ -175,7 +175,7 @@ case class Workflow(unqualifiedName: String,
   def evaluateOutputs(knownInputs: WorkflowCoercedInputs,
                       wdlFunctions: WdlFunctions[WdlValue],
                       outputResolver: OutputResolver = NoOutputResolver,
-                      shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): Try[Map[LocallyQualifiedName, WdlValue]] = {
+                      shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): Try[Map[WorkflowOutput, WdlValue]] = {
     
     val evaluatedOutputs = outputs.foldLeft(Map.empty[WorkflowOutput, Try[WdlValue]])((outputMap, output) => {
       val currentOutputs = outputMap collect {
@@ -187,7 +187,7 @@ case class Workflow(unqualifiedName: String,
       val workflowOutput = output -> coerced
 
       outputMap + workflowOutput
-    }) map { case (k, v) => k.unqualifiedName -> v }
+    }) map { case (k, v) => k -> v }
 
     TryUtil.sequenceMap(evaluatedOutputs, "Failed to evaluate workflow outputs.\n")
   }

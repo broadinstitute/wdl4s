@@ -9,7 +9,7 @@ scalaVersion := "2.11.8"
 
 lazy val versionSettings = Seq(
   // Upcoming release, or current if we're on the master branch
-  git.baseVersion := "0.7",
+  git.baseVersion := "0.9",
 
   // Shorten the git commit hash
   git.gitHeadCommit := git.gitHeadCommit.value map { _.take(7) },
@@ -25,7 +25,14 @@ versionWithGit ++ versionSettings
 
 val sprayJsonV = "1.3.2"
 
+val lenthallV = "0.20"
+
+resolvers ++= List(
+  "Broad Artifactory Releases" at "https://artifactory.broadinstitute.org/artifactory/libs-release/"
+)
+
 libraryDependencies ++= Seq(
+  "org.broadinstitute" %% "lenthall" % lenthallV,
   "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0",
   "io.spray" %% "spray-json" % sprayJsonV,
   /*

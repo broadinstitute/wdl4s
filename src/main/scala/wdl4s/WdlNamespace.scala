@@ -3,13 +3,14 @@ package wdl4s
 import java.nio.file.{Path, Paths}
 
 import better.files._
-import cats.data.NonEmptyList
+import lenthall.exception.AggregatedException
+import lenthall.util.TryUtil
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.command.ParameterCommandPart
+import wdl4s.exception._
 import wdl4s.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStandardLibraryFunctionsType}
 import wdl4s.parser.WdlParser._
 import wdl4s.types._
-import wdl4s.util.{AggregatedException, TryUtil}
 import wdl4s.values._
 
 import scala.collection.JavaConverters._
@@ -89,12 +90,12 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
         val rawValue = rawInputs(input.fqn)
         input.wdlType.coerceRawValue(rawValue) match {
           case Success(value) => Success(value)
-          case _ => Failure(new UnsatisfiedInputsException(s"Could not coerce ${rawValue.getClass.getSimpleName} value for '${input.fqn}' ($rawValue) into: ${input.wdlType}"))
+          case _ => Failure(new UnsatisfiedInputException(s"Could not coerce ${rawValue.getClass.getSimpleName} value for '${input.fqn}' ($rawValue) into: ${input.wdlType}"))
         }
       case _ =>
         input.optional match {
           case true => Success(WdlOptionalValue(input.wdlType.asInstanceOf[WdlOptionalType].memberType, None))
-          case _ => Failure(new UnsatisfiedInputsException(s"Required workflow input '${input.fqn}' not specified."))
+          case _ => Failure(new UnsatisfiedInputException(s"Required workflow input '${input.fqn}' not specified."))
         }
     }
 
@@ -106,9 +107,8 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
         (key, tryValue) <- successes
       } yield key -> tryValue.get)
     } else {
-      val errors = failures.values.collect { case f: Failure[_] => f.exception.getMessage }
-      // Fine to use .fromListUnsafe because failures is guaranteed to be nonEmpty
-      Failure(new ValidationException("Workflow input processing failed.", NonEmptyList.fromListUnsafe(errors.toList)))
+      val errors = failures.values.toList.collect { case f: Failure[_] => f.exception }
+      Failure(ValidationException("Workflow input processing failed.", errors))
     }
   }
 
@@ -140,11 +140,14 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
     // as this method is meant for pre-execution validation
     val filtered = evalScope filterNot {
       case (_, Failure(ex)) if filteredExceptions.contains(ex.getClass) => true
-      case (_, Failure(e: AggregatedException)) => e.exceptions forall { ex => filteredExceptions.contains(ex.getClass) }
+      case (_, Failure(e: AggregatedException)) => e.throwables forall { ex => filteredExceptions.contains(ex.getClass) }
       case _ => false
+    } map {
+      case (name, Failure(f)) => name -> Failure(ValidationException(name, List(f)))
+      case other => other
     }
     
-    TryUtil.sequenceMap(filtered)
+    TryUtil.sequenceMap(filtered, "Could not evaluate workflow declarations")
   }
 }
 
@@ -170,8 +173,8 @@ object WdlNamespace {
     load(wdlSource, resource.getOrElse("string"), importResolver.getOrElse(Seq(fileResolver)), None)
   }
 
-  private def load(wdlSource: WdlSource, resource: String, importResolver: Seq[ImportResolver], importedAs: Option[String]): WdlNamespace = {
-    WdlNamespace(AstTools.getAst(wdlSource, resource), wdlSource, importResolver, importedAs, root = true)
+  private def load(wdlSource: WdlSource, resource: String, importResolver: Seq[ImportResolver], importedAs: Option[String], root: Boolean = true): WdlNamespace = {
+    WdlNamespace(AstTools.getAst(wdlSource, resource), wdlSource, importResolver, importedAs, root = root)
   }
 
 
@@ -190,10 +193,9 @@ object WdlNamespace {
             case Failure(f) => tryResolve(str, tail, errors :+ f)
           }
         case Nil =>
-          val collectedErrors = errors.map(_.getMessage)
-          collectedErrors match {
-            case Nil => throw new UnsatisfiedInputsException("Failed to import workflow, no import sources provided.")
-            case _ => throw new ValidationException(s"Failed to import workflow $str.", NonEmptyList.fromListUnsafe(collectedErrors))
+          errors match {
+            case Nil => throw new UnsatisfiedInputException("Failed to import workflow, no import sources provided.")
+            case _ => throw ValidationException(s"Failed to import workflow $str.", errors)
           }
       }
     }
@@ -204,7 +206,7 @@ object WdlNamespace {
     val namespaces: Seq[WdlNamespace] = for {
       imp <- imports
       source = tryResolve(imp.uri, importResolvers, List.empty)
-    } yield WdlNamespace.load(source, imp.uri, importResolvers, Option(imp.namespaceName))
+    } yield WdlNamespace.load(source, imp.uri, importResolvers, Option(imp.namespaceName), root = false)
 
     /**
       * Map of Terminal -> WDL Source Code so the syntax error formatter can show line numbers
@@ -339,13 +341,22 @@ object WdlNamespace {
     val callInputSectionErrors = namespace.descendants.collect({ case c: TaskCall => c }).flatMap(
       validateCallInputSection(_, wdlSyntaxErrorFormatter)
     )
+    
+    val workflowOutputErrors = workflows flatMap { _.workflowCalls map { _.calledWorkflow } } collect {
+      case calledWorkflow if calledWorkflow.workflowOutputWildcards.nonEmpty => 
+        new SyntaxError(
+          s"""Workflow ${calledWorkflow.unqualifiedName} is used as a sub workflow but has outputs declared with a deprecated syntax not compatible with sub workflows.
+             |To use this workflow as a sub workflow please update the workflow outputs section to the latest WDL specification.
+             |See https://github.com/broadinstitute/wdl/blob/develop/SPEC.md#outputs""".stripMargin
+        )
+    }
 
     val declarationErrors = for {
       descendant <- namespace.descendants
       declaration <- getDecls(descendant)
       error <- validateDeclaration(declaration, wdlSyntaxErrorFormatter)
     } yield error
-
+    
     def scopeNameAndTerminal(scope: Scope): (String, Terminal) = {
       scope match {
         case ns: WdlNamespace => ("Namespace", imports.find(_.uri == ns.resource).get.namespaceTerminal)
@@ -387,7 +398,7 @@ object WdlNamespace {
       if !task.declarations.map(_.unqualifiedName).contains(variable.getSourceString)
     } yield new SyntaxError(wdlSyntaxErrorFormatter.commandExpressionContainsInvalidVariableReference(task.ast.getAttribute("name").asInstanceOf[Terminal], variable))
 
-    val all = declarationErrors ++ callInputSectionErrors ++ taskCommandReferenceErrors ++ duplicateSiblingScopeNameErrors
+    val all = workflowOutputErrors ++ declarationErrors ++ callInputSectionErrors ++ taskCommandReferenceErrors ++ duplicateSiblingScopeNameErrors
 
     all.toSeq.sortWith({ case (l, r) => l.getMessage < r.getMessage }) match {
       case s: Seq[SyntaxError] if s.nonEmpty => throw s.head
@@ -428,10 +439,10 @@ object WdlNamespace {
       case Some(c: Call) => WdlCallOutputsObjectType(c)
       case Some(s: Scatter) => s.collection.evaluateType(lookupType(s), new WdlStandardLibraryFunctionsType, Option(from)) match {
         case Success(a: WdlArrayType) => a.memberType
-        case _ => throw VariableLookupException(s"Variable $n references a scatter block ${s.fullyQualifiedName}, but the collection does not evaluate to an array")
+        case _ => throw new VariableLookupException(s"Variable $n references a scatter block ${s.fullyQualifiedName}, but the collection does not evaluate to an array")
       }
       case Some(ns: WdlNamespace) => WdlNamespaceType
-      case _ => throw VariableLookupException(s"Could not resolve $n from scope ${from.fullyQualifiedName}")
+      case _ => throw new VariableLookupException(s"Could not resolve $n from scope ${from.fullyQualifiedName}")
     }
   }
   
