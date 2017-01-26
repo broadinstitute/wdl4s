@@ -40,7 +40,7 @@ sealed trait WdlArrayType extends WdlType {
   }
 
   override def isCoerceableFrom(otherType: WdlType): Boolean = otherType match {
-    case WdlArrayType(otherMemberType) => otherMemberType == WdlAnyType || memberType.isCoerceableFrom(otherMemberType)
+    case WdlArrayType(otherMemberType) => memberType.isCoerceableFrom(otherMemberType)
     case _ => false
   }
 
