@@ -114,7 +114,7 @@ class WdlArrayTypeSpec extends FlatSpec with Matchers  {
   }
 
   List(WdlStringType, WdlArrayType(WdlIntegerType), WdlPairType(WdlIntegerType, WdlPairType(WdlIntegerType, WdlIntegerType)), WdlOptionalType(WdlStringType)) foreach { desiredMemberType =>
-    it should s"be able to construct an empty Array[${desiredMemberType.toWdlString}] value" ignore {
+    it should s"be able to construct an empty Array[${desiredMemberType.toWdlString}] value" in {
       def noLookup(String: String): WdlValue = fail("No identifiers should be looked up in this test")
 
       val desiredArrayType = WdlArrayType(desiredMemberType)
