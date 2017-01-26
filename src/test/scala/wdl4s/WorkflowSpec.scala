@@ -138,7 +138,7 @@ class WorkflowSpec extends WordSpec with Matchers {
 
       val evaluatedOutputs = ns.workflow.evaluateOutputs(workflowInputs, NoFunctions, outputResolver)
       evaluatedOutputs match {
-        case Success(v) => v should contain theSameElementsAs evaluationExpectations
+        case Success(v) => v map { case (output, outputValue) => output.unqualifiedName -> outputValue } should contain theSameElementsAs evaluationExpectations
         case Failure(e) => fail(e)
       }
     }
