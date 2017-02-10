@@ -550,15 +550,15 @@ object WdlNamespace {
 }
 
 object WdlNamespaceWithWorkflow {
-  def load(wdlSource: WdlSource, importsResolvers: Seq[ImportResolver]): WdlNamespaceWithWorkflow = {
-    from(WdlNamespace.loadUsingSource(wdlSource, None, Option(importsResolvers)))
+  def load(wdlSource: WdlSource, importsResolvers: Seq[ImportResolver]): Try[WdlNamespaceWithWorkflow] = {
+    Try(from(WdlNamespace.loadUsingSource(wdlSource, None, Option(importsResolvers))))
   }
 
   @deprecated("To avoid unexpected default resolutions, I recommend using the load(String, Seq[ImportResolver] method of loading.", "23")
   def load(wdlSource: WdlSource): WdlNamespaceWithWorkflow = from(WdlNamespace.loadUsingSource(wdlSource, None, None))
 
   @deprecated("To avoid unexpected default resolutions, I recommend using the load(String, Seq[ImportResolver] method of loading.", "23")
-  def load(wdlSource: WdlSource, importsDirectory: File): WdlNamespaceWithWorkflow = {
+  def load(wdlSource: WdlSource, importsDirectory: File): Try[WdlNamespaceWithWorkflow] = {
     val resolvers: Seq[ImportResolver] = Seq(WdlNamespace.directoryResolver(importsDirectory), WdlNamespace.fileResolver)
     load(wdlSource, resolvers)
   }

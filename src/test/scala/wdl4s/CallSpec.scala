@@ -152,7 +152,7 @@ class CallSpec extends WordSpec with Matchers {
       }
     }
 
-    val ns = WdlNamespaceWithWorkflow.load(wdl, Seq.empty)
+    val ns = WdlNamespaceWithWorkflow.load(wdl, Seq.empty).get
     val exception = intercept[ValidationException] {
         ns.workflow.findCallByName("hello2").get.evaluateTaskInputs(Map("wf_hello.wf_hello_input" -> WdlFile("/do/not/exist")), functionsWithRead).get
     }
