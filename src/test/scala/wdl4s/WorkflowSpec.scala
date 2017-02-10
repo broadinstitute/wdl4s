@@ -408,7 +408,7 @@ class WorkflowSpec extends WordSpec with Matchers {
         """.stripMargin
 
       a[SyntaxError] should be thrownBy {
-        WdlNamespaceWithWorkflow.load(wdl.replace("<<OUTPUTS>>", output), importResolver = (uri: String) => subWorkflow)
+        WdlNamespaceWithWorkflow.load(wdl.replace("<<OUTPUTS>>", output), importResolver = (uri: String) => subWorkflow).get
       }
     }
 
@@ -483,7 +483,7 @@ class WorkflowSpec extends WordSpec with Matchers {
           |}
         """.stripMargin
       
-      val exception = the[SyntaxError] thrownBy WdlNamespaceWithWorkflow.load(parentWorkflow, importResolver = (uri: String) => subWorkflow)
+      val exception = the[SyntaxError] thrownBy WdlNamespaceWithWorkflow.load(parentWorkflow, importResolver = (uri: String) => subWorkflow).get
       exception.getMessage shouldBe s"""Workflow sub_workflow is used as a sub workflow but has outputs declared with a deprecated syntax not compatible with sub workflows.
                                         |To use this workflow as a sub workflow please update the workflow outputs section to the latest WDL specification.
                                         |See https://github.com/broadinstitute/wdl/blob/develop/SPEC.md#outputs""".stripMargin
