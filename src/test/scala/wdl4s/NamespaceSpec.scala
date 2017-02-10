@@ -15,7 +15,7 @@ class NamespaceSpec extends WdlTest {
   val threeStepWdl = "src/test/cases/three_step/test.wdl"
 
   threeStepWdl should {
-    val namespace = loadWdlFile(File("src/test/cases/three_step/test.wdl"))
+    val namespace = loadWdlFile(File("src/test/cases/three_step/test.wdl")).get
 
     "coerceRawInputs (0)" in {
       namespace.coerceRawInputs(Map("three_step.cgrep.pattern" -> "abc")).get shouldEqual Map(

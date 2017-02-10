@@ -12,7 +12,7 @@ class TaskSpec extends WdlTest {
   val commandParameterWdl = "src/test/cases/command_parameters/test.wdl"
 
   threeStepWdl should {
-    val namespace = loadWdlFile(File(threeStepWdl))
+    val namespace = loadWdlFile(File(threeStepWdl)).get
     val wcTask = getTask(namespace, "wc")
     val cgrepTask = getTask(namespace, "cgrep")
     val psTask = getTask(namespace, "ps")
@@ -49,7 +49,7 @@ class TaskSpec extends WdlTest {
   }
 
   commandParameterWdl should {
-    val namespace = loadWdlFile(File(commandParameterWdl))
+    val namespace = loadWdlFile(File(commandParameterWdl)).get
     val paramTestTask = getTask(namespace, "param_test")
 
     s"instantiate command (0)" in {
@@ -139,7 +139,7 @@ class TaskSpec extends WdlTest {
         """.
           stripMargin
 
-      val namespace = WdlNamespaceWithWorkflow.load(wdl)
+      val namespace = WdlNamespaceWithWorkflow.load(wdl).get
       val callT = namespace.taskCalls.find(_.unqualifiedName == "t").get
       val callInputs = Map(callT.task.declarations.head -> WdlString("input"))
       val outputs = callT.task.evaluateOutputs(callInputs, NoFunctions)
@@ -152,7 +152,7 @@ class TaskSpec extends WdlTest {
     }
 
     "instantiate command (4)" in {
-      val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.TaskDeclarationsWdl.wdlSource())
+      val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.TaskDeclarationsWdl.wdlSource()).get
       val callV = namespace.taskCalls.find(_.unqualifiedName == "v").get
       val inputs = callV.task.inputsFromMap(
         Map(

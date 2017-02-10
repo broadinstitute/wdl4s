@@ -144,7 +144,7 @@ class WorkflowSpec extends WordSpec with Matchers {
     }
     
     def verifyOutputs(outputString: String, declarationExpectations: Seq[WorkflowOutputExpectation], evaluationExpectations: Map[String, WdlValue]) = {
-      val ns = WdlNamespaceWithWorkflow.load(wdl.replace("<<OUTPUTS>>", outputString), importResolver = (uri: String) => subWorkflow)
+      val ns = WdlNamespaceWithWorkflow.load(wdl.replace("<<OUTPUTS>>", outputString), importResolver = (uri: String) => subWorkflow).get
       verifyOutputsForNamespace(ns, declarationExpectations, evaluationExpectations, outputResolverForWorkflow(ns.workflow))
     }
 
@@ -437,7 +437,7 @@ class WorkflowSpec extends WordSpec with Matchers {
         "t.o2" -> WdlString("o2")
       )
 
-      val ns = WdlNamespaceWithWorkflow.load(wdl)
+      val ns = WdlNamespaceWithWorkflow.load(wdl).get
 
       def outputResolver(call: GraphNode, index: Option[Int])= {
         call match {

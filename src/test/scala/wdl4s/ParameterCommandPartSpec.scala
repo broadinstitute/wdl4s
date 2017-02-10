@@ -13,7 +13,7 @@ class ParameterCommandPartSpec extends WdlTest {
   val commandParameterWdl = "src/test/cases/command_parameters/test.wdl"
 
   commandParameterWdl should {
-    val namespace = loadWdlFile(File(commandParameterWdl))
+    val namespace = loadWdlFile(File(commandParameterWdl)).get
     val task = namespace.tasks.find(_.name == "param_test") getOrElse {
       fail("task 'param_test' not found")
     }
