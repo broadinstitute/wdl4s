@@ -12,7 +12,7 @@ class TaskSpec extends WdlTest {
   val commandParameterWdl = "src/test/cases/command_parameters/test.wdl"
 
   threeStepWdl should {
-    val namespace = loadWdlFile(File(threeStepWdl)).get
+    val namespace = loadWdlFile(File(threeStepWdl))
     val wcTask = getTask(namespace, "wc")
     val cgrepTask = getTask(namespace, "cgrep")
     val psTask = getTask(namespace, "ps")
@@ -49,7 +49,7 @@ class TaskSpec extends WdlTest {
   }
 
   commandParameterWdl should {
-    val namespace = loadWdlFile(File(commandParameterWdl)).get
+    val namespace = loadWdlFile(File(commandParameterWdl))
     val paramTestTask = getTask(namespace, "param_test")
 
     s"instantiate command (0)" in {

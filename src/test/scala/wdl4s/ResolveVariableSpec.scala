@@ -8,7 +8,7 @@ class ResolveVariableSpec extends WdlTest {
   val ifStatementWdl = "src/test/cases/if_statement/test.wdl"
 
   ifStatementWdl should {
-    val namespace = loadWdlFile(File(ifStatementWdl)).get
+    val namespace = loadWdlFile(File(ifStatementWdl))
 
     val lookupVarTable = Table(
       ("node", "variable", "resolution"),
