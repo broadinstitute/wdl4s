@@ -29,7 +29,7 @@ trait WdlType {
   def coerceRawValue(any: Any): Try[WdlValue] = {
     any match {
       case v: WdlValue if v.wdlType == this => Success(v)
-      case ok if coercion.isDefinedAt(any) => Try(coercion(any))
+      case ok if coercion.isDefinedAt(ok) => Try(coercion(ok))
       case v: WdlValue => Failure(new IllegalArgumentException(s"No coercion defined from WDL type '${v.wdlType.toWdlString}' to $toWdlString."))
       case _ => Failure(new IllegalArgumentException(s"No coercion defined from non-WDL type '${any.getClass.getSimpleName}' to $toWdlString."))
     }
