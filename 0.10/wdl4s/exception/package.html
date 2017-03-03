@@ -1,0 +1,259 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>exception - wdl4s.exception</title>
+          <meta name="description" content="exception - wdl4s.exception" />
+          <meta name="keywords" content="exception wdl4s.exception" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../index.html';
+            var hash = 'wdl4s.exception.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../lib/package_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="wdl4s">wdl4s</a></p>
+        <h1>exception</h1><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">exception</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="wdl4s.exception.LookupException" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LookupExceptionextendsAnyRef"></a>
+      <a id="LookupException:LookupException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="LookupException.html"><span class="name">LookupException</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package@LookupExceptionextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.exception.OptionalNotSuppliedException" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OptionalNotSuppliedExceptionextendsExceptionwithProductwithSerializable"></a>
+      <a id="OptionalNotSuppliedException:OptionalNotSuppliedException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="OptionalNotSuppliedException.html"><span class="name">OptionalNotSuppliedException</span></a><span class="params">(<span name="operationName">operationName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Exception">Exception</span> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package@OptionalNotSuppliedExceptionextendsExceptionwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.exception.OutputVariableLookupException" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OutputVariableLookupExceptionextendsVariableLookupExceptionwithProductwithSerializable"></a>
+      <a id="OutputVariableLookupException:OutputVariableLookupException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="OutputVariableLookupException.html"><span class="name">OutputVariableLookupException</span></a><span class="params">(<span name="node">node: <a href="../GraphNode.html" class="extype" name="wdl4s.GraphNode">GraphNode</a></span>, <span name="index">index: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Int">Int</span>]</span>)</span><span class="result"> extends <a href="VariableLookupException.html" class="extype" name="wdl4s.exception.VariableLookupException">VariableLookupException</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package@OutputVariableLookupExceptionextendsVariableLookupExceptionwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Raised when attempting to resolve an output variable but the output resolver failed to return a value.</p>
+    </li><li name="wdl4s.exception.ScatterIndexNotFound" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ScatterIndexNotFoundextendsVariableLookupExceptionwithProductwithSerializable"></a>
+      <a id="ScatterIndexNotFound:ScatterIndexNotFound"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ScatterIndexNotFound.html"><span class="name">ScatterIndexNotFound</span></a><span class="params">(<span name="message">message: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="VariableLookupException.html" class="extype" name="wdl4s.exception.VariableLookupException">VariableLookupException</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package@ScatterIndexNotFoundextendsVariableLookupExceptionwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Raised when attempting to resolve a variable in a scatter but the index could not be found.</p>
+    </li><li name="wdl4s.exception.UnsatisfiedInputException" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="UnsatisfiedInputExceptionextendsException"></a>
+      <a id="UnsatisfiedInputException:UnsatisfiedInputException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="UnsatisfiedInputException.html"><span class="name">UnsatisfiedInputException</span></a><span class="result"> extends <span class="extype" name="scala.Exception">Exception</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package@UnsatisfiedInputExceptionextendsException" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.exception.ValidationException" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ValidationExceptionextendsThrowablewithThrowableAggregationwithProductwithSerializable"></a>
+      <a id="ValidationException:ValidationException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ValidationException.html"><span class="name">ValidationException</span></a><span class="params">(<span name="exceptionContext">exceptionContext: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="throwables">throwables: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Throwable">Throwable</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Throwable">Throwable</span> with <span class="extype" name="lenthall.exception.ThrowableAggregation">ThrowableAggregation</span> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package@ValidationExceptionextendsThrowablewithThrowableAggregationwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.exception.VariableLookupException" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="VariableLookupExceptionextendsRuntimeExceptionwithThrowableAggregationwithLookupException"></a>
+      <a id="VariableLookupException:VariableLookupException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="VariableLookupException.html"><span class="name">VariableLookupException</span></a><span class="result"> extends <span class="extype" name="scala.RuntimeException">RuntimeException</span> with <span class="extype" name="lenthall.exception.ThrowableAggregation">ThrowableAggregation</span> with <a href="LookupException.html" class="extype" name="wdl4s.exception.LookupException">LookupException</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package@VariableLookupExceptionextendsRuntimeExceptionwithThrowableAggregationwithLookupException" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">When an unexpected exception occurred while attempting to resolve a variable.</p><div class="fullcomment"><div class="comment cmt"><p>When an unexpected exception occurred while attempting to resolve a variable.
+Might act a single exception or aggregate multiple exceptions.
+</p></div></div>
+    </li><li name="wdl4s.exception.VariableNotFoundException" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="VariableNotFoundExceptionextendsExceptionwithLookupExceptionwithProductwithSerializable"></a>
+      <a id="VariableNotFoundException:VariableNotFoundException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed abstract </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="VariableNotFoundException.html"><span class="name">VariableNotFoundException</span></a><span class="result"> extends <span class="extype" name="scala.Exception">Exception</span> with <a href="LookupException.html" class="extype" name="wdl4s.exception.LookupException">LookupException</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package@VariableNotFoundExceptionextendsExceptionwithLookupExceptionwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">When a variable does not reference any known scope in the namespace.</p>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="wdl4s.exception.VariableNotFoundException" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="VariableNotFoundException"></a>
+      <a id="VariableNotFoundException:VariableNotFoundException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="VariableNotFoundException$.html"><span class="name">VariableNotFoundException</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#wdl4s.exception.package@VariableNotFoundException" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

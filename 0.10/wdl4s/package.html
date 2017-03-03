@@ -1,0 +1,1353 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>wdl4s - wdl4s</title>
+          <meta name="description" content="wdl4s - wdl4s" />
+          <meta name="keywords" content="wdl4s wdl4s" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../lib/template.js"></script>
+      <script type="text/javascript" src="../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../index.html';
+            var hash = 'wdl4s.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../lib/package_big.png" />
+        
+        <h1>wdl4s</h1><span class="permalink">
+      <a href="../index.html#wdl4s.package" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wdl4s</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="wdl4s"><span>wdl4s</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="wdl4s.Call" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="CallextendsGraphNodeWithInputswithWorkflowScoped"></a>
+      <a id="Call:Call"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Call.html"><span class="name">Call</span></a><span class="result"> extends <a href="GraphNodeWithInputs.html" class="extype" name="wdl4s.GraphNodeWithInputs">GraphNodeWithInputs</a> with <a href="WorkflowScoped.html" class="extype" name="wdl4s.WorkflowScoped">WorkflowScoped</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@CallextendsGraphNodeWithInputswithWorkflowScoped" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Represents a <code>call</code> block in a WDL workflow.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a <code>call</code> block in a WDL workflow.  Calls wrap tasks
+and optionally provide a subset of the inputs for the task (as inputMappings member).
+All remaining inputs to the task that are not declared in the <code>input</code> section
+of the <code>call</code> block are called unsatisfiedInputs
+</p></div></div>
+    </li><li name="wdl4s.CallOutput" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CallOutputextendsOutputwithProductwithSerializable"></a>
+      <a id="CallOutput:CallOutput"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="CallOutput.html"><span class="name">CallOutput</span></a><span class="params">(<span name="call">call: <a href="Call.html" class="extype" name="wdl4s.Call">Call</a></span>, <span name="taskOutput">taskOutput: <a href="Output.html" class="extype" name="wdl4s.Output">Output</a></span>)</span><span class="result"> extends <a href="Output.html" class="extype" name="wdl4s.Output">Output</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@CallOutputextendsOutputwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Callable" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="CallableextendsScope"></a>
+      <a id="Callable:Callable"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Callable.html"><span class="name">Callable</span></a><span class="result"> extends <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@CallableextendsScope" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Declaration" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DeclarationextendsDeclarationInterfacewithProductwithSerializable"></a>
+      <a id="Declaration:Declaration"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Declaration.html"><span class="name">Declaration</span></a><span class="params">(<span name="wdlType">wdlType: <a href="types/WdlType.html" class="extype" name="wdl4s.types.WdlType">WdlType</a></span>, <span name="unqualifiedName">unqualifiedName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="expression">expression: <span class="extype" name="scala.Option">Option</span>[<a href="WdlExpression.html" class="extype" name="wdl4s.WdlExpression">WdlExpression</a>]</span>, <span name="parent">parent: <span class="extype" name="scala.Option">Option</span>[<a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a>]</span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="DeclarationInterface.html" class="extype" name="wdl4s.DeclarationInterface">DeclarationInterface</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@DeclarationextendsDeclarationInterfacewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.DeclarationInterface" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="DeclarationInterfaceextendsGraphNodeWithUpstreamReferences"></a>
+      <a id="DeclarationInterface:DeclarationInterface"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="DeclarationInterface.html"><span class="name">DeclarationInterface</span></a><span class="result"> extends <a href="GraphNodeWithUpstreamReferences.html" class="extype" name="wdl4s.GraphNodeWithUpstreamReferences">GraphNodeWithUpstreamReferences</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@DeclarationInterfaceextendsGraphNodeWithUpstreamReferences" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Represents a declaration which can show up in a workflow or a task context.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a declaration which can show up in a workflow or a task context.  For example</p><p>task test {
+  File test_file
+  command { ... }
+}</p><p>workflow wf {
+  String wf_string = &quot;abc&quot;
+  call test { input: s=wf_string }
+}</p><p>Both the definition of test_file and wf_string are declarations
+</p></div></div>
+    </li><li name="wdl4s.EvaluatedTaskInputs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="EvaluatedTaskInputs=Map[wdl4s.Declaration,wdl4s.values.WdlValue]"></a>
+      <a id="EvaluatedTaskInputs:EvaluatedTaskInputs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">EvaluatedTaskInputs</span><span class="result"> = <span class="extype" name="scala.collection.immutable.Map">Map</span>[<a href="Declaration.html" class="extype" name="wdl4s.Declaration">Declaration</a>, <a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@EvaluatedTaskInputs=Map[wdl4s.Declaration,wdl4s.values.WdlValue]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.FullyQualifiedName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="FullyQualifiedName=String"></a>
+      <a id="FullyQualifiedName:FullyQualifiedName"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">FullyQualifiedName</span><span class="result"> = <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@FullyQualifiedName=String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.GraphNode" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="GraphNodeextendsScope"></a>
+      <a id="GraphNode:GraphNode"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="GraphNode.html"><span class="name">GraphNode</span></a><span class="result"> extends <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@GraphNodeextendsScope" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.GraphNodeWithInputs" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="GraphNodeWithInputsextendsGraphNode"></a>
+      <a id="GraphNodeWithInputs:GraphNodeWithInputs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="GraphNodeWithInputs.html"><span class="name">GraphNodeWithInputs</span></a><span class="result"> extends <a href="GraphNode.html" class="extype" name="wdl4s.GraphNode">GraphNode</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@GraphNodeWithInputsextendsGraphNode" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.GraphNodeWithUpstreamReferences" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="GraphNodeWithUpstreamReferencesextendsGraphNode"></a>
+      <a id="GraphNodeWithUpstreamReferences:GraphNodeWithUpstreamReferences"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="GraphNodeWithUpstreamReferences.html"><span class="name">GraphNodeWithUpstreamReferences</span></a><span class="result"> extends <a href="GraphNode.html" class="extype" name="wdl4s.GraphNode">GraphNode</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@GraphNodeWithUpstreamReferencesextendsGraphNode" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.If" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="IfextendsGraphNodeWithUpstreamReferenceswithWorkflowScopedwithProductwithSerializable"></a>
+      <a id="If:If"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="If.html"><span class="name">If</span></a><span class="params">(<span name="index">index: <span class="extype" name="scala.Int">Int</span></span>, <span name="condition">condition: <a href="WdlExpression.html" class="extype" name="wdl4s.WdlExpression">WdlExpression</a></span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="GraphNodeWithUpstreamReferences.html" class="extype" name="wdl4s.GraphNodeWithUpstreamReferences">GraphNodeWithUpstreamReferences</a> with <a href="WorkflowScoped.html" class="extype" name="wdl4s.WorkflowScoped">WorkflowScoped</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@IfextendsGraphNodeWithUpstreamReferenceswithWorkflowScopedwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Represents an If block in WDL
+</p><div class="fullcomment"><div class="comment cmt"><p>Represents an If block in WDL
+</p></div><dl class="paramcmts block"><dt class="param">index</dt><dd class="cmt"><p>Index of the if block. The index is computed during tree generation to reflect WDL scope structure.</p></dd><dt class="param">condition</dt><dd class="cmt"><p>WDL Expression representing the condition in which to execute this If-block</p></dd></dl></div>
+    </li><li name="wdl4s.Import" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ImportextendsProductwithSerializable"></a>
+      <a id="Import:Import"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Import.html"><span class="name">Import</span></a><span class="params">(<span name="uri">uri: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="namespaceTerminal">namespaceTerminal: <span class="extype" name="wdl4s.parser.WdlParser.Terminal">Terminal</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@ImportextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.ImportResolver" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ImportResolver=String=&gt;wdl4s.package.WdlSource"></a>
+      <a id="ImportResolver:ImportResolver"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ImportResolver</span><span class="result"> = (<span class="extype" name="scala.Predef.String">String</span>) ⇒ <a href="#WdlSource=String" class="extmbr" name="wdl4s.WdlSource">WdlSource</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@ImportResolver=String=&gt;wdl4s.package.WdlSource" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.LocallyQualifiedName" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LocallyQualifiedName=String"></a>
+      <a id="LocallyQualifiedName:LocallyQualifiedName"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">LocallyQualifiedName</span><span class="result"> = <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@LocallyQualifiedName=String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.MemberAccess" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MemberAccessextendsProductwithSerializable"></a>
+      <a id="MemberAccess:MemberAccess"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="MemberAccess.html"><span class="name">MemberAccess</span></a><span class="params">(<span name="lhs">lhs: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="rhs">rhs: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@MemberAccessextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Represents a member-access construct holding the left and right hand sides, e.g.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a member-access construct holding the left and right hand sides, e.g.
+&quot;foo.blah&quot; would deconstruct into &quot;foo&quot; and &quot;blah&quot;.</p><p>The right-hand side of a member-access AST should always be interpreted as a String
+Sometimes, the left-hand side is itself a MemberAccess AST, like in the expression
+for <code>call t1</code> below.  In that example, &quot;ns.ns2.task_name&quot; would be the left hand side
+In the <code>call t2</code> example, &quot;alias&quot; would be the left hand side</p><p>import &quot;test.wdl&quot; as ns
+workflow w {
+ call ns.ns2.task_name
+ call t1 {
+   input: x=ns.ns2.task_name.output
+ }</p><p> call ns.ns2.task_name as alias
+ call t2 {
+   input: y=alias.output
+ }
+}
+</p></div></div>
+    </li><li name="wdl4s.Output" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="OutputextendsDeclarationInterface"></a>
+      <a id="Output:Output"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Output.html"><span class="name">Output</span></a><span class="result"> extends <a href="DeclarationInterface.html" class="extype" name="wdl4s.DeclarationInterface">DeclarationInterface</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@OutputextendsDeclarationInterface" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.OutputResolver" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OutputResolver=(wdl4s.GraphNode,Option[Int])=&gt;scala.util.Try[wdl4s.values.WdlValue]"></a>
+      <a id="OutputResolver:OutputResolver"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">OutputResolver</span><span class="result"> = (<a href="GraphNode.html" class="extype" name="wdl4s.GraphNode">GraphNode</a>, <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Int">Int</span>]) ⇒ <span class="extype" name="scala.util.Try">Try</span>[<a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@OutputResolver=(wdl4s.GraphNode,Option[Int])=&gt;scala.util.Try[wdl4s.values.WdlValue]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.ReportableSymbol" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ReportableSymbolextendsProductwithSerializable"></a>
+      <a id="ReportableSymbol:ReportableSymbol"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ReportableSymbol.html"><span class="name">ReportableSymbol</span></a><span class="params">(<span name="fullyQualifiedName">fullyQualifiedName: <a href="#FullyQualifiedName=String" class="extmbr" name="wdl4s.FullyQualifiedName">FullyQualifiedName</a></span>, <span name="wdlType">wdlType: <a href="types/WdlType.html" class="extype" name="wdl4s.types.WdlType">WdlType</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@ReportableSymbolextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.RuntimeAttributes" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RuntimeAttributesextendsProductwithSerializable"></a>
+      <a id="RuntimeAttributes:RuntimeAttributes"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="RuntimeAttributes.html"><span class="name">RuntimeAttributes</span></a><span class="params">(<span name="attrs">attrs: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="WdlExpression.html" class="extype" name="wdl4s.WdlExpression">WdlExpression</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@RuntimeAttributesextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Scatter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ScatterextendsGraphNodeWithUpstreamReferenceswithWorkflowScopedwithProductwithSerializable"></a>
+      <a id="Scatter:Scatter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Scatter.html"><span class="name">Scatter</span></a><span class="params">(<span name="index">index: <span class="extype" name="scala.Int">Int</span></span>, <span name="item">item: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="collection">collection: <a href="WdlExpression.html" class="extype" name="wdl4s.WdlExpression">WdlExpression</a></span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="GraphNodeWithUpstreamReferences.html" class="extype" name="wdl4s.GraphNodeWithUpstreamReferences">GraphNodeWithUpstreamReferences</a> with <a href="WorkflowScoped.html" class="extype" name="wdl4s.WorkflowScoped">WorkflowScoped</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@ScatterextendsGraphNodeWithUpstreamReferenceswithWorkflowScopedwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Scatter class.</p><div class="fullcomment"><div class="comment cmt"><p>Scatter class.</p></div><dl class="paramcmts block"><dt class="param">index</dt><dd class="cmt"><p>Index of the scatter block. The index is computed during tree generation to reflect wdl scatter blocks structure.</p></dd><dt class="param">item</dt><dd class="cmt"><p>Item which this block is scattering over</p></dd><dt class="param">collection</dt><dd class="cmt"><p>Wdl Expression corresponding to the collection this scatter is looping through</p></dd></dl></div>
+    </li><li name="wdl4s.Scope" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ScopeextendsAnyRef"></a>
+      <a id="Scope:Scope"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Scope.html"><span class="name">Scope</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@ScopeextendsAnyRef" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Task" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="TaskextendsCallablewithProductwithSerializable"></a>
+      <a id="Task:Task"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Task.html"><span class="name">Task</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="commandTemplate">commandTemplate: <span class="extype" name="scala.Seq">Seq</span>[<a href="command/CommandPart.html" class="extype" name="wdl4s.command.CommandPart">CommandPart</a>]</span>, <span name="runtimeAttributes">runtimeAttributes: <a href="RuntimeAttributes.html" class="extype" name="wdl4s.RuntimeAttributes">RuntimeAttributes</a></span>, <span name="meta">meta: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="parameterMeta">parameterMeta: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="Callable.html" class="extype" name="wdl4s.Callable">Callable</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@TaskextendsCallablewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Represents a <code>task</code> declaration in a WDL file
+</p><div class="fullcomment"><div class="comment cmt"><p>Represents a <code>task</code> declaration in a WDL file
+</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>Name of the task</p></dd><dt class="param">commandTemplate</dt><dd class="cmt"><p>Sequence of command pieces, essentially a parsed command template</p></dd><dt class="param">runtimeAttributes</dt><dd class="cmt"><p>'runtime' section of a file</p></dd><dt class="param">meta</dt><dd class="cmt"><p>'meta' section of a task</p></dd><dt class="param">parameterMeta</dt><dd class="cmt"><p>- 'parameter_meta' section of a task</p></dd><dt class="param">ast</dt><dd class="cmt"><p>The syntax tree from which this was built.</p></dd></dl></div>
+    </li><li name="wdl4s.TaskCall" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TaskCallextendsCallwithProductwithSerializable"></a>
+      <a id="TaskCall:TaskCall"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="TaskCall.html"><span class="name">TaskCall</span></a><span class="params">(<span name="alias">alias: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="task">task: <a href="Task.html" class="extype" name="wdl4s.Task">Task</a></span>, <span name="inputMappings">inputMappings: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="WdlExpression.html" class="extype" name="wdl4s.WdlExpression">WdlExpression</a>]</span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="Call.html" class="extype" name="wdl4s.Call">Call</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@TaskCallextendsCallwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.TaskInput" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TaskInputextendsProductwithSerializable"></a>
+      <a id="TaskInput:TaskInput"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="TaskInput.html"><span class="name">TaskInput</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="wdlType">wdlType: <a href="types/WdlType.html" class="extype" name="wdl4s.types.WdlType">WdlType</a></span>, <span name="postfixQuantifier">postfixQuantifier: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@TaskInputextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.TaskOutput" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TaskOutputextendsOutputwithProductwithSerializable"></a>
+      <a id="TaskOutput:TaskOutput"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="TaskOutput.html"><span class="name">TaskOutput</span></a><span class="params">(<span name="unqualifiedName">unqualifiedName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="wdlType">wdlType: <a href="types/WdlType.html" class="extype" name="wdl4s.types.WdlType">WdlType</a></span>, <span name="requiredExpression">requiredExpression: <a href="WdlExpression.html" class="extype" name="wdl4s.WdlExpression">WdlExpression</a></span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>, <span name="parent">parent: <span class="extype" name="scala.Option">Option</span>[<a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a>]</span>)</span><span class="result"> extends <a href="Output.html" class="extype" name="wdl4s.Output">Output</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@TaskOutputextendsOutputwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.TsvSerializable" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TsvSerializableextendsAnyRef"></a>
+      <a id="TsvSerializable:TsvSerializable"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$TsvSerializable.html"><span class="name">TsvSerializable</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@TsvSerializableextendsAnyRef" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WdlExpression" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WdlExpressionextendsWdlValuewithProductwithSerializable"></a>
+      <a id="WdlExpression:WdlExpression"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="WdlExpression.html"><span class="name">WdlExpression</span></a><span class="params">(<span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.AstNode">AstNode</span></span>)</span><span class="result"> extends <a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlExpressionextendsWdlValuewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WdlExpressionException" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WdlExpressionExceptionextendsRuntimeException"></a>
+      <a id="WdlExpressionException:WdlExpressionException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="WdlExpressionException.html"><span class="name">WdlExpressionException</span></a><span class="result"> extends <span class="extype" name="scala.RuntimeException">RuntimeException</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlExpressionExceptionextendsRuntimeException" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WdlJson" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WdlJson=String"></a>
+      <a id="WdlJson:WdlJson"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">WdlJson</span><span class="result"> = <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlJson=String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WdlNamespace" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="WdlNamespaceextendsWdlValuewithScope"></a>
+      <a id="WdlNamespace:WdlNamespace"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="WdlNamespace.html"><span class="name">WdlNamespace</span></a><span class="result"> extends <a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a> with <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlNamespaceextendsWdlValuewithScope" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Represents a parsed WDL file
+</p>
+    </li><li name="wdl4s.WdlNamespaceWithWorkflow" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WdlNamespaceWithWorkflowextendsWdlNamespacewithProductwithSerializable"></a>
+      <a id="WdlNamespaceWithWorkflow:WdlNamespaceWithWorkflow"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="WdlNamespaceWithWorkflow.html"><span class="name">WdlNamespaceWithWorkflow</span></a><span class="params">(<span name="importedAs">importedAs: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="workflow">workflow: <a href="Workflow.html" class="extype" name="wdl4s.Workflow">Workflow</a></span>, <span name="imports">imports: <span class="extype" name="scala.Seq">Seq</span>[<a href="Import.html" class="extype" name="wdl4s.Import">Import</a>]</span>, <span name="namespaces">namespaces: <span class="extype" name="scala.Seq">Seq</span>[<a href="WdlNamespace.html" class="extype" name="wdl4s.WdlNamespace">WdlNamespace</a>]</span>, <span name="tasks">tasks: <span class="extype" name="scala.Seq">Seq</span>[<a href="Task.html" class="extype" name="wdl4s.Task">Task</a>]</span>, <span name="terminalMap">terminalMap: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="wdl4s.parser.WdlParser.Terminal">Terminal</span>, <a href="#WdlSource=String" class="extmbr" name="wdl4s.WdlSource">WdlSource</a>]</span>, <span name="wdlSyntaxErrorFormatter">wdlSyntaxErrorFormatter: <a href="WdlSyntaxErrorFormatter.html" class="extype" name="wdl4s.WdlSyntaxErrorFormatter">WdlSyntaxErrorFormatter</a></span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="WdlNamespace.html" class="extype" name="wdl4s.WdlNamespace">WdlNamespace</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlNamespaceWithWorkflowextendsWdlNamespacewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A WdlNamespace which has exactly one workflow defined.</p>
+    </li><li name="wdl4s.WdlNamespaceWithoutWorkflow" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WdlNamespaceWithoutWorkflowextendsWdlNamespacewithProductwithSerializable"></a>
+      <a id="WdlNamespaceWithoutWorkflow:WdlNamespaceWithoutWorkflow"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="WdlNamespaceWithoutWorkflow.html"><span class="name">WdlNamespaceWithoutWorkflow</span></a><span class="params">(<span name="importedAs">importedAs: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="imports">imports: <span class="extype" name="scala.Seq">Seq</span>[<a href="Import.html" class="extype" name="wdl4s.Import">Import</a>]</span>, <span name="namespaces">namespaces: <span class="extype" name="scala.Seq">Seq</span>[<a href="WdlNamespace.html" class="extype" name="wdl4s.WdlNamespace">WdlNamespace</a>]</span>, <span name="tasks">tasks: <span class="extype" name="scala.Seq">Seq</span>[<a href="Task.html" class="extype" name="wdl4s.Task">Task</a>]</span>, <span name="terminalMap">terminalMap: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="wdl4s.parser.WdlParser.Terminal">Terminal</span>, <a href="#WdlSource=String" class="extmbr" name="wdl4s.WdlSource">WdlSource</a>]</span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="WdlNamespace.html" class="extype" name="wdl4s.WdlNamespace">WdlNamespace</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlNamespaceWithoutWorkflowextendsWdlNamespacewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A WdlNamespace which doesn't have a locally defined Workflow.</p>
+    </li><li name="wdl4s.WdlSource" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WdlSource=String"></a>
+      <a id="WdlSource:WdlSource"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">WdlSource</span><span class="result"> = <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlSource=String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WdlSyntaxErrorFormatter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WdlSyntaxErrorFormatterextendsWdlParser.SyntaxErrorFormatterwithProductwithSerializable"></a>
+      <a id="WdlSyntaxErrorFormatter:WdlSyntaxErrorFormatter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="WdlSyntaxErrorFormatter.html"><span class="name">WdlSyntaxErrorFormatter</span></a><span class="params">(<span name="terminalMap">terminalMap: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="wdl4s.parser.WdlParser.Terminal">Terminal</span>, <a href="#WdlSource=String" class="extmbr" name="wdl4s.WdlSource">WdlSource</a>]</span>)</span><span class="result"> extends <span class="extype" name="wdl4s.parser.WdlParser.SyntaxErrorFormatter">SyntaxErrorFormatter</span> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlSyntaxErrorFormatterextendsWdlParser.SyntaxErrorFormatterwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Workflow" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowextendsCallablewithProductwithSerializable"></a>
+      <a id="Workflow:Workflow"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Workflow.html"><span class="name">Workflow</span></a><span class="params">(<span name="unqualifiedName">unqualifiedName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="workflowOutputWildcards">workflowOutputWildcards: <span class="extype" name="scala.Seq">Seq</span>[<a href="WorkflowOutputWildcard.html" class="extype" name="wdl4s.WorkflowOutputWildcard">WorkflowOutputWildcard</a>]</span>, <span name="wdlSyntaxErrorFormatter">wdlSyntaxErrorFormatter: <a href="WdlSyntaxErrorFormatter.html" class="extype" name="wdl4s.WdlSyntaxErrorFormatter">WdlSyntaxErrorFormatter</a></span>, <span name="meta">meta: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="parameterMeta">parameterMeta: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="Callable.html" class="extype" name="wdl4s.Callable">Callable</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WorkflowextendsCallablewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WorkflowCall" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowCallextendsCallwithProductwithSerializable"></a>
+      <a id="WorkflowCall:WorkflowCall"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="WorkflowCall.html"><span class="name">WorkflowCall</span></a><span class="params">(<span name="alias">alias: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="calledWorkflow">calledWorkflow: <a href="Workflow.html" class="extype" name="wdl4s.Workflow">Workflow</a></span>, <span name="inputMappings">inputMappings: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="WdlExpression.html" class="extype" name="wdl4s.WdlExpression">WdlExpression</a>]</span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="Call.html" class="extype" name="wdl4s.Call">Call</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WorkflowCallextendsCallwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WorkflowCoercedInputs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowCoercedInputs=Map[wdl4s.package.FullyQualifiedName,wdl4s.values.WdlValue]"></a>
+      <a id="WorkflowCoercedInputs:WorkflowCoercedInputs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">WorkflowCoercedInputs</span><span class="result"> = <span class="extype" name="scala.collection.immutable.Map">Map</span>[<a href="#FullyQualifiedName=String" class="extmbr" name="wdl4s.FullyQualifiedName">FullyQualifiedName</a>, <a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WorkflowCoercedInputs=Map[wdl4s.package.FullyQualifiedName,wdl4s.values.WdlValue]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WorkflowInput" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowInputextendsProductwithSerializable"></a>
+      <a id="WorkflowInput:WorkflowInput"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="WorkflowInput.html"><span class="name">WorkflowInput</span></a><span class="params">(<span name="fqn">fqn: <a href="#FullyQualifiedName=String" class="extmbr" name="wdl4s.FullyQualifiedName">FullyQualifiedName</a></span>, <span name="wdlType">wdlType: <a href="types/WdlType.html" class="extype" name="wdl4s.types.WdlType">WdlType</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WorkflowInputextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WorkflowOutput" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowOutputextendsOutputwithProductwithSerializable"></a>
+      <a id="WorkflowOutput:WorkflowOutput"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="WorkflowOutput.html"><span class="name">WorkflowOutput</span></a><span class="params">(<span name="unqualifiedName">unqualifiedName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="wdlType">wdlType: <a href="types/WdlType.html" class="extype" name="wdl4s.types.WdlType">WdlType</a></span>, <span name="requiredExpression">requiredExpression: <a href="WdlExpression.html" class="extype" name="wdl4s.WdlExpression">WdlExpression</a></span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>, <span name="parent">parent: <span class="extype" name="scala.Option">Option</span>[<a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a>]</span>)</span><span class="result"> extends <a href="Output.html" class="extype" name="wdl4s.Output">Output</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WorkflowOutputextendsOutputwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WorkflowOutputWildcard" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowOutputWildcardextendsProductwithSerializable"></a>
+      <a id="WorkflowOutputWildcard:WorkflowOutputWildcard"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="WorkflowOutputWildcard.html"><span class="name">WorkflowOutputWildcard</span></a><span class="params">(<span name="fqn">fqn: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="wildcard">wildcard: <span class="extype" name="scala.Boolean">Boolean</span></span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WorkflowOutputWildcardextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WorkflowRawInputs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowRawInputs=Map[wdl4s.package.FullyQualifiedName,Any]"></a>
+      <a id="WorkflowRawInputs:WorkflowRawInputs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">WorkflowRawInputs</span><span class="result"> = <span class="extype" name="scala.collection.immutable.Map">Map</span>[<a href="#FullyQualifiedName=String" class="extmbr" name="wdl4s.FullyQualifiedName">FullyQualifiedName</a>, <span class="extype" name="scala.Any">Any</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WorkflowRawInputs=Map[wdl4s.package.FullyQualifiedName,Any]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WorkflowScoped" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="WorkflowScopedextendsScope"></a>
+      <a id="WorkflowScoped:WorkflowScoped"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="WorkflowScoped.html"><span class="name">WorkflowScoped</span></a><span class="result"> extends <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WorkflowScopedextendsScope" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="wdl4s.AstTools" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AstTools"></a>
+      <a id="AstTools:AstTools"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="AstTools$.html"><span class="name">AstTools</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@AstTools" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Call" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Call"></a>
+      <a id="Call:Call"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Call$.html"><span class="name">Call</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@Call" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Declaration" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Declaration"></a>
+      <a id="Declaration:Declaration"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Declaration$.html"><span class="name">Declaration</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@Declaration" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.DeclarationInterface" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DeclarationInterface"></a>
+      <a id="DeclarationInterface:DeclarationInterface"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="DeclarationInterface$.html"><span class="name">DeclarationInterface</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@DeclarationInterface" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.GraphNode" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="GraphNode"></a>
+      <a id="GraphNode:GraphNode"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="GraphNode$.html"><span class="name">GraphNode</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@GraphNode" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.If" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="If"></a>
+      <a id="If:If"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="If$.html"><span class="name">If</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@If" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Import" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Import"></a>
+      <a id="Import:Import"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Import$.html"><span class="name">Import</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@Import" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.MemberAccess" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MemberAccess"></a>
+      <a id="MemberAccess:MemberAccess"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="MemberAccess$.html"><span class="name">MemberAccess</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@MemberAccess" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.NoLookup" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="NoLookup"></a>
+      <a id="NoLookup:NoLookup"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="NoLookup$.html"><span class="name">NoLookup</span></a><span class="result"> extends <a href="WdlExpression$.html#ScopedLookupFunction=String=&gt;wdl4s.values.WdlValue" class="extmbr" name="wdl4s.WdlExpression.ScopedLookupFunction">ScopedLookupFunction</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@NoLookup" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s#NoOutputResolver" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="NoOutputResolver:wdl4s.package.OutputResolver"></a>
+      <a id="NoOutputResolver:OutputResolver"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">NoOutputResolver</span><span class="result">: <a href="#OutputResolver=(wdl4s.GraphNode,Option[Int])=&gt;scala.util.Try[wdl4s.values.WdlValue]" class="extmbr" name="wdl4s.OutputResolver">OutputResolver</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@NoOutputResolver:wdl4s.package.OutputResolver" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.RuntimeAttributes" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RuntimeAttributes"></a>
+      <a id="RuntimeAttributes:RuntimeAttributes"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="RuntimeAttributes$.html"><span class="name">RuntimeAttributes</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@RuntimeAttributes" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Scatter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Scatter"></a>
+      <a id="Scatter:Scatter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Scatter$.html"><span class="name">Scatter</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@Scatter" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Task" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Task"></a>
+      <a id="Task:Task"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Task$.html"><span class="name">Task</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@Task" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.TaskOutput" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TaskOutput"></a>
+      <a id="TaskOutput:TaskOutput"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TaskOutput$.html"><span class="name">TaskOutput</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@TaskOutput" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WdlExpression" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WdlExpression"></a>
+      <a id="WdlExpression:WdlExpression"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="WdlExpression$.html"><span class="name">WdlExpression</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlExpression" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WdlNamespace" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="WdlNamespace"></a>
+      <a id="WdlNamespace:WdlNamespace"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="WdlNamespace$.html"><span class="name">WdlNamespace</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlNamespace" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Main interface into the <code>wdl4s</code> package.</p><div class="fullcomment"><div class="comment cmt"><p>Main interface into the <code>wdl4s</code> package.</p><p>Example usage</p><pre><span class="kw">val</span> namespace = WdlNamespace.loadUsingPath(Paths.get(<span class="lit">"/path/to/file.wdl"</span>), <span class="std">None</span>, <span class="std">None</span>)
+namespace.workflow.calls foreach { call <span class="kw">=&gt;</span>
+  println(call)
+}</pre></div></div>
+    </li><li name="wdl4s.WdlNamespaceWithWorkflow" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WdlNamespaceWithWorkflow"></a>
+      <a id="WdlNamespaceWithWorkflow:WdlNamespaceWithWorkflow"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="WdlNamespaceWithWorkflow$.html"><span class="name">WdlNamespaceWithWorkflow</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WdlNamespaceWithWorkflow" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Workflow" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Workflow"></a>
+      <a id="Workflow:Workflow"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Workflow$.html"><span class="name">Workflow</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@Workflow" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.WorkflowOutput" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowOutput"></a>
+      <a id="WorkflowOutput:WorkflowOutput"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="WorkflowOutput$.html"><span class="name">WorkflowOutput</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@WorkflowOutput" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.command" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="command"></a>
+      <a id="command:command"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="command/package.html"><span class="name">command</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@command" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.examples" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="examples"></a>
+      <a id="examples:examples"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="examples/package.html"><span class="name">examples</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@examples" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.exception" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="exception"></a>
+      <a id="exception:exception"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="exception/package.html"><span class="name">exception</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@exception" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.expression" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="expression"></a>
+      <a id="expression:expression"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="expression/package.html"><span class="name">expression</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@expression" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.formatter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="formatter"></a>
+      <a id="formatter:formatter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="formatter/package.html"><span class="name">formatter</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@formatter" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.parser" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="parser"></a>
+      <a id="parser:parser"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="parser/package.html"><span class="name">parser</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@parser" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.types" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="types"></a>
+      <a id="types:types"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="types/package.html"><span class="name">types</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@types" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.util" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="util"></a>
+      <a id="util:util"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="util/package.html"><span class="name">util</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@util" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.values" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="values"></a>
+      <a id="values:values"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="values/package.html"><span class="name">values</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.package@values" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

@@ -1,0 +1,1147 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>Task - wdl4s.Task</title>
+          <meta name="description" content="Task - wdl4s.Task" />
+          <meta name="keywords" content="Task wdl4s.Task" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../lib/template.js"></script>
+      <script type="text/javascript" src="../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../index.html';
+            var hash = 'wdl4s.Task';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="type">
+      <div id="definition">
+        <a href="Task$.html" title="See companion object"><img alt="Class/Object" src="../lib/class_to_object_big.png" /></a>
+        <p id="owner"><a href="package.html" class="extype" name="wdl4s">wdl4s</a></p>
+        <h1><a href="Task$.html" title="See companion object">Task</a></h1><h3><span class="morelinks"><div>
+            Related Docs:
+            <a href="Task$.html" title="See companion object">object Task</a>
+            | <a href="package.html" class="extype" name="wdl4s">package wdl4s</a>
+          </div></span></h3><span class="permalink">
+      <a href="../index.html#wdl4s.Task" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Task</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="commandTemplate">commandTemplate: <span class="extype" name="scala.Seq">Seq</span>[<a href="command/CommandPart.html" class="extype" name="wdl4s.command.CommandPart">CommandPart</a>]</span>, <span name="runtimeAttributes">runtimeAttributes: <a href="RuntimeAttributes.html" class="extype" name="wdl4s.RuntimeAttributes">RuntimeAttributes</a></span>, <span name="meta">meta: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="parameterMeta">parameterMeta: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span><span class="result"> extends <a href="Callable.html" class="extype" name="wdl4s.Callable">Callable</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Represents a <code>task</code> declaration in a WDL file
+</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>Name of the task</p></dd><dt class="param">commandTemplate</dt><dd class="cmt"><p>Sequence of command pieces, essentially a parsed command template</p></dd><dt class="param">runtimeAttributes</dt><dd class="cmt"><p>'runtime' section of a file</p></dd><dt class="param">meta</dt><dd class="cmt"><p>'meta' section of a task</p></dd><dt class="param">parameterMeta</dt><dd class="cmt"><p>- 'parameter_meta' section of a task</p></dd><dt class="param">ast</dt><dd class="cmt"><p>The syntax tree from which this was built.</p></dd></dl><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="Callable.html" class="extype" name="wdl4s.Callable">Callable</a>, <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="wdl4s.Task"><span>Task</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="wdl4s.Callable"><span>Callable</span></li><li class="in" name="wdl4s.Scope"><span>Scope</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="wdl4s.Task#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="&lt;init&gt;(name:String,commandTemplate:Seq[wdl4s.command.CommandPart],runtimeAttributes:wdl4s.RuntimeAttributes,meta:Map[String,String],parameterMeta:Map[String,String],ast:wdl4s.parser.WdlParser.Ast):wdl4s.Task"></a>
+      <a id="&lt;init&gt;:Task"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">new</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Task</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="commandTemplate">commandTemplate: <span class="extype" name="scala.Seq">Seq</span>[<a href="command/CommandPart.html" class="extype" name="wdl4s.command.CommandPart">CommandPart</a>]</span>, <span name="runtimeAttributes">runtimeAttributes: <a href="RuntimeAttributes.html" class="extype" name="wdl4s.RuntimeAttributes">RuntimeAttributes</a></span>, <span name="meta">meta: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="parameterMeta">parameterMeta: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="ast">ast: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@&lt;init&gt;(name:String,commandTemplate:Seq[wdl4s.command.CommandPart],runtimeAttributes:wdl4s.RuntimeAttributes,meta:Map[String,String],parameterMeta:Map[String,String],ast:wdl4s.parser.WdlParser.Ast):wdl4s.Task" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>Name of the task</p></dd><dt class="param">commandTemplate</dt><dd class="cmt"><p>Sequence of command pieces, essentially a parsed command template</p></dd><dt class="param">runtimeAttributes</dt><dd class="cmt"><p>'runtime' section of a file</p></dd><dt class="param">meta</dt><dd class="cmt"><p>'meta' section of a task</p></dd><dt class="param">parameterMeta</dt><dd class="cmt"><p>- 'parameter_meta' section of a task</p></dd><dt class="param">ast</dt><dd class="cmt"><p>The syntax tree from which this was built.</p></dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@##():Int" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="wdl4s.Scope#ancestry" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ancestry:Seq[wdl4s.Scope]"></a>
+      <a id="ancestry:Seq[Scope]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ancestry</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@ancestry:Seq[wdl4s.Scope]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Seq(parent, grandparent, great grandparent, ..., WdlNamespace)
+</p><div class="fullcomment"><div class="comment cmt"><p>Seq(parent, grandparent, great grandparent, ..., WdlNamespace)
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#appearsInFqn" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="appearsInFqn:Boolean"></a>
+      <a id="appearsInFqn:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">appearsInFqn</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@appearsInFqn:Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="wdl4s.Task#ast" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ast:wdl4s.parser.WdlParser.Ast"></a>
+      <a id="ast:Ast"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ast</span><span class="result">: <span class="extype" name="wdl4s.parser.WdlParser.Ast">Ast</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@ast:wdl4s.parser.WdlParser.Ast" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The syntax tree from which this was built.</p><div class="fullcomment"><div class="comment cmt"><p>The syntax tree from which this was built.</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="wdl4s.Task">Task</a> → <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#calls" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="calls:Set[wdl4s.Call]"></a>
+      <a id="calls:Set[Call]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">calls</span><span class="result">: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="Call.html" class="extype" name="wdl4s.Call">Call</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@calls:Set[wdl4s.Call]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Descendants that are Calls
+</p><div class="fullcomment"><div class="comment cmt"><p>Descendants that are Calls
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#children" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="children:Seq[wdl4s.Scope]"></a>
+      <a id="children:Seq[Scope]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">children</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@children:Seq[wdl4s.Scope]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Child scopes, in the order that they appear in the source code
+</p><div class="fullcomment"><div class="comment cmt"><p>Child scopes, in the order that they appear in the source code
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#children_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="children_=[Child&lt;:wdl4s.Scope](children:Seq[Child]):Unit"></a>
+      <a id="children_=[Child&lt;:Scope](Seq[Child]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: children_$eq" class="name">children_=</span><span class="tparams">[<span name="Child">Child &lt;: <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>]</span><span class="params">(<span name="children">children: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="wdl4s.Scope.children_=.Child">Child</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@children_=[Child&lt;:wdl4s.Scope](children:Seq[Child]):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@clone():Object" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="wdl4s.Scope#closestCommonAncestor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="closestCommonAncestor(other:wdl4s.Scope):Option[wdl4s.Scope]"></a>
+      <a id="closestCommonAncestor(Scope):Option[Scope]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">closestCommonAncestor</span><span class="params">(<span name="other">other: <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@closestCommonAncestor(other:wdl4s.Scope):Option[wdl4s.Scope]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Given another scope, returns the closest common ancestor between the two scopes,
+if one exists at all
+</p><div class="fullcomment"><div class="comment cmt"><p>Given another scope, returns the closest common ancestor between the two scopes,
+if one exists at all
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>closest common ancestor</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#closestCommonScatter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="closestCommonScatter(other:wdl4s.Scope):Option[wdl4s.Scatter]"></a>
+      <a id="closestCommonScatter(Scope):Option[Scatter]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">closestCommonScatter</span><span class="params">(<span name="other">other: <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<a href="Scatter.html" class="extype" name="wdl4s.Scatter">Scatter</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@closestCommonScatter(other:wdl4s.Scope):Option[wdl4s.Scatter]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Task#commandTemplate" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="commandTemplate:Seq[wdl4s.command.CommandPart]"></a>
+      <a id="commandTemplate:Seq[CommandPart]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">commandTemplate</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="command/CommandPart.html" class="extype" name="wdl4s.command.CommandPart">CommandPart</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@commandTemplate:Seq[wdl4s.command.CommandPart]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Sequence of command pieces, essentially a parsed command template</p>
+    </li><li name="wdl4s.Task#commandTemplateString" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="commandTemplateString:String"></a>
+      <a id="commandTemplateString:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">commandTemplateString</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@commandTemplateString:String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="wdl4s.Scope#declarations" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="declarations:Seq[wdl4s.Declaration]"></a>
+      <a id="declarations:Seq[Declaration]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">declarations</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="Declaration.html" class="extype" name="wdl4s.Declaration">Declaration</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@declarations:Seq[wdl4s.Declaration]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Declarations within this Scope, in the order that they appear in source code
+</p><div class="fullcomment"><div class="comment cmt"><p>Declarations within this Scope, in the order that they appear in source code
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#descendants" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="descendants:Set[wdl4s.Scope]"></a>
+      <a id="descendants:Set[Scope]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">descendants</span><span class="result">: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@descendants:Set[wdl4s.Scope]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">All children ++ children's children ++ etc
+</p><div class="fullcomment"><div class="comment cmt"><p>All children ++ children's children ++ etc
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="wdl4s.Task#evaluateFilesFromCommand" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="evaluateFilesFromCommand(inputs:wdl4s.WorkflowCoercedInputs,functions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue]):scala.collection.immutable.Map[wdl4s.WdlExpression,wdl4s.values.WdlFile]"></a>
+      <a id="evaluateFilesFromCommand(WorkflowCoercedInputs,WdlFunctions[WdlValue]):Map[WdlExpression,WdlFile]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">evaluateFilesFromCommand</span><span class="params">(<span name="inputs">inputs: <a href="package.html#WorkflowCoercedInputs=Map[wdl4s.package.FullyQualifiedName,wdl4s.values.WdlValue]" class="extmbr" name="wdl4s.WorkflowCoercedInputs">WorkflowCoercedInputs</a></span>, <span name="functions">functions: <a href="expression/WdlFunctions.html" class="extype" name="wdl4s.expression.WdlFunctions">WdlFunctions</a>[<a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]</span>)</span><span class="result">: <span class="extype" name="scala.collection.immutable.Map">Map</span>[<a href="WdlExpression.html" class="extype" name="wdl4s.WdlExpression">WdlExpression</a>, <a href="values/WdlFile.html" class="extype" name="wdl4s.values.WdlFile">WdlFile</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@evaluateFilesFromCommand(inputs:wdl4s.WorkflowCoercedInputs,functions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue]):scala.collection.immutable.Map[wdl4s.WdlExpression,wdl4s.values.WdlFile]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Finds all write_* expressions in the command line, evaluates them,
+and return the corresponding created file for them.</p>
+    </li><li name="wdl4s.Task#evaluateOutputs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="evaluateOutputs(inputs:wdl4s.EvaluatedTaskInputs,wdlFunctions:wdl4s.expression.WdlStandardLibraryFunctions,postMapper:wdl4s.values.WdlValue=&gt;scala.util.Try[wdl4s.values.WdlValue]):scala.util.Try[Map[wdl4s.TaskOutput,wdl4s.values.WdlValue]]"></a>
+      <a id="evaluateOutputs(EvaluatedTaskInputs,WdlStandardLibraryFunctions,(WdlValue)⇒Try[WdlValue]):Try[Map[TaskOutput,WdlValue]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">evaluateOutputs</span><span class="params">(<span name="inputs">inputs: <a href="package.html#EvaluatedTaskInputs=Map[wdl4s.Declaration,wdl4s.values.WdlValue]" class="extmbr" name="wdl4s.EvaluatedTaskInputs">EvaluatedTaskInputs</a></span>, <span name="wdlFunctions">wdlFunctions: <a href="expression/WdlStandardLibraryFunctions.html" class="extype" name="wdl4s.expression.WdlStandardLibraryFunctions">WdlStandardLibraryFunctions</a></span>, <span name="postMapper">postMapper: (<a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>) ⇒ <span class="extype" name="scala.util.Try">Try</span>[<a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>] = <span class="symbol">v =&gt; Success(v)</span></span>)</span><span class="result">: <span class="extype" name="scala.util.Try">Try</span>[<span class="extype" name="scala.Predef.Map">Map</span>[<a href="TaskOutput.html" class="extype" name="wdl4s.TaskOutput">TaskOutput</a>, <a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@evaluateOutputs(inputs:wdl4s.EvaluatedTaskInputs,wdlFunctions:wdl4s.expression.WdlStandardLibraryFunctions,postMapper:wdl4s.values.WdlValue=&gt;scala.util.Try[wdl4s.values.WdlValue]):scala.util.Try[Map[wdl4s.TaskOutput,wdl4s.values.WdlValue]]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@finalize():Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="wdl4s.Task#findOutputFiles" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="findOutputFiles(inputs:wdl4s.WorkflowCoercedInputs,functions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue],silenceEvaluationErrors:Boolean):Seq[wdl4s.values.WdlFile]"></a>
+      <a id="findOutputFiles(WorkflowCoercedInputs,WdlFunctions[WdlValue],Boolean):Seq[WdlFile]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">findOutputFiles</span><span class="params">(<span name="inputs">inputs: <a href="package.html#WorkflowCoercedInputs=Map[wdl4s.package.FullyQualifiedName,wdl4s.values.WdlValue]" class="extmbr" name="wdl4s.WorkflowCoercedInputs">WorkflowCoercedInputs</a></span>, <span name="functions">functions: <a href="expression/WdlFunctions.html" class="extype" name="wdl4s.expression.WdlFunctions">WdlFunctions</a>[<a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]</span>, <span name="silenceEvaluationErrors">silenceEvaluationErrors: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="values/WdlFile.html" class="extype" name="wdl4s.values.WdlFile">WdlFile</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@findOutputFiles(inputs:wdl4s.WorkflowCoercedInputs,functions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue],silenceEvaluationErrors:Boolean):Seq[wdl4s.values.WdlFile]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Tries to determine files that will be created by the outputs of this task.</p>
+    </li><li name="wdl4s.Scope#fullyQualifiedName" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="fullyQualifiedName:String"></a>
+      <a id="fullyQualifiedName:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">fullyQualifiedName</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@fullyQualifiedName:String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">String identifier for this scope.</p><div class="fullcomment"><div class="comment cmt"><p>String identifier for this scope.  this.namespace.resolve(this.fullyQualifiedName) == this
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#fullyQualifiedNameWithIndexScopes" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="fullyQualifiedNameWithIndexScopes:String"></a>
+      <a id="fullyQualifiedNameWithIndexScopes:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">fullyQualifiedNameWithIndexScopes</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@fullyQualifiedNameWithIndexScopes:String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">String identifier for this scope, with hidden scope information.</p><div class="fullcomment"><div class="comment cmt"><p>String identifier for this scope, with hidden scope information.</p><p>this.namespace.resolve(this.fullyQualifiedNameWithIndexScopes) == this
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="wdl4s.Task#inputsFromMap" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="inputsFromMap(inputs:Map[wdl4s.FullyQualifiedName,wdl4s.values.WdlValue]):wdl4s.EvaluatedTaskInputs"></a>
+      <a id="inputsFromMap(Map[FullyQualifiedName,WdlValue]):EvaluatedTaskInputs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">inputsFromMap</span><span class="params">(<span name="inputs">inputs: <span class="extype" name="scala.Predef.Map">Map</span>[<a href="package.html#FullyQualifiedName=String" class="extmbr" name="wdl4s.FullyQualifiedName">FullyQualifiedName</a>, <a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]</span>)</span><span class="result">: <a href="package.html#EvaluatedTaskInputs=Map[wdl4s.Declaration,wdl4s.values.WdlValue]" class="extmbr" name="wdl4s.EvaluatedTaskInputs">EvaluatedTaskInputs</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@inputsFromMap(inputs:Map[wdl4s.FullyQualifiedName,wdl4s.values.WdlValue]):wdl4s.EvaluatedTaskInputs" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Assign declaration values from the given input map.</p><div class="fullcomment"><div class="comment cmt"><p>Assign declaration values from the given input map.
+Fqn must be task declaration fqns
+e.g.:
+task t {
+  String s
+}
+inputMap = Map(&quot;t.s&quot; -&gt; WdlString(&quot;hello&quot;))
+</p></div></div>
+    </li><li name="wdl4s.Task#inputsLookupFunction" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="inputsLookupFunction(inputs:wdl4s.WorkflowCoercedInputs,wdlFunctions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue],shards:Map[wdl4s.Scatter,Int]):String=&gt;wdl4s.values.WdlValue"></a>
+      <a id="inputsLookupFunction(WorkflowCoercedInputs,WdlFunctions[WdlValue],Map[Scatter,Int]):(String)⇒WdlValue"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">inputsLookupFunction</span><span class="params">(<span name="inputs">inputs: <a href="package.html#WorkflowCoercedInputs=Map[wdl4s.package.FullyQualifiedName,wdl4s.values.WdlValue]" class="extmbr" name="wdl4s.WorkflowCoercedInputs">WorkflowCoercedInputs</a></span>, <span name="wdlFunctions">wdlFunctions: <a href="expression/WdlFunctions.html" class="extype" name="wdl4s.expression.WdlFunctions">WdlFunctions</a>[<a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]</span>, <span name="shards">shards: <span class="extype" name="scala.Predef.Map">Map</span>[<a href="Scatter.html" class="extype" name="wdl4s.Scatter">Scatter</a>, <span class="extype" name="scala.Int">Int</span>] = <span class="symbol">Map.empty[Scatter, Int]</span></span>)</span><span class="result">: (<span class="extype" name="scala.Predef.String">String</span>) ⇒ <a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@inputsLookupFunction(inputs:wdl4s.WorkflowCoercedInputs,wdlFunctions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue],shards:Map[wdl4s.Scatter,Int]):String=&gt;wdl4s.values.WdlValue" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A lookup function that restricts known task values to input declarations
+</p>
+    </li><li name="wdl4s.Task#instantiateCommand" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="instantiateCommand(taskInputs:wdl4s.EvaluatedTaskInputs,functions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue],valueMapper:wdl4s.values.WdlValue=&gt;wdl4s.values.WdlValue):scala.util.Try[String]"></a>
+      <a id="instantiateCommand(EvaluatedTaskInputs,WdlFunctions[WdlValue],(WdlValue)⇒WdlValue):Try[String]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">instantiateCommand</span><span class="params">(<span name="taskInputs">taskInputs: <a href="package.html#EvaluatedTaskInputs=Map[wdl4s.Declaration,wdl4s.values.WdlValue]" class="extmbr" name="wdl4s.EvaluatedTaskInputs">EvaluatedTaskInputs</a></span>, <span name="functions">functions: <a href="expression/WdlFunctions.html" class="extype" name="wdl4s.expression.WdlFunctions">WdlFunctions</a>[<a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]</span>, <span name="valueMapper">valueMapper: (<a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>) ⇒ <a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a> = <span class="symbol">(v) =&gt; v</span></span>)</span><span class="result">: <span class="extype" name="scala.util.Try">Try</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@instantiateCommand(taskInputs:wdl4s.EvaluatedTaskInputs,functions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue],valueMapper:wdl4s.values.WdlValue=&gt;wdl4s.values.WdlValue):scala.util.Try[String]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Given a map of task-local parameter names and WdlValues, create a command String.</p><div class="fullcomment"><div class="comment cmt"><p>Given a map of task-local parameter names and WdlValues, create a command String.</p><p>Instantiating a command line is the process of taking a command in this form:</p><pre>sh script.sh $${var1} -o $${var2}</pre><p>This command is stored as a <code>Seq[CommandPart]</code> in the <code>Command</code> class
+(e.g. [sh script.sh, $${var1}, -o, $${var2}]).
+Then, given a map of variable -&gt; value:</p><pre>{
+  <span class="lit">"var1"</span>: <span class="lit">"foo"</span>,
+  <span class="lit">"var2"</span>: <span class="lit">"bar"</span>
+}</pre><p>It calls instantiate() on each part, and passes this map. The ParameterCommandPart are the $${var1} and $${var2}
+pieces and they lookup var1 and var2 in that map.</p><p>The command that's returned from Command.instantiate() is:</p><pre>sh script.sh foo -o bar</pre></div><dl class="paramcmts block"><dt class="param">taskInputs</dt><dd class="cmt"><p>Map[String, WdlValue] of inputs to this call, keys should be declarations</p></dd><dt class="param">functions</dt><dd class="cmt"><p>Implementation of the WDL standard library functions to evaluate functions in expressions</p></dd><dt class="param">valueMapper</dt><dd class="cmt"><p>Optional WdlValue =&gt; WdlValue function that is called on the result of each expression
+                   evaluation (i.e. evaluation of $${...} blocks).</p></dd><dt>returns</dt><dd class="cmt"><p>String instantiation of the command</p></dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="wdl4s.Scope#locallyQualifiedName" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="locallyQualifiedName(relativeTo:wdl4s.Scope):String"></a>
+      <a id="locallyQualifiedName(Scope):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">locallyQualifiedName</span><span class="params">(<span name="relativeTo">relativeTo: <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@locallyQualifiedName(relativeTo:wdl4s.Scope):String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Similar to fullyQualifiedName but relatively to an ancestry scope.</p><div class="fullcomment"><div class="comment cmt"><p>Similar to fullyQualifiedName but relatively to an ancestry scope.
+e.g.
+Workflow w
+  Call a
+    Output o</p><p>o.locallyQualified(a) = &quot;a.o&quot;
+o.locallyQualified(w) = o.fullyQualifiedName = &quot;w.a.o&quot;
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#lookupFunction" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="lookupFunction(knownInputs:wdl4s.WorkflowCoercedInputs,wdlFunctions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue],outputResolver:wdl4s.OutputResolver,shards:Map[wdl4s.Scatter,Int],relativeTo:wdl4s.Scope):String=&gt;wdl4s.values.WdlValue"></a>
+      <a id="lookupFunction(WorkflowCoercedInputs,WdlFunctions[WdlValue],OutputResolver,Map[Scatter,Int],Scope):(String)⇒WdlValue"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lookupFunction</span><span class="params">(<span name="knownInputs">knownInputs: <a href="package.html#WorkflowCoercedInputs=Map[wdl4s.package.FullyQualifiedName,wdl4s.values.WdlValue]" class="extmbr" name="wdl4s.WorkflowCoercedInputs">WorkflowCoercedInputs</a></span>, <span name="wdlFunctions">wdlFunctions: <a href="expression/WdlFunctions.html" class="extype" name="wdl4s.expression.WdlFunctions">WdlFunctions</a>[<a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a>]</span>, <span name="outputResolver">outputResolver: <a href="package.html#OutputResolver=(wdl4s.GraphNode,Option[Int])=&gt;scala.util.Try[wdl4s.values.WdlValue]" class="extmbr" name="wdl4s.OutputResolver">OutputResolver</a> = <span class="symbol"><span class="name"><a href="package.html#NoOutputResolver:wdl4s.package.OutputResolver">NoOutputResolver</a></span></span></span>, <span name="shards">shards: <span class="extype" name="scala.Predef.Map">Map</span>[<a href="Scatter.html" class="extype" name="wdl4s.Scatter">Scatter</a>, <span class="extype" name="scala.Int">Int</span>] = <span class="symbol">Map.empty[Scatter, Int]</span></span>, <span name="relativeTo">relativeTo: <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a> = <span class="symbol">this</span></span>)</span><span class="result">: (<span class="extype" name="scala.Predef.String">String</span>) ⇒ <a href="values/WdlValue.html" class="extype" name="wdl4s.values.WdlValue">WdlValue</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@lookupFunction(knownInputs:wdl4s.WorkflowCoercedInputs,wdlFunctions:wdl4s.expression.WdlFunctions[wdl4s.values.WdlValue],outputResolver:wdl4s.OutputResolver,shards:Map[wdl4s.Scatter,Int],relativeTo:wdl4s.Scope):String=&gt;wdl4s.values.WdlValue" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This will return a lookup function for evaluating expressions which will traverse up the
+scope hierarchy to find a value for <code>name</code>.</p><div class="fullcomment"><div class="comment cmt"><p>This will return a lookup function for evaluating expressions which will traverse up the
+scope hierarchy to find a value for <code>name</code>.  An exception will be thrown if a value cannot
+be found for <code>name</code>
+</p></div><dl class="paramcmts block"><dt class="param">knownInputs</dt><dd class="cmt"><p>All known values of FQNs</p></dd><dt class="param">wdlFunctions</dt><dd class="cmt"><p>Implementation of WDL functions for expression evaluation</p></dd><dt class="param">shards</dt><dd class="cmt"><p>For resolving specific shards of scatter blocks</p></dd><dt>returns</dt><dd class="cmt"><p>String =&gt; WdlValue lookup function rooted at <code>scope</code></p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd><dt>Exceptions thrown</dt><dd><span class="cmt"><p><span class="extype" name="VariableLookupException"><code>VariableLookupException</code></span> if anything else goes wrong in looking up a value for <code>name</code></p></span><span class="cmt"><p><span class="extype" name="VariableNotFoundException"><code>VariableNotFoundException</code></span> If no errors occurred, but also <code>name</code> didn't resolve to any value</p></span></dd></dl></div>
+    </li><li name="wdl4s.Task#meta" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="meta:Map[String,String]"></a>
+      <a id="meta:Map[String,String]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">meta</span><span class="result">: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@meta:Map[String,String]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">'meta' section of a task</p>
+    </li><li name="wdl4s.Task#name" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="name:String"></a>
+      <a id="name:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">name</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@name:String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Name of the task</p>
+    </li><li name="wdl4s.Scope#namespace" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="namespace:wdl4s.WdlNamespace"></a>
+      <a id="namespace:WdlNamespace"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">namespace</span><span class="result">: <a href="WdlNamespace.html" class="extype" name="wdl4s.WdlNamespace">WdlNamespace</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@namespace:wdl4s.WdlNamespace" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Containing namespace
+</p><div class="fullcomment"><div class="comment cmt"><p>Containing namespace
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#namespace_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="namespace_=[Child&lt;:wdl4s.WdlNamespace](ns:wdl4s.WdlNamespace):Unit"></a>
+      <a id="namespace_=[Child&lt;:WdlNamespace](WdlNamespace):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: namespace_$eq" class="name">namespace_=</span><span class="tparams">[<span name="Child">Child &lt;: <a href="WdlNamespace.html" class="extype" name="wdl4s.WdlNamespace">WdlNamespace</a></span>]</span><span class="params">(<span name="ns">ns: <a href="WdlNamespace.html" class="extype" name="wdl4s.WdlNamespace">WdlNamespace</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@namespace_=[Child&lt;:wdl4s.WdlNamespace](ns:wdl4s.WdlNamespace):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@notify():Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="wdl4s.Task#outputs" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="outputs:Seq[wdl4s.TaskOutput]"></a>
+      <a id="outputs:Seq[TaskOutput]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">outputs</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="TaskOutput.html" class="extype" name="wdl4s.TaskOutput">TaskOutput</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@outputs:Seq[wdl4s.TaskOutput]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="wdl4s.Task">Task</a> → <a href="Callable.html" class="extype" name="wdl4s.Callable">Callable</a></dd></dl></div>
+    </li><li name="wdl4s.Task#parameterMeta" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="parameterMeta:Map[String,String]"></a>
+      <a id="parameterMeta:Map[String,String]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">parameterMeta</span><span class="result">: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@parameterMeta:Map[String,String]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">- 'parameter_meta' section of a task</p>
+    </li><li name="wdl4s.Scope#parent" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="parent:Option[wdl4s.Scope]"></a>
+      <a id="parent:Option[Scope]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">parent</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@parent:Option[wdl4s.Scope]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Parent scope
+</p><div class="fullcomment"><div class="comment cmt"><p>Parent scope
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#parent_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="parent_=[Child&lt;:wdl4s.Scope](scope:wdl4s.Scope):Unit"></a>
+      <a id="parent_=[Child&lt;:Scope](Scope):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: parent_$eq" class="name">parent_=</span><span class="tparams">[<span name="Child">Child &lt;: <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>]</span><span class="params">(<span name="scope">scope: <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@parent_=[Child&lt;:wdl4s.Scope](scope:wdl4s.Scope):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Scope#resolveVariable" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="resolveVariable(name:String,relativeTo:wdl4s.Scope):Option[wdl4s.GraphNode]"></a>
+      <a id="resolveVariable(String,Scope):Option[GraphNode]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">resolveVariable</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="relativeTo">relativeTo: <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a> = <span class="symbol">this</span></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<a href="GraphNode.html" class="extype" name="wdl4s.GraphNode">GraphNode</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@resolveVariable(name:String,relativeTo:wdl4s.Scope):Option[wdl4s.GraphNode]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Performs scope resolution starting from this scope and walking up the lexical hierarchy
+until it finds a GraphNode with the <code>name</code> as its unqualifiedName
+</p><div class="fullcomment"><div class="comment cmt"><p>Performs scope resolution starting from this scope and walking up the lexical hierarchy
+until it finds a GraphNode with the <code>name</code> as its unqualifiedName
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Task#runtimeAttributes" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="runtimeAttributes:wdl4s.RuntimeAttributes"></a>
+      <a id="runtimeAttributes:RuntimeAttributes"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">runtimeAttributes</span><span class="result">: <a href="RuntimeAttributes.html" class="extype" name="wdl4s.RuntimeAttributes">RuntimeAttributes</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@runtimeAttributes:wdl4s.RuntimeAttributes" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">'runtime' section of a file</p>
+    </li><li name="wdl4s.Scope#scatters" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="scatters:Set[wdl4s.Scatter]"></a>
+      <a id="scatters:Set[Scatter]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">scatters</span><span class="result">: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="Scatter.html" class="extype" name="wdl4s.Scatter">Scatter</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@scatters:Set[wdl4s.Scatter]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Descendants that are Scatters
+</p><div class="fullcomment"><div class="comment cmt"><p>Descendants that are Scatters
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="wdl4s.Scope#taskCalls" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="taskCalls:Set[wdl4s.TaskCall]"></a>
+      <a id="taskCalls:Set[TaskCall]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">taskCalls</span><span class="result">: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="TaskCall.html" class="extype" name="wdl4s.TaskCall">TaskCall</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@taskCalls:Set[wdl4s.TaskCall]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="wdl4s.Task#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@toString():String" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="wdl4s.Task">Task</a> → AnyRef → Any</dd></dl></div>
+    </li><li name="wdl4s.Task#unqualifiedName" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="unqualifiedName:wdl4s.LocallyQualifiedName"></a>
+      <a id="unqualifiedName:LocallyQualifiedName"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">unqualifiedName</span><span class="result">: <a href="package.html#LocallyQualifiedName=String" class="extmbr" name="wdl4s.LocallyQualifiedName">LocallyQualifiedName</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@unqualifiedName:wdl4s.LocallyQualifiedName" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="wdl4s.Task">Task</a> → <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@wait():Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="wdl4s.Scope#workflowCalls" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="workflowCalls:Set[wdl4s.WorkflowCall]"></a>
+      <a id="workflowCalls:Set[WorkflowCall]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">workflowCalls</span><span class="result">: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="WorkflowCall.html" class="extype" name="wdl4s.WorkflowCall">WorkflowCall</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../index.html#wdl4s.Task@workflowCalls:Set[wdl4s.WorkflowCall]" title="Permalink" target="_top">
+        <img src="../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.Serializable">
+              <h3>Inherited from <span class="extype" name="scala.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="java.io.Serializable">
+              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="scala.Product">
+              <h3>Inherited from <span class="extype" name="scala.Product">Product</span></h3>
+            </div><div class="parent" name="scala.Equals">
+              <h3>Inherited from <span class="extype" name="scala.Equals">Equals</span></h3>
+            </div><div class="parent" name="wdl4s.Callable">
+              <h3>Inherited from <a href="Callable.html" class="extype" name="wdl4s.Callable">Callable</a></h3>
+            </div><div class="parent" name="wdl4s.Scope">
+              <h3>Inherited from <a href="Scope.html" class="extype" name="wdl4s.Scope">Scope</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
