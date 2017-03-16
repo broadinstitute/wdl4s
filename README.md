@@ -24,10 +24,10 @@ Add the following to `libraryDependencies`:
 
 The latest version is ![Latest Version](version.png)
 
-Or add a snapshot release in the format `<version>-<git-hash7>-SNAPSHOT`:
+Or add a snapshot release in the format `<version>-<git-hash7>-SNAP`:
 
 ```
-"org.broadinstitute" %% "wdl4s" % "0.10-ace1357-SNAPSHOT",
+"org.broadinstitute" %% "wdl4s" % "0.123-fff0246-SNAP",
 ```
 
 
@@ -37,11 +37,11 @@ To use in your Maven project add the following dependency
 <dependency>
     <groupId>org.broadinstitute</groupId>
     <artifactId>wdl4s_2.11</artifactId>
-    <version>0.10</version>
+    <version>${version}</version>
 </dependency>
 ```
 
-## Scaladoc 
+## Scaladoc
 
 [![Scaladoc](scaladoc.png)](http://broadinstitute.github.io/wdl4s/latest)
 
