@@ -84,6 +84,50 @@ object SampleWdl {
 
   object ThreeStep extends ThreeStepTemplate
 
+  object IfInScatterWdl extends SampleWdl {
+    override def wdlSource(runtime: String = "") =
+      """
+        task A {
+        |  command {
+        |    echo -n -e "jeff\nchris\nmiguel\nthibault\nkhalid\nscott"
+        |  }
+        |  output {
+        |    Array[String] A_out = read_lines(stdout())
+        |  }
+        |}
+        |
+        |task B {
+        |  String B_in
+        |  command {
+        |    python -c "print(len('${B_in}'))"
+        |  }
+        |  output {
+        |    Int B_out = read_int(stdout())
+        |  }
+        |}
+        |
+        |task C {
+        |  Int? C_in
+        |  command {
+        |    python -c "print(${C_in}*100)"
+        |  }
+        |  output {
+        |    Int C_out = read_int(stdout())
+        |  }
+        |}
+        |
+        |workflow w {
+        |  call A
+        |  scatter (item in A.A_out) { # scatter 0
+        |    if (true) {
+        |     call B {input: B_in = item}
+        |    }
+        |    call C {input: C_in = B.B_out}
+        |  }  
+        |}
+      """.stripMargin
+    override lazy val rawInputs = Map("" -> "...")
+  }  
 
   object NestedScatterWdl extends SampleWdl {
     override def wdlSource(runtime: String = "") =
@@ -291,6 +335,7 @@ object SampleWdl {
       |   String i
       |   File j
       |   Array[File] k
+      |   String? l
       |
       |   command {
       |     echo ${a}
@@ -314,12 +359,16 @@ object SampleWdl {
       | 
       | scatter (i in t2.outputArray) {
       |   call t {input: s = "c"}
+      |   if (true) {
+      |     call t as t3 {input: s = "c"}
+      |   }
       |   call u as v {input: a = workflowDeclarationFromInput,
       |                       b = workflowDeclaration,
       |                       c = t.o,
       |                       d = i,
       |                       i = "${workflowDeclaration}",
-      |                       k = files }
+      |                       k = files,
+      |                       l = t3.o }
       | }
       |}
     """.
