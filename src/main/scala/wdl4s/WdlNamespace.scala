@@ -135,13 +135,21 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
       (declarations ++ workflowDeclarations).foldLeft(Map.empty[FullyQualifiedName, Try[WdlValue]])(evalDeclaration)
     }
 
+    def flattenThrowable(toExpand: List[Throwable], flattened: List[Throwable]): List[Throwable] = toExpand match {
+      case Nil => flattened
+      case t :: r =>
+        t match {
+          case aggregated: AggregatedException => flattenThrowable(r ++ aggregated.throwables.toList, flattened)
+          case classic => flattenThrowable(r, flattened :+ classic)
+        }
+    }
+
     val filteredExceptions: Set[Class[_ <: Throwable]] = Set(classOf[OutputVariableLookupException], classOf[ScatterIndexNotFound])
     
     // Filter out declarations for which evaluation failed because a call output variable could not be resolved, or a shard could not be found,
     // as this method is meant for pre-execution validation
     val filtered = evalScope filterNot {
-      case (_, Failure(ex)) if filteredExceptions.contains(ex.getClass) => true
-      case (_, Failure(e: AggregatedException)) => e.throwables forall { ex => filteredExceptions.contains(ex.getClass) }
+      case (_, Failure(ex)) => flattenThrowable(List(ex), List.empty) forall { ex => filteredExceptions.contains(ex.getClass) }
       case _ => false
     } map {
       case (name, Failure(f)) => name -> Failure(ValidationException(name, List(f)))
