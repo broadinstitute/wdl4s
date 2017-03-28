@@ -3,7 +3,6 @@ package wdl4s
 import java.nio.file.{Path, Paths}
 
 import better.files._
-import lenthall.exception.AggregatedException
 import lenthall.util.TryUtil
 import wdl4s.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.command.ParameterCommandPart
@@ -119,6 +118,8 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
     * and return the value. Only evaluates workflow level declarations. Other declarations will be evaluated at runtime.
     */
   def staticDeclarationsRecursive(userInputs: WorkflowCoercedInputs, wdlFunctions: WdlStandardLibraryFunctions): Try[WorkflowCoercedInputs] = {
+    import lenthall.exception.Aggregation._
+    
     def evalDeclaration(accumulated: Map[FullyQualifiedName, Try[WdlValue]], current: Declaration): Map[FullyQualifiedName, Try[WdlValue]] = {
       current.expression match {
         case Some(expr) =>
@@ -135,21 +136,12 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
       (declarations ++ workflowDeclarations).foldLeft(Map.empty[FullyQualifiedName, Try[WdlValue]])(evalDeclaration)
     }
 
-    def flattenThrowable(toExpand: List[Throwable], flattened: List[Throwable]): List[Throwable] = toExpand match {
-      case Nil => flattened
-      case t :: r =>
-        t match {
-          case aggregated: AggregatedException => flattenThrowable(r ++ aggregated.throwables.toList, flattened)
-          case classic => flattenThrowable(r, flattened :+ classic)
-        }
-    }
-
     val filteredExceptions: Set[Class[_ <: Throwable]] = Set(classOf[OutputVariableLookupException], classOf[ScatterIndexNotFound])
     
     // Filter out declarations for which evaluation failed because a call output variable could not be resolved, or a shard could not be found,
     // as this method is meant for pre-execution validation
     val filtered = evalScope filterNot {
-      case (_, Failure(ex)) => flattenThrowable(List(ex), List.empty) forall { ex => filteredExceptions.contains(ex.getClass) }
+      case (_, Failure(ex)) => ex.flatten forall { ex => filteredExceptions.contains(ex.getClass) }
       case _ => false
     } map {
       case (name, Failure(f)) => name -> Failure(ValidationException(name, List(f)))
