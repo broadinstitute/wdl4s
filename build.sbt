@@ -36,7 +36,9 @@ resolvers ++= List(
 libraryDependencies ++= {
   Seq(
     "org.broadinstitute" %% "lenthall" % lenthallV,
+    "com.google.guava" % "guava" % "20.0",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+    "eu.timepit" %% "refined" % "0.7.0",
     "io.spray" %% "spray-json" % sprayJsonV,
     /*
     Exclude test framework cats-laws and its transitive dependency scalacheck.

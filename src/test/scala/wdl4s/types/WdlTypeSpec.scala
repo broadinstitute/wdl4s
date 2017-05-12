@@ -6,6 +6,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.prop.Tables.Table
 import org.scalatest.{FlatSpec, Matchers}
 import spray.json.JsString
+import wdl4s.exception.UnsatisfiedInputException
 
 import scala.runtime.ScalaRunTime
 
@@ -35,6 +36,12 @@ class WdlTypeSpec extends FlatSpec with Matchers {
       "WdlType",
       "Exception Class",
       "Exception Message Regex"
+    ),
+    (
+      "\"gs://bucket/dir/file.txt",
+      WdlFileType,
+      classOf[UnsatisfiedInputException],
+      "String: '\"gs://bucket/dir/file.txt' is not a valid URI"
     ),
     (
       WdlString("hello"),
