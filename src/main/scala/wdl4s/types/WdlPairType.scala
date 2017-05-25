@@ -1,6 +1,7 @@
 package wdl4s.types
 
-import wdl4s.values.{WdlPair, WdlValue}
+import spray.json.JsObject
+import wdl4s.values.{WdlMap, WdlPair, WdlValue}
 
 case class WdlPairType(leftType: WdlType, rightType: WdlType) extends WdlType {
 
@@ -18,6 +19,8 @@ case class WdlPairType(leftType: WdlType, rightType: WdlType) extends WdlType {
     */
   override protected def coercion: PartialFunction[Any, WdlValue] = {
     case otherPair @ WdlPair(otherValue1, otherValue2) if isCoerceableFrom(otherPair.wdlType) =>
+      WdlPair(leftType.coerceRawValue(otherValue1).get, rightType.coerceRawValue(otherValue2).get)
+    case otherPair @ WdlMap(otherValue1, otherValue2) if isCoerceableFrom(otherPair.wdlType) =>
       WdlPair(leftType.coerceRawValue(otherValue1).get, rightType.coerceRawValue(otherValue2).get)
   }
 

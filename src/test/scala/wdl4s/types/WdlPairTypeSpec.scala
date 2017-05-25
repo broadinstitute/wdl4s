@@ -2,14 +2,27 @@ package wdl4s.types
 
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FlatSpec, Matchers}
+import spray.json.{JsNumber, JsObject}
 import wdl4s.WdlNamespaceWithWorkflow
-import wdl4s.values.{WdlInteger, WdlMap, WdlPair, WdlString}
+import wdl4s.values.{WdlArray, WdlInteger, WdlMap, WdlPair, WdlString}
 
 import scala.util.{Failure, Success}
 
 class WdlPairTypeSpec extends FlatSpec with Matchers {
 
   behavior of "WdlPairType"
+
+  val stringIntMap = WdlMap(WdlMapType(WdlStringType, WdlIntegerType), Map(
+    WdlString("a") -> WdlInteger(1),
+    WdlString("b") -> WdlInteger(2),
+    WdlString("c") -> WdlInteger(3)
+  ))
+
+  val arrayOfPairs = WdlArray(WdlArrayType(WdlPairType(WdlStringType, WdlIntegerType)), Seq(
+    WdlPair(WdlString("a"),WdlInteger(1)),
+    WdlPair(WdlString("b"),WdlInteger(2)),
+    WdlPair(WdlString("c"),WdlInteger(3))
+  ))
 
   val coerceables = Table(
     ("fromValue", "toType", "coercedValue"),
@@ -60,7 +73,7 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
       }
     }
   }
-  
+
   it should "Allow use of pairs in call input mappings" in {
     val wdl =
       """
@@ -83,7 +96,7 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
         |workflow w {
         |  Array[Pair[File, Array[File]]] arr = [("left_file", ["right_file1", "right_file2"])]
         |  Pair[String, String] p = ("hello", "world")
-        |  
+        |
         |  scatter (i in arr) {
         |    call t {
         |      input:
@@ -96,7 +109,21 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
         |  }
         |}
       """.stripMargin
-    
+
     noException should be thrownBy WdlNamespaceWithWorkflow.load(wdl, Seq.empty)
+  }
+
+  it should "coerce a WdlMap into a WdlArray of WdlPairs" in {
+    WdlArrayType(WdlPairType(WdlStringType, WdlIntegerType)).coerceRawValue(stringIntMap) match {
+      case Success(array) => array shouldEqual arrayOfPairs
+      case Failure(f) => fail(s"exception while coercing JsObject: $f")
+    }
+  }
+
+  it should "coerce a JsObject into a WdlArray of WdlPairs" ignore {
+    WdlArrayType(WdlPairType(WdlStringType, WdlIntegerType)).coerceRawValue(JsObject(Map("a" -> JsNumber(1), "b" -> JsNumber(2), "c" -> JsNumber(3)))) match {
+      case Success(array) => array shouldEqual arrayOfPairs
+      case Failure(f) => fail(s"exception while coercing JsObject: $f")
+    }
   }
 }
