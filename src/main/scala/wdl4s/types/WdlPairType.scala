@@ -1,12 +1,15 @@
 package wdl4s.types
 
 import spray.json.JsObject
-import wdl4s.values.{WdlMap, WdlPair, WdlValue}
+import wdl4s.values.{WdlPair, WdlValue}
+
+import scala.language.postfixOps
 
 case class WdlPairType(leftType: WdlType, rightType: WdlType) extends WdlType {
 
   override def isCoerceableFrom(otherType: WdlType): Boolean = otherType match {
     case WdlPairType(otherType1, otherType2) => leftType.isCoerceableFrom(otherType1) && rightType.isCoerceableFrom(otherType2)
+    case jsObject: JsObject if jsObject.fields.size.equals(1) => rightType.coerceRawValue(jsObject.fields.head._2).isSuccess
     case _ => false
   }
 
@@ -20,8 +23,9 @@ case class WdlPairType(leftType: WdlType, rightType: WdlType) extends WdlType {
   override protected def coercion: PartialFunction[Any, WdlValue] = {
     case otherPair @ WdlPair(otherValue1, otherValue2) if isCoerceableFrom(otherPair.wdlType) =>
       WdlPair(leftType.coerceRawValue(otherValue1).get, rightType.coerceRawValue(otherValue2).get)
-    case otherPair @ WdlMap(otherValue1, otherValue2) if isCoerceableFrom(otherPair.wdlType) =>
-      WdlPair(leftType.coerceRawValue(otherValue1).get, rightType.coerceRawValue(otherValue2).get)
+    case jsObject: JsObject if jsObject.fields.size.equals(1) => jsObject.fields.head match {
+      case (k, v) => WdlPair(leftType.coerceRawValue(k).get, rightType.coerceRawValue(v).get)
+    }
   }
 
   override def toWdlString: String = s"Pair[${leftType.toWdlString}, ${rightType.toWdlString}]"
