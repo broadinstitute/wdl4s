@@ -1,7 +1,7 @@
 package wdl4s.wdl
 
 import wdl4s.parser.WdlParser.Terminal
-import AstTools.EnhancedAstNode
+import wdl4s.wdl.AstTools.EnhancedAstNode
 
 sealed trait GraphNode extends Scope {
 

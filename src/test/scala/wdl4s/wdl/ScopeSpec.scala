@@ -14,7 +14,7 @@ class ScopeSpec extends FlatSpec with Matchers {
   it should "throw an exception if trying to generate a workflow from a non-workflow ast" in {
     val callAst: Ast = AstTools.findAsts(namespace.ast, AstNodeName.Call).head
     the [UnsupportedOperationException] thrownBy {
-      Workflow(callAst, namespace.wdlSyntaxErrorFormatter)
+      WdlWorkflow(callAst, namespace.wdlSyntaxErrorFormatter)
     } should have message "Expecting Workflow AST, got a Call AST"
   }
 }
