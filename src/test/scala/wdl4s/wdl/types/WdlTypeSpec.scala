@@ -65,8 +65,8 @@ class WdlTypeSpec extends FlatSpec with Matchers {
       WdlBooleanType,
       classOf[IllegalArgumentException],
       "No coercion defined from" +
-        """ 'wdl4s.types.WdlTypeSpec\$\$anon\$(.*)@.*' of type""" +
-        """ 'wdl4s.types.WdlTypeSpec\$\$anon\$\1' to 'Boolean'."""
+        """ 'wdl4s.wdl.types.WdlTypeSpec\$\$anon\$(.*)@.*' of type""" +
+        """ 'wdl4s.wdl.types.WdlTypeSpec\$\$anon\$\1' to 'Boolean'."""
     ),
     (
       WdlArray(WdlArrayType(WdlOptionalType(WdlIntegerType)), Seq(
