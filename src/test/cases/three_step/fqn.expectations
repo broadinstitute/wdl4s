@@ -5,7 +5,7 @@
   "cgrep.pattern": "Declaration",
   "ps": "Task",
   "ps.procs": "TaskOutput",
-  "three_step": "Workflow",
+  "three_step": "WdlWorkflow",
   "three_step.cgrep": "TaskCall",
   "three_step.cgrep.count": "CallOutput",
   "three_step.cgrep.in_file": "Declaration",

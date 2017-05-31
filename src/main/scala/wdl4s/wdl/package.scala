@@ -1,5 +1,6 @@
 package wdl4s
 
+import wdl4s.wdl.GraphNode
 import wdl4s.wdl.exception.OutputVariableLookupException
 import wdl4s.wdl.values.WdlValue
 

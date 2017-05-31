@@ -1,17 +1,18 @@
 package wdl4s.wdl
 
 import lenthall.util.TryUtil
-import wdl4s.wdl.AstTools.{AstNodeName, EnhancedAstNode}
+import wdl4s.parser.WdlParser._
+import wdl4s.wdl.AstTools._
 import wdl4s.wdl.expression.WdlFunctions
-import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.wdl.types.WdlType
 import wdl4s.wdl.values.WdlValue
+import wdl4s.wom.components.Workflow
 
 import scala.language.postfixOps
 import scala.util.Try
 
-object Workflow {
-  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Workflow = {
+object WdlWorkflow {
+  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): WdlWorkflow = {
     if (ast.getName != AstNodeName.Workflow) {
       throw new UnsupportedOperationException(s"Expecting Workflow AST, got a ${ast.getName} AST")
     }
@@ -42,16 +43,21 @@ object Workflow {
     val meta = AstTools.wdlSectionToStringMap(ast, AstNodeName.Meta, wdlSyntaxErrorFormatter)
     val parameterMeta = AstTools.wdlSectionToStringMap(ast, AstNodeName.ParameterMeta, wdlSyntaxErrorFormatter)
 
-    new Workflow(name, workflowOutputsWildcards, wdlSyntaxErrorFormatter, meta, parameterMeta, ast)
+    new WdlWorkflow(name, workflowOutputsWildcards, wdlSyntaxErrorFormatter, meta, parameterMeta, ast)
   }
 }
 
-case class Workflow(unqualifiedName: String,
-                    workflowOutputWildcards: Seq[WorkflowOutputWildcard],
-                    wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
-                    meta: Map[String, String],
-                    parameterMeta: Map[String, String],
-                    ast: Ast) extends Callable {
+case class WdlWorkflow(unqualifiedName: String,
+                       workflowOutputWildcards: Seq[WorkflowOutputWildcard],
+                       wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
+                       meta: Map[String, String],
+                       parameterMeta: Map[String, String],
+                       ast: Ast) extends Callable {
+
+  /**
+    * Convert this WdlWorkflow into a wom.components.Workflow
+    */
+  lazy val toWorkflow: Workflow = Workflow(unqualifiedName, inputs, outputs, calls, meta, parameterMeta)
 
   /**
    * FQNs for all inputs to this workflow and their associated types and possible postfix quantifiers.
@@ -103,7 +109,7 @@ case class Workflow(unqualifiedName: String,
   lazy val transitiveDeclarations = {
     def isValid(d: Declaration) = {
       d.parent match {
-        case Some(w: Workflow) if w == this => true
+        case Some(w: WdlWorkflow) if w == this => true
         case Some(_: Scatter) => true
         case Some(_: If) => true
         case _ => false

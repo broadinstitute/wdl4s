@@ -14,7 +14,7 @@ object Call {
   def apply(ast: Ast,
             namespaces: Seq[WdlNamespace],
             tasks: Seq[Task],
-            workflows: Seq[Workflow],
+            workflows: Seq[WdlWorkflow],
             wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Call = {
     val alias: Option[String] = ast.getAttribute("alias") match {
       case x: Terminal => Option(x.getSourceString)
@@ -31,7 +31,7 @@ object Call {
 
     callable match {
       case task: Task => new TaskCall(alias, task, callInputSectionMappings, ast)
-      case workflow: Workflow => new WorkflowCall(alias, workflow, callInputSectionMappings, ast)
+      case workflow: WdlWorkflow => new WorkflowCall(alias, workflow, callInputSectionMappings, ast)
     }
   }
 
@@ -203,6 +203,6 @@ sealed abstract class Call(val alias: Option[String],
 case class TaskCall(override val alias: Option[String], task: Task, override val inputMappings: Map[String, WdlExpression], override val ast: Ast) extends Call(alias, task, inputMappings, ast) {
   override val callType = "call"
 }
-case class WorkflowCall(override val alias: Option[String], calledWorkflow: Workflow, override val inputMappings: Map[String, WdlExpression], override val ast: Ast) extends Call(alias, calledWorkflow, inputMappings, ast) {
+case class WorkflowCall(override val alias: Option[String], calledWorkflow: WdlWorkflow, override val inputMappings: Map[String, WdlExpression], override val ast: Ast) extends Call(alias, calledWorkflow, inputMappings, ast) {
   override val callType = "workflow"
 }

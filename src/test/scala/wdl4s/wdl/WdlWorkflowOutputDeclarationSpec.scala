@@ -2,7 +2,7 @@ package wdl4s.wdl
 
 import org.scalatest.{Matchers, FlatSpec}
 
-class WorkflowOutputDeclarationSpec extends FlatSpec with Matchers {
+class WdlWorkflowOutputDeclarationSpec extends FlatSpec with Matchers {
 
   "WorkflowOutputDeclaration" should "match outputs" in {
     val declaration = WorkflowOutputWildcard("wf.mytask", wildcard = true, null)

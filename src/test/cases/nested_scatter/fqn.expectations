@@ -12,7 +12,7 @@
   "D.D_out": "TaskOutput",
   "E": "Task",
   "E.E_out": "TaskOutput",
-  "w": "Workflow",
+  "w": "WdlWorkflow",
   "w.$scatter_0": "Scatter",
   "w.$scatter_1": "Scatter",
   "w.$scatter_2": "Scatter",

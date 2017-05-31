@@ -2,7 +2,7 @@ package wdl4s.wdl.formatter
 
 import lenthall.util.TerminalUtil
 import wdl4s.wdl.AstTools.EnhancedAstNode
-import wdl4s.wdl._
+import wdl4s.wdl.{WdlWorkflow, _}
 import wdl4s.wdl.command.StringCommandPart
 import wdl4s.wdl.types.WdlType
 import wdl4s.parser.WdlParser.{Ast, AstList, AstNode}
@@ -148,7 +148,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
     indent(s"${highlighter.wdlType(output.wdlType)} ${highlighter.variable(output.unqualifiedName)} = ${output.requiredExpression.toString(highlighter)}", level)
   }
 
-  private def formatWorkflow(workflow: Workflow): String = {
+  private def formatWorkflow(workflow: WdlWorkflow): String = {
     val declarations = workflow.declarations.map(formatDeclaration(_, 1))
     val children = workflow.children.collect({case c if !workflow.declarations.contains(c) => formatScope(c, 1) })
     val outputs = formatWorkflowOutputs(workflow.workflowOutputWildcards, 1)

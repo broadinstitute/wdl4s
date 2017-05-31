@@ -28,7 +28,7 @@ sealed trait WdlNamespace extends WdlValue with Scope {
   def imports: Seq[Import]
   def namespaces: Seq[WdlNamespace]
   def tasks: Seq[Task]
-  def workflows: Seq[Workflow]
+  def workflows: Seq[WdlWorkflow]
   def terminalMap: Map[Terminal, WdlSource]
   def findTask(name: String): Option[Task] = tasks.find(_.name == name)
   override def unqualifiedName: LocallyQualifiedName = importedAs.getOrElse("")
@@ -57,7 +57,7 @@ case class WdlNamespaceWithoutWorkflow(importedAs: Option[String],
                                        tasks: Seq[Task],
                                        terminalMap: Map[Terminal, WdlSource],
                                        ast: Ast) extends WdlNamespace {
-  val workflows = Seq.empty[Workflow]
+  val workflows = Seq.empty[WdlWorkflow]
 
 }
 
@@ -65,7 +65,7 @@ case class WdlNamespaceWithoutWorkflow(importedAs: Option[String],
   * A WdlNamespace which has exactly one workflow defined.
   */
 case class WdlNamespaceWithWorkflow(importedAs: Option[String],
-                                    workflow: Workflow,
+                                    workflow: WdlWorkflow,
                                     imports: Seq[Import],
                                     namespaces: Seq[WdlNamespace],
                                     tasks: Seq[Task],
@@ -131,7 +131,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
     }
 
     def evalScope: Map[FullyQualifiedName, Try[WdlValue]] = {
-      val workflowDeclarations = children.collect({ case w: Workflow => w.declarations }).flatten
+      val workflowDeclarations = children.collect({ case w: WdlWorkflow => w.declarations }).flatten
       (declarations ++ workflowDeclarations).foldLeft(Map.empty[FullyQualifiedName, Try[WdlValue]])(evalDeclaration)
     }
 
@@ -224,9 +224,9 @@ object WdlNamespace {
       taskAst <- topLevelAsts if taskAst.getName == AstNodeName.Task
     } yield Task(taskAst, wdlSyntaxErrorFormatter)
 
-    val workflows: Seq[Workflow] = for {
+    val workflows: Seq[WdlWorkflow] = for {
       workflowAst <- topLevelAsts if workflowAst.getName == AstNodeName.Workflow
-    } yield Workflow(workflowAst, wdlSyntaxErrorFormatter)
+    } yield WdlWorkflow(workflowAst, wdlSyntaxErrorFormatter)
 
     /**
       * Build scope tree recursively
@@ -236,7 +236,7 @@ object WdlNamespace {
     def getScope(scopeAst: Ast, parent: Option[Scope]): Scope = {
       val scope = scopeAst.getName match {
         case AstNodeName.Call => Call(scopeAst, namespaces, topLevelTasks, workflows, wdlSyntaxErrorFormatter)
-        case AstNodeName.Workflow => Workflow(scopeAst, wdlSyntaxErrorFormatter)
+        case AstNodeName.Workflow => WdlWorkflow(scopeAst, wdlSyntaxErrorFormatter)
         case AstNodeName.Declaration => Declaration(scopeAst, wdlSyntaxErrorFormatter, parent)
         case AstNodeName.Scatter =>
           scopeIndexes(classOf[Scatter]) += 1
@@ -279,7 +279,7 @@ object WdlNamespace {
           referencedTask match {
             case Some(task: Task) =>
               getScopeAsts(task.ast, "declarations").map(d => getScope(d, scope))
-            case Some(workflow: Workflow) =>
+            case Some(workflow: WdlWorkflow) =>
               workflow.ast.getAttribute("body").astListAsVector collect {
                 case declaration: Ast if declaration.getName == AstNodeName.Declaration => getScope(declaration, scope)
               }
@@ -390,7 +390,7 @@ object WdlNamespace {
     }
 
     val expandedWorkflowOutputsDuplicationErrors = {
-      (namespace.descendants + namespace) collect { case workflow: Workflow => lookForDuplicates(workflow.outputs) }
+      (namespace.descendants + namespace) collect { case workflow: WdlWorkflow => lookForDuplicates(workflow.outputs) }
     }
 
     val accumulatedErrors = expandedWorkflowOutputsDuplicationErrors ++ scopeDuplicationErrors
@@ -417,7 +417,7 @@ object WdlNamespace {
   private def getDecls(scope: Scope): Seq[DeclarationInterface] = {
     scope match {
       case t: Task => t.declarations ++ t.outputs
-      case w: Workflow => w.declarations ++ w.outputs
+      case w: WdlWorkflow => w.declarations ++ w.outputs
       case s => s.declarations
     }
   }
@@ -596,7 +596,7 @@ object WdlNamespaceWithWorkflow {
     }
   }
 
-  def apply(ast: Ast, workflow: Workflow, namespace: Option[String], imports: Seq[Import],
+  def apply(ast: Ast, workflow: WdlWorkflow, namespace: Option[String], imports: Seq[Import],
             namespaces: Seq[WdlNamespace], tasks: Seq[Task], terminalMap: Map[Terminal, WdlSource],
             wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): WdlNamespaceWithWorkflow = {
     new WdlNamespaceWithWorkflow(namespace, workflow, imports, namespaces, tasks, terminalMap, wdlSyntaxErrorFormatter, ast)

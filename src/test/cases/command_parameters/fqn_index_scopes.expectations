@@ -6,7 +6,7 @@
   "param_test.d": "Declaration",
   "param_test.e": "Declaration",
   "param_test.f": "Declaration",
-  "wf": "Workflow",
+  "wf": "WdlWorkflow",
   "wf.param_test": "TaskCall",
   "wf.param_test.a": "Declaration",
   "wf.param_test.b": "Declaration",

@@ -11,7 +11,7 @@
   "ns3.wc": "Task",
   "ns3.wc.count": "TaskOutput",
   "ns3.wc.in_file": "Declaration",
-  "three_step": "Workflow",
+  "three_step": "WdlWorkflow",
   "three_step.a1": "TaskCall",
   "three_step.a1.procs": "CallOutput",
   "three_step.a2": "TaskCall",
