@@ -3,7 +3,7 @@ package wdl4s.wdl
 import better.files.File
 import org.scalatest.{FlatSpec, Matchers}
 
-class WorkflowImportsSpec extends FlatSpec with Matchers {
+class WdlWorkflowImportsSpec extends FlatSpec with Matchers {
 
   def addAndGetFile(name: String, source: String): String = {
     val tempFile = File.newTemporaryFile(s"$name", ".wdl", Option(wdlDirectory)) write source

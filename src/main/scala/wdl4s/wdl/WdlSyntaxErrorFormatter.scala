@@ -312,7 +312,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
   def declarationContainsReferenceToAbsentValue(parent: Option[Scope], variable: Terminal) = {
 
     val (parentName, missingType) = parent match {
-      case Some(t: Task) => (s"task '${t.unqualifiedName}'" , "value")
+      case Some(t: WdlTask) => (s"task '${t.unqualifiedName}'" , "value")
       case Some(t: TaskCall) => (s"task '${t.task.unqualifiedName}'" , "value")
       case Some(other) => ("workflow", "value or call")
       case None => ("", "")
