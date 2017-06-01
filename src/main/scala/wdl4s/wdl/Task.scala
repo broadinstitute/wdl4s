@@ -3,10 +3,10 @@ package wdl4s.wdl
 import java.util.regex.Pattern
 
 import lenthall.util.TryUtil
-import wdl4s.wdl.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.wdl.command.{CommandPart, ParameterCommandPart, StringCommandPart}
 import wdl4s.wdl.expression.{WdlFunctions, WdlStandardLibraryFunctions}
 import wdl4s.parser.WdlParser._
+import wdl4s.wdl.AstTools._
 import wdl4s.wdl.util.StringUtil
 import wdl4s.wdl.values.{WdlFile, WdlValue}
 
@@ -68,6 +68,12 @@ case class Task(name: String,
   // Assumes that this will not be accessed before the children for the task are set, otherwise it will be empty
   // If that assumption proves false, make it a def or a var that is set after children are.
   override lazy val outputs: Seq[TaskOutput] = children collect { case output: TaskOutput => output }
+
+  val writeExpressions: Seq[WdlExpression] = commandTemplate.collect({
+    case x: ParameterCommandPart => x.expression
+  }).map(_.ast).flatMap(x => AstTools.findAsts(x, "FunctionCall")).collect({
+    case y if y.getAttribute("name").sourceString.startsWith("write_") => y
+  }) map { e => WdlExpression(e) }
 
   /**
     * Given a map of task-local parameter names and WdlValues, create a command String.
