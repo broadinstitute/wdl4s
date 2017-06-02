@@ -1,11 +1,15 @@
 package wdl4s.values
 
+import com.google.common.net.UrlEscapers
 import wdl4s.types.{WdlFileType, WdlType}
+import eu.timepit.refined.refineV
+import eu.timepit.refined.string.Uri
+import wdl4s.exception.UnsatisfiedInputException
 
 import scala.util.{Success, Try}
 
 object WdlFile {
-  def appendPathsWithSlashSeparators(path1: String, path2: String) = {
+  def appendPathsWithSlashSeparators(path1: String, path2: String): String = {
     if (path1.endsWith("/") || path2.startsWith("/")) path1 + path2
     else path1 + "/" + path2
   }
@@ -35,14 +39,20 @@ sealed trait WdlFile extends WdlPrimitive {
     case _ => invalid(s"$value == $rhs")
   }
 
-  override def valueString = value.toString
+  override def valueString: String = value.toString
 }
 
-case class WdlSingleFile(value: String) extends WdlFile {
-  override def toWdlString = "\"" + value.toString + "\""
+case class WdlSingleFile(origValue: String) extends WdlFile {
+  override def toWdlString: String = "\"" + value.toString + "\""
+
+  // Validate file path
+  val value: String = refineV[Uri](UrlEscapers.urlFragmentEscaper().escape(origValue)) match {
+    case Left(_) => throw new UnsatisfiedInputException(s"String: '$origValue' is not a valid URI")
+    case Right(_) => origValue
+  }
 }
 
 case class WdlGlobFile(value: String) extends WdlFile {
-  override def toWdlString = "glob(\"" + value.toString + "\")"
+  override def toWdlString: String = "glob(\"" + value.toString + "\")"
 }
 
