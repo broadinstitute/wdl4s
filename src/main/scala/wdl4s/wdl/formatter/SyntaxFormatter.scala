@@ -84,7 +84,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
     s"${highlighter.keyword("import")} '${imp.uri}'$namespace"
   }
 
-  private def formatTask(task: Task): String = {
+  private def formatTask(task: WdlTask): String = {
     val outputs = if (task.outputs.nonEmpty) formatOutputs(task.outputs, 1) else ""
     val command = formatCommandSection(task, 1)
     val declarations = task.declarations.map(formatDeclaration(_, 1)) match {
@@ -126,7 +126,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
     }
   }
 
-  private def formatCommandSection(task: Task, level:Int): String = {
+  private def formatCommandSection(task: WdlTask, level:Int): String = {
     val (sdelim: String, edelim: String) =
       if (task.commandTemplate.collect({case s:StringCommandPart => s.literal}).mkString.contains("}")) ("<<<", ">>>")
       else ("{", "}")

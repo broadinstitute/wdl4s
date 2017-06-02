@@ -1,8 +1,8 @@
-package wdl4s.wom
+package wdl4s.wom.components
 
 import lenthall.util.TryUtil
 import wdl4s.wdl._
-import wdl4s.wdl.command.{CommandPart, ParameterCommandPart}
+import wdl4s.wdl.command.{CommandPart}
 import wdl4s.wdl.expression.{WdlFunctions, WdlStandardLibraryFunctions}
 import wdl4s.wdl.util.StringUtil
 import wdl4s.wdl.values.{WdlFile, WdlValue}
@@ -10,30 +10,30 @@ import wdl4s.wdl.values.{WdlFile, WdlValue}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
-object CommonTask {
-
-  def apply(task: Task): CommonTask = {
-
-    CommonTask(task.name, task.commandTemplate, task.runtimeAttributes, task.meta,
-      task.parameterMeta, task.writeExpressions, task.outputs, task.declarations, lookupFunction = ???)
+object Task {
+  def apply(task: WdlTask): Task = {
+    Task(task.name, task.commandTemplate, task.runtimeAttributes, task.meta,
+      task.parameterMeta, task.outputs, task.declarations)
   }
-
 }
 
-case class CommonTask(name: String,
-                      commandTemplate: Seq[CommandPart],
-                      runtimeAttributes: RuntimeAttributes,
-                      meta: Map[String, String],
-                      parameterMeta: Map[String, String],
-                      writeExpressions: Seq[WdlExpression],
-                      taskOutputs: Seq[TaskOutput],
-                      declarations: Seq[Declaration],
-                      lookupFunction: String => WdlValue) {
+case class Task(name: String,
+                commandTemplate: Seq[CommandPart],
+                runtimeAttributes: RuntimeAttributes,
+                meta: Map[String, String],
+                parameterMeta: Map[String, String],
+                taskOutputs: Seq[TaskOutput],
+                declarations: Seq[Declaration]) {
 
-  val unqualifiedName = name
+  val unqualifiedName: LocallyQualifiedName = name
 
   val outputs: Seq[TaskOutput] = taskOutputs
 
+  def lookupFunction(knownInputs: WorkflowCoercedInputs,
+                     wdlFunctions: WdlFunctions[WdlValue],
+                     outputResolver: OutputResolver = NoOutputResolver,
+                     shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
+                     relativeTo: Scope = ???): String => WdlValue = ???
 
   def instantiateCommand(taskInputs: EvaluatedTaskInputs,
                          functions: WdlFunctions[WdlValue],
@@ -50,26 +50,10 @@ case class CommonTask(name: String,
     */
   def inputsLookupFunction(inputs: WorkflowCoercedInputs,
                            wdlFunctions: WdlFunctions[WdlValue],
-                           shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): String => WdlValue = {
-    outputs.toList match {
-      case head :: others => super.lookupFunction(inputs, wdlFunctions, NoOutputResolver, shards, relativeTo = head)
-      case _ => super.lookupFunction(inputs, wdlFunctions, NoOutputResolver, shards, this)
-    }
-  }
+                           shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): String => WdlValue = ???
 
   def evaluateFilesFromCommand(inputs: WorkflowCoercedInputs,
-                               functions: WdlFunctions[WdlValue]) = {
-    val commandExpressions = commandTemplate.collect({
-      case x: ParameterCommandPart => x.expression
-    })
-
-    val lookup = lookupFunction(inputs, functions)
-    val evaluatedExpressionMap = writeExpressions map { e => e -> e.evaluate(lookup, functions) } toMap
-
-    evaluatedExpressionMap collect {
-      case (k, Success(file: WdlFile)) => k -> file
-    }
-  }
+                               functions: WdlFunctions[WdlValue]) = ???
 
   /**
     * Tries to determine files that will be created by the outputs of this task.
@@ -123,6 +107,5 @@ case class CommonTask(name: String,
         case (fqn, value) if fqn == declaration.fullyQualifiedName => declaration -> value }
     } toMap
   }
-
 
 }

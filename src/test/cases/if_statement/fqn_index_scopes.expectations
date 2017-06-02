@@ -1,5 +1,5 @@
 {
-  "A": "Task",
+  "A": "WdlTask",
   "A.i": "Declaration",
   "A.o": "TaskOutput",
   "w": "WdlWorkflow",

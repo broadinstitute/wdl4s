@@ -1,11 +1,11 @@
 {
   "cgrep": "WdlNamespaceWithoutWorkflow",
-  "cgrep.cgrep": "Task",
+  "cgrep.cgrep": "WdlTask",
   "cgrep.cgrep.count": "TaskOutput",
   "cgrep.cgrep.in_file": "Declaration",
   "cgrep.cgrep.pattern": "Declaration",
   "ps": "WdlNamespaceWithoutWorkflow",
-  "ps.ps": "Task",
+  "ps.ps": "WdlTask",
   "ps.ps.procs": "TaskOutput",
   "three_step": "WdlWorkflow",
   "three_step.cgrep": "TaskCall",
@@ -18,7 +18,7 @@
   "three_step.wc.count": "CallOutput",
   "three_step.wc.in_file": "Declaration",
   "wc": "WdlNamespaceWithoutWorkflow",
-  "wc.wc": "Task",
+  "wc.wc": "WdlTask",
   "wc.wc.count": "TaskOutput",
   "wc.wc.in_file": "Declaration"
 }

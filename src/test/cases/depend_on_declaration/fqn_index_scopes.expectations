@@ -1,7 +1,7 @@
 {
-  "a": "Task",
+  "a": "WdlTask",
   "a.o": "TaskOutput",
-  "b": "Task",
+  "b": "WdlTask",
   "b.ints": "Declaration",
   "b.o": "TaskOutput",
   "w": "WdlWorkflow",

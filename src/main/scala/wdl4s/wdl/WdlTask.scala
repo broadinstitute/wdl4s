@@ -14,7 +14,7 @@ import scala.collection.JavaConverters._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
-object Task {
+object WdlTask {
   val Ws = Pattern.compile("[\\ \\t]+")
 
   /** The function validateDeclaration() and the DeclarationAccumulator class are used
@@ -26,7 +26,7 @@ object Task {
     */
   case class DeclarationAccumulator(errors: Seq[String] = Seq.empty, declarations: Seq[Declaration] = Seq.empty)
 
-  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Task = {
+  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): WdlTask = {
     val taskNameTerminal = ast.getAttribute("name").asInstanceOf[Terminal]
     val name = taskNameTerminal.sourceString
     val commandAsts = ast.findAsts(AstNodeName.Command)
@@ -40,10 +40,10 @@ object Task {
       case x: Ast => ParameterCommandPart(x, wdlSyntaxErrorFormatter)
     }
 
-    Task(name, commandTemplate, runtimeAttributes, meta, parameterMeta, ast)
+    WdlTask(name, commandTemplate, runtimeAttributes, meta, parameterMeta, ast)
   }
 
-  def empty: Task = new Task("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, null)
+  def empty: WdlTask = new WdlTask("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, null)
 }
 
 /**
@@ -56,24 +56,18 @@ object Task {
   * @param parameterMeta     - 'parameter_meta' section of a task
   * @param ast               The syntax tree from which this was built.
   */
-case class Task(name: String,
-                commandTemplate: Seq[CommandPart],
-                runtimeAttributes: RuntimeAttributes,
-                meta: Map[String, String],
-                parameterMeta: Map[String, String],
-                ast: Ast) extends Callable {
+case class WdlTask(name: String,
+                   commandTemplate: Seq[CommandPart],
+                   runtimeAttributes: RuntimeAttributes,
+                   meta: Map[String, String],
+                   parameterMeta: Map[String, String],
+                   ast: Ast) extends Callable {
 
   override val unqualifiedName: LocallyQualifiedName = name
 
   // Assumes that this will not be accessed before the children for the task are set, otherwise it will be empty
   // If that assumption proves false, make it a def or a var that is set after children are.
   override lazy val outputs: Seq[TaskOutput] = children collect { case output: TaskOutput => output }
-
-  val writeExpressions: Seq[WdlExpression] = commandTemplate.collect({
-    case x: ParameterCommandPart => x.expression
-  }).map(_.ast).flatMap(x => AstTools.findAsts(x, "FunctionCall")).collect({
-    case y if y.getAttribute("name").sourceString.startsWith("write_") => y
-  }) map { e => WdlExpression(e) }
 
   /**
     * Given a map of task-local parameter names and WdlValues, create a command String.

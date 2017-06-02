@@ -1,8 +1,8 @@
 {
-  "inner": "Task",
+  "inner": "WdlTask",
   "inner.i": "Declaration",
   "inner.out": "TaskOutput",
-  "outer": "Task",
+  "outer": "WdlTask",
   "outer.matrix": "Declaration",
   "outer.tsv": "TaskOutput",
   "w": "WdlWorkflow",

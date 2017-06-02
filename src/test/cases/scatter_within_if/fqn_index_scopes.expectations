@@ -1,9 +1,9 @@
 {
   "global": "Declaration",
-  "taskA": "Task",
+  "taskA": "WdlTask",
   "taskA.i": "Declaration",
   "taskA.o": "TaskOutput",
-  "taskB": "Task",
+  "taskB": "WdlTask",
   "taskB.i": "Declaration",
   "taskB.o": "TaskOutput",
   "w": "WdlWorkflow",

@@ -1,6 +1,6 @@
 {
   "sub": "WdlNamespaceWithWorkflow",
-  "sub.t": "Task",
+  "sub.t": "WdlTask",
   "sub.t.o": "TaskOutput",
   "sub.t.o2": "TaskOutput",
   "sub.t.s": "Declaration",
@@ -11,7 +11,7 @@
   "sub.w2.t.o": "CallOutput",
   "sub.w2.t.o2": "CallOutput",
   "sub.w2.t.s": "Declaration",
-  "t": "Task",
+  "t": "WdlTask",
   "t.o": "TaskOutput",
   "t.o2": "TaskOutput",
   "t.s": "Declaration",

@@ -27,10 +27,10 @@ sealed trait WdlNamespace extends WdlValue with Scope {
   def importedAs: Option[String] // Used when imported with `as`
   def imports: Seq[Import]
   def namespaces: Seq[WdlNamespace]
-  def tasks: Seq[Task]
+  def tasks: Seq[WdlTask]
   def workflows: Seq[WdlWorkflow]
   def terminalMap: Map[Terminal, WdlSource]
-  def findTask(name: String): Option[Task] = tasks.find(_.name == name)
+  def findTask(name: String): Option[WdlTask] = tasks.find(_.name == name)
   override def unqualifiedName: LocallyQualifiedName = importedAs.getOrElse("")
   override def appearsInFqn: Boolean = importedAs.isDefined
   override def namespace: WdlNamespace = this
@@ -54,7 +54,7 @@ sealed trait WdlNamespace extends WdlValue with Scope {
 case class WdlNamespaceWithoutWorkflow(importedAs: Option[String],
                                        imports: Seq[Import],
                                        namespaces: Seq[WdlNamespace],
-                                       tasks: Seq[Task],
+                                       tasks: Seq[WdlTask],
                                        terminalMap: Map[Terminal, WdlSource],
                                        ast: Ast) extends WdlNamespace {
   val workflows = Seq.empty[WdlWorkflow]
@@ -68,7 +68,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
                                     workflow: WdlWorkflow,
                                     imports: Seq[Import],
                                     namespaces: Seq[WdlNamespace],
-                                    tasks: Seq[Task],
+                                    tasks: Seq[WdlTask],
                                     terminalMap: Map[Terminal, WdlSource],
                                     wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
                                     ast: Ast) extends WdlNamespace {
@@ -220,9 +220,9 @@ object WdlNamespace {
     /**
       * All `task` definitions of primary workflow.
       */
-    val topLevelTasks: Seq[Task] = for {
+    val topLevelTasks: Seq[WdlTask] = for {
       taskAst <- topLevelAsts if taskAst.getName == AstNodeName.Task
-    } yield Task(taskAst, wdlSyntaxErrorFormatter)
+    } yield WdlTask(taskAst, wdlSyntaxErrorFormatter)
 
     val workflows: Seq[WdlWorkflow] = for {
       workflowAst <- topLevelAsts if workflowAst.getName == AstNodeName.Workflow
@@ -277,7 +277,7 @@ object WdlNamespace {
         case AstNodeName.Call =>
           val referencedTask = findCallable(scopeAst.getAttribute("task").sourceString, namespaces, topLevelTasks ++ workflows)
           referencedTask match {
-            case Some(task: Task) =>
+            case Some(task: WdlTask) =>
               getScopeAsts(task.ast, "declarations").map(d => getScope(d, scope))
             case Some(workflow: WdlWorkflow) =>
               workflow.ast.getAttribute("body").astListAsVector collect {
@@ -416,7 +416,7 @@ object WdlNamespace {
 
   private def getDecls(scope: Scope): Seq[DeclarationInterface] = {
     scope match {
-      case t: Task => t.declarations ++ t.outputs
+      case t: WdlTask => t.declarations ++ t.outputs
       case w: WdlWorkflow => w.declarations ++ w.outputs
       case s => s.declarations
     }
@@ -534,8 +534,8 @@ object WdlNamespace {
     * Given a name, a collection of WdlNamespaces and a collection of Tasks, this method will attempt to find
     * a Task with that name within those collections.
     */
-  def findTask(name: String, namespaces: Seq[WdlNamespace], tasks: Seq[Task]): Option[Task] = {
-    findCallable(name, namespaces, tasks) collect { case t: Task => t }
+  def findTask(name: String, namespaces: Seq[WdlNamespace], tasks: Seq[WdlTask]): Option[WdlTask] = {
+    findCallable(name, namespaces, tasks) collect { case t: WdlTask => t }
   }
 
   def findCallable(name: String, namespaces: Seq[WdlNamespace], callables: Seq[Callable]): Option[Callable] = {
@@ -597,7 +597,7 @@ object WdlNamespaceWithWorkflow {
   }
 
   def apply(ast: Ast, workflow: WdlWorkflow, namespace: Option[String], imports: Seq[Import],
-            namespaces: Seq[WdlNamespace], tasks: Seq[Task], terminalMap: Map[Terminal, WdlSource],
+            namespaces: Seq[WdlNamespace], tasks: Seq[WdlTask], terminalMap: Map[Terminal, WdlSource],
             wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): WdlNamespaceWithWorkflow = {
     new WdlNamespaceWithWorkflow(namespace, workflow, imports, namespaces, tasks, terminalMap, wdlSyntaxErrorFormatter, ast)
   }
