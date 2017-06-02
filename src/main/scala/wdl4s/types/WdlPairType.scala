@@ -29,7 +29,9 @@ case class WdlPairType(leftType: WdlType, rightType: WdlType) extends WdlType {
 
   def mapToPair(m: Map[String, JsValue], wdlPairType: WdlPairType): WdlPair = {
 
-    val wdlPair: Seq[Try[WdlValue]] = (m.get("Left"), m.get("Right")) match {
+    val caseNormalizedMap = m map { case(k, v) => k.toLowerCase.capitalize -> v }
+
+    val wdlPair: Seq[Try[WdlValue]] = (caseNormalizedMap.get("Left"), caseNormalizedMap.get("Right")) match {
       case (Some(leftVal), Some(rightVal)) => Seq(wdlPairType.leftType.coerceRawValue(leftVal), wdlPairType.rightType.coerceRawValue(rightVal))
     }
 

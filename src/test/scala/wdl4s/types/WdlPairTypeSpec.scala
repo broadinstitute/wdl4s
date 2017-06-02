@@ -167,4 +167,13 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
         ex.getMessage should (startWith("No coercion defined from") and endWith("to 'Pair[String, Int]'."))
     }
   }
+
+  it should "coerce a JsObject to a WdlPair regardless of canonical capitalization" in {
+    val jsArray = JsObject("LefT" -> JsString("a"), "right" -> JsNumber(1))
+
+    WdlPairType(WdlStringType, WdlIntegerType).coerceRawValue(jsArray) match {
+      case Success(array) => array shouldEqual simplePair
+      case Failure(f) => fail(s"exception while coercing JsObject: $f")
+    }
+  }
 }
