@@ -7,7 +7,7 @@ trait WdlTest extends Matchers with WordSpecLike {
   def resolver(root: File)(relPath: String): String = (root / relPath).contentAsString
   def loadWdlFile(wdlFile: File) =
     WdlNamespaceWithWorkflow.load(wdlFile.contentAsString, Seq(resolver(wdlFile / "..") _)).get
-  def getTask(ns: WdlNamespace, name: String): Task = ns.tasks.find(_.unqualifiedName == name).get
+  def getTask(ns: WdlNamespace, name: String): WdlTask = ns.tasks.find(_.unqualifiedName == name).get
   def getCall(ns: WdlNamespaceWithWorkflow, name: String): TaskCall = ns.workflow.taskCalls.find(_.unqualifiedName == name) getOrElse {
     fail(s"Expecting call with name '$name'")
   }

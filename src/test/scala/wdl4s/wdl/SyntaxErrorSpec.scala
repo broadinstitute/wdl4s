@@ -142,7 +142,7 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         |import "ps" as ps
         |               ^
         |
-        |Workflow statement defined here (line 2, col 10):
+        |WdlWorkflow statement defined here (line 2, col 10):
         |
         |workflow ps {
         |         ^

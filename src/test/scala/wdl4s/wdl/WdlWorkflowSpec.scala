@@ -10,7 +10,7 @@ import wdl4s.wdl.values._
 
 import scala.util.{Failure, Success}
 
-class WorkflowSpec extends WordSpec with Matchers {
+class WdlWorkflowSpec extends WordSpec with Matchers {
 
   "Workflow" should {
     val subWorkflow =
@@ -70,7 +70,7 @@ class WorkflowSpec extends WordSpec with Matchers {
 
     val workflowInputs = Map("main_workflow.workflow_input" -> WdlString("workflow_input"))
 
-    def outputResolverForWorkflow(workflow: Workflow)(call: GraphNode, index: Option[Int])= {
+    def outputResolverForWorkflow(workflow: WdlWorkflow)(call: GraphNode, index: Option[Int])= {
       call match {
         // Main Task
         case c: Call if c == workflow.findCallByName("main_task").get =>

@@ -3,18 +3,19 @@ package wdl4s.wdl
 import java.util.regex.Pattern
 
 import lenthall.util.TryUtil
-import wdl4s.wdl.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.wdl.command.{CommandPart, ParameterCommandPart, StringCommandPart}
 import wdl4s.wdl.expression.{WdlFunctions, WdlStandardLibraryFunctions}
 import wdl4s.parser.WdlParser._
+import wdl4s.wdl.AstTools._
 import wdl4s.wdl.util.StringUtil
 import wdl4s.wdl.values.{WdlFile, WdlValue}
+import wdl4s.wom.callable.TaskDefinition
 
 import scala.collection.JavaConverters._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
-object Task {
+object WdlTask {
   val Ws = Pattern.compile("[\\ \\t]+")
 
   /** The function validateDeclaration() and the DeclarationAccumulator class are used
@@ -26,7 +27,7 @@ object Task {
     */
   case class DeclarationAccumulator(errors: Seq[String] = Seq.empty, declarations: Seq[Declaration] = Seq.empty)
 
-  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Task = {
+  def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): WdlTask = {
     val taskNameTerminal = ast.getAttribute("name").asInstanceOf[Terminal]
     val name = taskNameTerminal.sourceString
     val commandAsts = ast.findAsts(AstNodeName.Command)
@@ -40,10 +41,10 @@ object Task {
       case x: Ast => ParameterCommandPart(x, wdlSyntaxErrorFormatter)
     }
 
-    Task(name, commandTemplate, runtimeAttributes, meta, parameterMeta, ast)
+    WdlTask(name, commandTemplate, runtimeAttributes, meta, parameterMeta, ast)
   }
 
-  def empty: Task = new Task("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, null)
+  def empty: WdlTask = new WdlTask("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, null)
 }
 
 /**
@@ -56,12 +57,15 @@ object Task {
   * @param parameterMeta     - 'parameter_meta' section of a task
   * @param ast               The syntax tree from which this was built.
   */
-case class Task(name: String,
-                commandTemplate: Seq[CommandPart],
-                runtimeAttributes: RuntimeAttributes,
-                meta: Map[String, String],
-                parameterMeta: Map[String, String],
-                ast: Ast) extends Callable {
+case class WdlTask(name: String,
+                   commandTemplate: Seq[CommandPart],
+                   runtimeAttributes: RuntimeAttributes,
+                   meta: Map[String, String],
+                   parameterMeta: Map[String, String],
+                   ast: Ast) extends WdlCallable {
+
+  // TODO: Reinstate inputs
+  lazy val womTaskDefinition: TaskDefinition = TaskDefinition(name, commandTemplate, runtimeAttributes, meta, parameterMeta, outputs.map(_.toWom).toSet, Set.empty) // declarations)
 
   override val unqualifiedName: LocallyQualifiedName = name
 

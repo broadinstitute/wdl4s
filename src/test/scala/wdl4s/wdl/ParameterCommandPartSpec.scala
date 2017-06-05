@@ -58,7 +58,7 @@ class ParameterCommandPartSpec extends WdlTest {
         """.stripMargin
 
       val ns = WdlNamespace.loadUsingSource(wdl, None, None).get
-      val task: Task = ns.findTask("t").get
+      val task: WdlTask = ns.findTask("t").get
       val command = task.instantiateCommand(Map(task.declarations.head -> WdlString("world")), NoFunctions)
       command shouldBe Success("echo hello world")
     }
