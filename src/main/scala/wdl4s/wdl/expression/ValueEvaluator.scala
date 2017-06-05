@@ -125,13 +125,13 @@ case class ValueEvaluator(override val lookup: String => WdlValue, override val 
                         // Give a specific error message based on the type of Callable
                       case callOutputObject: WdlCallOutputsObject => 
                         callOutputObject.call match {
-                          case workflowCall: WorkflowCall => 
+                          case workflowCall: WdlWorkflowCall =>
                             Failure(new WdlExpressionException(
                               s"""${rhs.getSourceString} is not declared as an output of the sub workflow ${workflowCall.calledWorkflow.fullyQualifiedName}.
                                  |If you want to use workflow ${workflowCall.calledWorkflow.fullyQualifiedName} as a sub workflow, make sure that its output section is up to date with the latest syntax.
                                  |See the WDL specification for how to write outputs: https://github.com/broadinstitute/wdl/blob/develop/SPEC.md#outputs""".stripMargin
                             ))
-                          case taskCall: TaskCall => 
+                          case taskCall: WdlTaskCall =>
                             Failure(new WdlExpressionException(
                               s"""${rhs.getSourceString} is not declared as an output of the task ${taskCall.task.fullyQualifiedName}.
                                  |Make sure to declare it as an output to be able to use it in the workflow.""".stripMargin

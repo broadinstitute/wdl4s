@@ -20,7 +20,7 @@ object If {
   * @param condition WDL Expression representing the condition in which to execute this If-block
   */
 case class If(index: Int, condition: WdlExpression, ast: Ast)
-  extends GraphNodeWithUpstreamReferences with WorkflowScoped {
+  extends WdlGraphNodeWithUpstreamReferences with WorkflowScoped {
   val unqualifiedName = s"${If.FQNIdentifier}_$index"
   override def appearsInFqn = false
 

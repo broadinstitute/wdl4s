@@ -7,6 +7,7 @@ import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlType
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.callable.WorkflowDefinition
+import wdl4s.wom.graph.Graph
 
 import scala.language.postfixOps
 import scala.util.Try
@@ -45,6 +46,20 @@ object WdlWorkflow {
 
     new WdlWorkflow(name, workflowOutputsWildcards, wdlSyntaxErrorFormatter, meta, parameterMeta, ast)
   }
+
+  def buildWomGraph(wdlWorkflow: WdlWorkflow): Graph = ???
+
+  /**
+    * Convert this WdlWorkflow into a wom.components.Workflow
+    */
+  def womWorkflowDefinition(wdlWorkflow: WdlWorkflow): WorkflowDefinition = {
+    WorkflowDefinition(
+      wdlWorkflow.unqualifiedName,
+      buildWomGraph(wdlWorkflow),
+      wdlWorkflow.meta,
+      wdlWorkflow.parameterMeta,
+      List.empty)
+  }
 }
 
 case class WdlWorkflow(unqualifiedName: String,
@@ -57,7 +72,7 @@ case class WdlWorkflow(unqualifiedName: String,
   /**
     * Convert this WdlWorkflow into a wom.components.Workflow
     */
-  lazy val womWorkflowDefinition: WorkflowDefinition = WorkflowDefinition(unqualifiedName, inputs.values.map(_.toWom).toSet, outputs.map(_.toWom).toSet, Set.empty, meta, parameterMeta)
+  lazy val womWorkflowDefinition: WorkflowDefinition = WdlWorkflow.womWorkflowDefinition(this)
 
   /**
    * FQNs for all inputs to this workflow and their associated types and possible postfix quantifiers.
@@ -82,7 +97,7 @@ case class WdlWorkflow(unqualifiedName: String,
   /** First tries to find any Call with name `name`.  If not found,
     * Fallback to looking at immediate children or delegating to parent node
     */
-  override def resolveVariable(name: String, relativeTo: Scope = this): Option[GraphNode] = {
+  override def resolveVariable(name: String, relativeTo: Scope = this): Option[WdlGraphNode] = {
     findCallByName(name) orElse findDeclarationByName(name) orElse findWorkflowOutputByName(name, relativeTo) orElse super.resolveVariable(name, relativeTo)
   }
 
@@ -101,7 +116,7 @@ case class WdlWorkflow(unqualifiedName: String,
     * @param name name of call to return
     * @return Some(Call) if one with that name was found otherwise None
     */
-  def findCallByName(name: String): Option[Call] = calls.find(_.unqualifiedName == name)
+  def findCallByName(name: String): Option[WdlCall] = calls.find(_.unqualifiedName == name)
 
   /**
     * Declarations within the workflow scope (including inside scatters and ifs)
@@ -153,7 +168,7 @@ case class WdlWorkflow(unqualifiedName: String,
     def toWorkflowOutputs(scope: Scope) = {
       // Find out the number of parent scatters
       val outputs = scope match {
-        case call: Call => call.outputs
+        case call: WdlCall => call.outputs
         case outputDeclaration: Output => Seq(outputDeclaration)
           // For non output declaration, don't return an array but return the raw value
         case otherDeclaration: DeclarationInterface => Seq(otherDeclaration)
@@ -175,7 +190,7 @@ case class WdlWorkflow(unqualifiedName: String,
         case alias => alias + "." + output.fqn
       }
       namespace.resolveCallOrOutputOrDeclaration(outputFqn) match {
-        case Some(call: Call) if output.wildcard && calls.contains(call) => toWorkflowOutputs(call)
+        case Some(call: WdlCall) if output.wildcard && calls.contains(call) => toWorkflowOutputs(call)
         case Some(declaration: DeclarationInterface) if descendants.contains(declaration) => toWorkflowOutputs(declaration)
         case e => throw new SyntaxError(wdlSyntaxErrorFormatter.badOldStyleWorkflowOutput(output.ast))
       }

@@ -3,7 +3,7 @@ package wdl4s.wdl
 import wdl4s.parser.WdlParser.Ast
 import wdl4s.wdl.types.WdlType
 
-case class CallOutput(call: Call, taskOutput: Output) extends Output {
+case class CallOutput(call: WdlCall, taskOutput: Output) extends Output {
   override lazy val requiredExpression: WdlExpression = taskOutput.requiredExpression
   override lazy val ast: Ast = taskOutput.ast
   override lazy val wdlType: WdlType = taskOutput.wdlType

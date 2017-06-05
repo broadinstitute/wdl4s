@@ -1,7 +1,7 @@
 package wdl4s.wdl.exception
 
 import lenthall.exception.ThrowableAggregation
-import wdl4s.wdl.{Declaration, GraphNode}
+import wdl4s.wdl.{Declaration, WdlGraphNode}
 import wdl4s.wdl.types.WdlType
 
 sealed trait LookupException { this: Exception => }
@@ -33,4 +33,4 @@ final case class ScatterIndexNotFound(message: String) extends VariableLookupExc
 /**
   * Raised when attempting to resolve an output variable but the output resolver failed to return a value.
   */
-final case class OutputVariableLookupException(node: GraphNode, index: Option[Int]) extends VariableLookupException(s"Could not find outputs for call ${node.fullyQualifiedName} at index $index")
+final case class OutputVariableLookupException(node: WdlGraphNode, index: Option[Int]) extends VariableLookupException(s"Could not find outputs for call ${node.fullyQualifiedName} at index $index")
