@@ -5,7 +5,7 @@ import spray.json.{JsObject, JsValue}
 import wdl4s.values.{WdlPair, WdlValue}
 
 import scala.language.postfixOps
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 case class WdlPairType(leftType: WdlType, rightType: WdlType) extends WdlType {
 
@@ -37,15 +37,14 @@ case class WdlPairType(leftType: WdlType, rightType: WdlType) extends WdlType {
 
     val failures = wdlPair collect { case f:Failure[_] => f }
 
-    failures match {
-      case f: Iterable[Failure[_]] if f.nonEmpty =>
-        throw new UnsupportedOperationException(s"Failed to coerce one or more values for creating a ${wdlPairType.toWdlString}:\n${TryUtil.stringifyFailures(f)}}")
-      case _ =>
-        val coercedPair = wdlPair match { case Seq(left, right) => (left.get, right.get) }
-        val leftType = WdlType.homogeneousTypeFromValues(Seq(coercedPair._1))
-        val rightType = WdlType.homogeneousTypeFromValues(Seq(coercedPair._2))
-        WdlPair(coercedPair._1, coercedPair._2)
+    if (failures.isEmpty) {
+      wdlPair match {
+        case Seq(Success(left), Success(right)) => WdlPair(left, right)
+      }
+    } else {
+      throw new UnsupportedOperationException(s"Failed to coerce one or more values for creating a ${wdlPairType.toWdlString}:\n${TryUtil.stringifyFailures(failures)}}")
     }
+
   }
 
   override def toWdlString: String = s"Pair[${leftType.toWdlString}, ${rightType.toWdlString}]"

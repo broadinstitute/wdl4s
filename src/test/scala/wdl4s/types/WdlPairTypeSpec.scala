@@ -2,7 +2,7 @@ package wdl4s.types
 
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FlatSpec, Matchers}
-import spray.json.{JsArray, JsNumber, JsObject, JsString}
+import spray.json._
 import wdl4s.WdlNamespaceWithWorkflow
 import wdl4s.values.{WdlArray, WdlInteger, WdlMap, WdlPair, WdlString}
 
@@ -127,11 +127,13 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
   }
 
   it should "coerce a JsArray into a WdlArray of WdlPairs" in {
-    val jsArray = JsArray(
-      JsObject("Left" -> JsString("a"), "Right" -> JsNumber(1)),
-      JsObject("Left" -> JsString("b"), "Right" -> JsNumber(2)),
-      JsObject("Left" -> JsString("c"), "Right" -> JsNumber(3))
-    )
+    val jsArray =
+      """
+        |[ { "Left": "a", "Right": 1 },
+        |  { "Left": "b", "Right": 2 },
+        |  { "Left": "c", "Right": 3 }
+        |]
+      """.stripMargin.parseJson
 
     WdlArrayType(WdlPairType(WdlStringType, WdlIntegerType)).coerceRawValue(jsArray) match {
       case Success(array) => array shouldEqual arrayOfPairs
@@ -140,11 +142,13 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
   }
 
   it should "coerce a complex JsArray into a WdlArray of WdlPairs of WdlArrays" in {
-    val complexJsArray =  JsArray(
-      JsObject("Left" -> JsArray(JsString("a"), JsString("b")), "Right" -> JsArray(JsNumber(1), JsNumber(11))),
-      JsObject("Left" -> JsArray(JsString("c"), JsString("d")), "Right" -> JsArray(JsNumber(2), JsNumber(21))),
-      JsObject("Left" -> JsArray(JsString("e"), JsString("f")), "Right" -> JsArray(JsNumber(3), JsNumber(31)))
-    )
+    val complexJsArray =
+      """
+        |[ { "Left": ["a", "b"], "Right": [1, 11] },
+        |  { "Left": ["c", "d"], "Right": [2, 21] },
+        |  { "Left": ["e", "f"], "Right": [3, 31] }
+        |]
+      """.stripMargin.parseJson
 
     WdlArrayType(WdlPairType(WdlArrayType(WdlStringType), WdlArrayType(WdlIntegerType))).coerceRawValue(complexJsArray) match {
       case Success(array) => array shouldEqual arrayOfPairsOfArrays
@@ -153,7 +157,12 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
   }
 
   it should "detect invalid pair construction if missing right or left" in {
-    val results = WdlPairType(WdlStringType, WdlIntegerType).coerceRawValue(JsObject("Left" -> JsString("a")))
+    val invalidPair =
+      """
+        |{ "Left": "a" }
+      """.stripMargin.parseJson
+
+    val results = WdlPairType(WdlStringType, WdlIntegerType).coerceRawValue(invalidPair)
     results match {
       case Failure(ex) =>
         ex.getMessage should (startWith("No coercion defined from") and endWith("to 'Pair[String, Int]'."))
@@ -161,7 +170,12 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
   }
 
   it should "detect invalid pair construction if JsObject is of size >2" in {
-    val results = WdlPairType(WdlStringType, WdlIntegerType).coerceRawValue(JsObject("Left" -> JsString("a"), "Right" -> JsNumber(1), "Middle" -> JsString("cheating")))
+    val invalidPair =
+      """
+        |{ "Left": "a", "Middle": "notAllowed", "Right": 1 }
+      """.stripMargin.parseJson
+
+    val results = WdlPairType(WdlStringType, WdlIntegerType).coerceRawValue(invalidPair)
     results match {
       case Failure(ex) =>
         ex.getMessage should (startWith("No coercion defined from") and endWith("to 'Pair[String, Int]'."))
@@ -169,11 +183,22 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
   }
 
   it should "coerce a JsObject to a WdlPair regardless of canonical capitalization" in {
-    val jsArray = JsObject("LefT" -> JsString("a"), "right" -> JsNumber(1))
+    val validCaps =
+      """
+        |{ "LefT": "a", "right": 1 }
+      """.stripMargin.parseJson
 
-    WdlPairType(WdlStringType, WdlIntegerType).coerceRawValue(jsArray) match {
+    WdlPairType(WdlStringType, WdlIntegerType).coerceRawValue(validCaps) match {
       case Success(array) => array shouldEqual simplePair
       case Failure(f) => fail(s"exception while coercing JsObject: $f")
+    }
+  }
+
+  it should "return an error if pair types can't be coerced" in {
+    val results = WdlPairType(WdlIntegerType, WdlIntegerType).coerceRawValue(JsObject("Left" -> JsString("a")))
+    results match {
+      case Failure(ex) =>
+        ex.getMessage should (startWith("No coercion defined from") and endWith("to 'Pair[Int, Int]'."))
     }
   }
 }
