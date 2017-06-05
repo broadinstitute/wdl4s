@@ -7,7 +7,7 @@
   "summary.log": "TaskOutput",
   "test1": "WdlWorkflow",
   "test1.bfile": "Declaration",
-  "test1.summary": "TaskCall",
+  "test1.summary": "WdlTaskCall",
   "test1.summary.bfile": "Declaration",
   "test1.summary.hwe": "CallOutput",
   "test1.summary.imiss": "CallOutput",

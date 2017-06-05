@@ -6,6 +6,4 @@ trait Output extends DeclarationInterface {
   def requiredExpression: WdlExpression
 
   override val expression = Option(requiredExpression)
-
-  def toWom = Callable.OutputDefinition(unqualifiedName, wdlType, requiredExpression)
 }

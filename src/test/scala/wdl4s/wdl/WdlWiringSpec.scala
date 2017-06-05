@@ -183,11 +183,11 @@ class WdlWiringSpec extends FlatSpec with Matchers {
     }
   }
 
-  private def expectedUpstreamAncestry(testDir: File, namespace: WdlNamespaceWithWorkflow): Map[GraphNode, Set[Scope]] = {
+  private def expectedUpstreamAncestry(testDir: File, namespace: WdlNamespaceWithWorkflow): Map[WdlGraphNode, Set[Scope]] = {
     val expectedUpstreamFile = testDir / "upstreamAncestry.expectations"
 
     if (!expectedUpstreamFile.exists) {
-      val upstreamFqns = namespace.descendants.collect({ case n: GraphNode => n }) map { node =>
+      val upstreamFqns = namespace.descendants.collect({ case n: WdlGraphNode => n }) map { node =>
         node.fullyQualifiedName -> JsArray(node.upstreamAncestry.toVector.map(_.fullyQualifiedName).sorted.map(JsString(_)))
       }
       val jsObject = JsObject(ListMap(upstreamFqns.toSeq.sortBy(_._1): _*))
@@ -197,16 +197,16 @@ class WdlWiringSpec extends FlatSpec with Matchers {
     expectedUpstreamFile.contentAsString.parseJson.asInstanceOf[JsObject].fields.asInstanceOf[Map[String, JsArray]] map {
       case (k, v) =>
         val expectedUpstreamAncestors = v.elements.asInstanceOf[Vector[JsString]].map(n => namespace.resolve(n.value).get).toSet
-        val resolvedFqn = namespace.resolve(k).get.asInstanceOf[GraphNode]
+        val resolvedFqn = namespace.resolve(k).get.asInstanceOf[WdlGraphNode]
         resolvedFqn -> expectedUpstreamAncestors
     }
   }
 
-  private def expectedUpstream(testDir: File, namespace: WdlNamespaceWithWorkflow): Map[GraphNode, Set[Scope]] = {
+  private def expectedUpstream(testDir: File, namespace: WdlNamespaceWithWorkflow): Map[WdlGraphNode, Set[Scope]] = {
     val expectedUpstreamFile = testDir / "upstream.expectations"
 
     if (!expectedUpstreamFile.exists) {
-      val upstreamFqns = namespace.descendants.collect({ case n: GraphNode => n }) map { node =>
+      val upstreamFqns = namespace.descendants.collect({ case n: WdlGraphNode => n }) map { node =>
         node.fullyQualifiedName -> JsArray(node.upstream.toVector.map(_.fullyQualifiedName).sorted.map(JsString(_)))
       }
       val jsObject = JsObject(ListMap(upstreamFqns.toSeq.sortBy(_._1): _*))
@@ -216,16 +216,16 @@ class WdlWiringSpec extends FlatSpec with Matchers {
     expectedUpstreamFile.contentAsString.parseJson.asInstanceOf[JsObject].fields.asInstanceOf[Map[String, JsArray]] map {
       case (k, v) =>
         val expectedUpstream = v.elements.asInstanceOf[Vector[JsString]].map(n => namespace.resolve(n.value).get).toSet
-        val resolvedFqn = namespace.resolve(k).get.asInstanceOf[GraphNode]
+        val resolvedFqn = namespace.resolve(k).get.asInstanceOf[WdlGraphNode]
         resolvedFqn -> expectedUpstream
     }
   }
 
-  private def expectedDownstream(testDir: File, namespace: WdlNamespaceWithWorkflow): Map[GraphNode, Set[Scope]] = {
+  private def expectedDownstream(testDir: File, namespace: WdlNamespaceWithWorkflow): Map[WdlGraphNode, Set[Scope]] = {
     val expectedDownstreamFile = testDir / "downstream.expectations"
 
     if (!expectedDownstreamFile.exists) {
-      val downstreamFqns = namespace.descendants.collect({ case n: GraphNode => n }) map { node =>
+      val downstreamFqns = namespace.descendants.collect({ case n: WdlGraphNode => n }) map { node =>
         node.fullyQualifiedName -> JsArray(node.downstream.toVector.map(_.fullyQualifiedName).sorted.map(JsString(_)))
       }
       val jsObject = JsObject(ListMap(downstreamFqns.toSeq.sortBy(_._1): _*))
@@ -234,7 +234,7 @@ class WdlWiringSpec extends FlatSpec with Matchers {
 
     expectedDownstreamFile.contentAsString.parseJson.asInstanceOf[JsObject].fields.asInstanceOf[Map[String, JsArray]] map { case (k, v) =>
       val expectedDownstream = v.elements.asInstanceOf[Vector[JsString]].map(n => namespace.resolve(n.value).get).toSet
-      val resolvedFqn = namespace.resolve(k).get.asInstanceOf[GraphNode]
+      val resolvedFqn = namespace.resolve(k).get.asInstanceOf[WdlGraphNode]
       resolvedFqn -> expectedDownstream
     }
   }

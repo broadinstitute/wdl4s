@@ -188,7 +188,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
      """.stripMargin
   }
 
-  def memberAccessReferencesAbsentCallOutput(memberAccessAst: Ast, call: Call): String = {
+  def memberAccessReferencesAbsentCallOutput(memberAccessAst: Ast, call: WdlCall): String = {
     val rhsAst = memberAccessAst.getAttribute("rhs").asInstanceOf[Terminal]
     val memberAccess = MemberAccess(memberAccessAst)
     val taskName = call.unqualifiedName
@@ -313,7 +313,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
 
     val (parentName, missingType) = parent match {
       case Some(t: WdlTask) => (s"task '${t.unqualifiedName}'" , "value")
-      case Some(t: TaskCall) => (s"task '${t.task.unqualifiedName}'" , "value")
+      case Some(t: WdlTaskCall) => (s"task '${t.task.unqualifiedName}'" , "value")
       case Some(other) => ("workflow", "value or call")
       case None => ("", "")
     }

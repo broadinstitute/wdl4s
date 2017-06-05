@@ -3,47 +3,47 @@ package wdl4s.wdl
 import wdl4s.parser.WdlParser.Terminal
 import wdl4s.wdl.AstTools.EnhancedAstNode
 
-sealed trait GraphNode extends Scope {
+sealed trait WdlGraphNode extends Scope {
 
   /**
     * The set of all graph nodes which are (transitively) upstream from this one.
     */
-  final lazy val upstreamAncestry: Set[GraphNode] = GraphNode.calculateUpstreamAncestry(Set.empty, this)
+  final lazy val upstreamAncestry: Set[WdlGraphNode] = WdlGraphNode.calculateUpstreamAncestry(Set.empty, this)
 
-  def referencedNodes: Iterable[GraphNode]
+  def referencedNodes: Iterable[WdlGraphNode]
 
   /**
     * The set of all graph nodes which are a single step upstream from this one.
     */
-  final lazy val upstream: Set[GraphNode] = {
+  final lazy val upstream: Set[WdlGraphNode] = {
     // If we are inside the scope of another graph node (i.e. via document element ancestry), then
     // that is also upstream of us.
     val closestScopedAncestor = ancestry.collectFirst({
-      case ancestor: GraphNode => ancestor
+      case ancestor: WdlGraphNode => ancestor
     })
 
     (referencedNodes ++ closestScopedAncestor.toSeq).toSet
   }
 
-  final lazy val downstream: Set[GraphNode] = {
+  final lazy val downstream: Set[WdlGraphNode] = {
     for {
       node <- namespace.descendants.collect({
-        case n: GraphNode if n.fullyQualifiedName != fullyQualifiedName => n
+        case n: WdlGraphNode if n.fullyQualifiedName != fullyQualifiedName => n
       })
       if node.upstream.contains(this)
     } yield node
   }
 }
 
-object GraphNode {
-  private def calculateUpstreamAncestry(currentSet: Set[GraphNode], graphNode: GraphNode): Set[GraphNode] = {
+object WdlGraphNode {
+  private def calculateUpstreamAncestry(currentSet: Set[WdlGraphNode], graphNode: WdlGraphNode): Set[WdlGraphNode] = {
     val setWithUpstream = currentSet ++ graphNode.upstream
     val updatesNeeded = graphNode.upstream -- currentSet
     updatesNeeded.foldLeft(setWithUpstream)(calculateUpstreamAncestry)
   }
 }
 
-trait GraphNodeWithUpstreamReferences extends GraphNode {
+trait WdlGraphNodeWithUpstreamReferences extends WdlGraphNode {
   def upstreamReferences: Iterable[Terminal]
 
   // If we have variable reference to other graph nodes, then they are upstream from us.
@@ -54,7 +54,7 @@ trait GraphNodeWithUpstreamReferences extends GraphNode {
     } yield node
 }
 
-trait GraphNodeWithInputs extends GraphNode {
+trait WdlGraphNodeWithInputs extends WdlGraphNode {
   def inputMappings: Map[String, WdlExpression]
 
   override final def referencedNodes = for {

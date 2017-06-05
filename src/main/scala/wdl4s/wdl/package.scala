@@ -1,6 +1,6 @@
 package wdl4s
 
-import wdl4s.wdl.GraphNode
+import wdl4s.wdl.WdlGraphNode
 import wdl4s.wdl.exception.OutputVariableLookupException
 import wdl4s.wdl.values.WdlValue
 
@@ -15,9 +15,9 @@ package object wdl {
   type LocallyQualifiedName = String
   type EvaluatedTaskInputs = Map[Declaration, WdlValue]
   type ImportResolver = String => WdlSource
-  type OutputResolver = (GraphNode, Option[Int]) => Try[WdlValue]
+  type OutputResolver = (WdlGraphNode, Option[Int]) => Try[WdlValue]
   
-  val NoOutputResolver: OutputResolver = (node: GraphNode, i: Option[Int]) => Failure(new OutputVariableLookupException(node, i))
+  val NoOutputResolver: OutputResolver = (node: WdlGraphNode, i: Option[Int]) => Failure(new OutputVariableLookupException(node, i))
 
   trait TsvSerializable {
     def tsvSerialize: Try[String]

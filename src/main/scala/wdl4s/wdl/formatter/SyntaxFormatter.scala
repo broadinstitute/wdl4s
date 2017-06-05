@@ -186,12 +186,12 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
   }
 
   private def formatScope(scope: Scope, level: Int): String = scope match {
-    case c: TaskCall => formatCall(c, level)
+    case c: WdlTaskCall => formatCall(c, level)
     case s: Scatter => formatScatter(s, level)
     case d: DeclarationInterface => formatDeclaration(d, level)
   }
 
-  private def formatCall(call: TaskCall, level: Int): String = {
+  private def formatCall(call: WdlTaskCall, level: Int): String = {
     val header = s"${highlighter.keyword("call")} ${highlighter.name(call.task.name)}${formatCallAlias(call)}"
     if (call.inputMappings.isEmpty) {
       indent(header, level)
@@ -213,7 +213,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
        |}""".stripMargin, level)
   }
 
-  private def formatCallAlias(call: TaskCall): String = {
+  private def formatCallAlias(call: WdlTaskCall): String = {
     call.alias.map {a => s" as ${highlighter.alias(a)}"}.getOrElse("")
   }
 }
