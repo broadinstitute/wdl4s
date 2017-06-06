@@ -152,7 +152,7 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
 
     WdlArrayType(WdlPairType(WdlArrayType(WdlStringType), WdlArrayType(WdlIntegerType))).coerceRawValue(complexJsArray) match {
       case Success(array) => array shouldEqual arrayOfPairsOfArrays
-      case Failure(f) => fail(s"exception while coercing JsObject: $f")
+      case Failure(f) => fail(s"exception while coercing JsObject to WdlPair: $f")
     }
   }
 
@@ -166,6 +166,7 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
     results match {
       case Failure(ex) =>
         ex.getMessage should (startWith("No coercion defined from") and endWith("to 'Pair[String, Int]'."))
+      case Success(_) => fail("Unexpected successful coercion to WdlPair")
     }
   }
 
@@ -179,6 +180,21 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
     results match {
       case Failure(ex) =>
         ex.getMessage should (startWith("No coercion defined from") and endWith("to 'Pair[String, Int]'."))
+      case Success(_) => fail("Unexpected successful coercion to WdlPair")
+    }
+  }
+
+  it should "detect invalid pair construction if Left and/or Right are undefined in the JsObject" in {
+    val invalidPair =
+      """
+        |{ "notLeft": "a", "notRight": 1 }
+      """.stripMargin.parseJson
+
+    val results = WdlPairType(WdlStringType, WdlIntegerType).coerceRawValue(invalidPair)
+    results match {
+      case Failure(ex) =>
+        ex.getMessage should (startWith("Failed to coerce") and endWith("requires for Right/Left value(s) to be defined.)"))
+      case Success(_) => fail("Unexpected successful coercion to WdlPair")
     }
   }
 
@@ -190,7 +206,7 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
 
     WdlPairType(WdlStringType, WdlIntegerType).coerceRawValue(validCaps) match {
       case Success(array) => array shouldEqual simplePair
-      case Failure(f) => fail(s"exception while coercing JsObject: $f")
+      case Failure(f) => fail(s"exception while coercing JsObject to WdlPair: $f")
     }
   }
 
@@ -199,6 +215,7 @@ class WdlPairTypeSpec extends FlatSpec with Matchers {
     results match {
       case Failure(ex) =>
         ex.getMessage should (startWith("No coercion defined from") and endWith("to 'Pair[Int, Int]'."))
+      case Success(_) => fail("Unexpected successful coercion to WdlPair")
     }
   }
 }
