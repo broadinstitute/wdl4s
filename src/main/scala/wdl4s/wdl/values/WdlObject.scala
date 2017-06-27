@@ -2,7 +2,7 @@ package wdl4s.wdl.values
 
 import wdl4s.wdl.types._
 import wdl4s.wdl.util.FileUtil
-import wdl4s.wdl.{Call, TaskCall, TsvSerializable}
+import wdl4s.wdl.{WdlCall, WdlTaskCall, TsvSerializable}
 
 import scala.util.{Failure, Success, Try}
 
@@ -82,7 +82,7 @@ case class WdlObject(value: Map[String, WdlValue]) extends WdlValue with WdlObje
   }
 }
 
-case class WdlCallOutputsObject(call: Call, outputs: Map[String, WdlValue]) extends WdlValue with WdlObjectLike {
+case class WdlCallOutputsObject(call: WdlCall, outputs: Map[String, WdlValue]) extends WdlValue with WdlObjectLike {
   val wdlType = WdlCallOutputsObjectType(call)
   val value = outputs
 }

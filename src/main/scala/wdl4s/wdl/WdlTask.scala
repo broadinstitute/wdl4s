@@ -64,9 +64,6 @@ case class WdlTask(name: String,
                    parameterMeta: Map[String, String],
                    ast: Ast) extends WdlCallable {
 
-  // TODO: Reinstate inputs
-  lazy val womTaskDefinition: TaskDefinition = TaskDefinition(name, commandTemplate, runtimeAttributes, meta, parameterMeta, outputs.map(_.toWom).toSet, Set.empty) // declarations)
-
   override val unqualifiedName: LocallyQualifiedName = name
 
   // Assumes that this will not be accessed before the children for the task are set, otherwise it will be empty

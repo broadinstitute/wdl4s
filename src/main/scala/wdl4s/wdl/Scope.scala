@@ -70,11 +70,11 @@ trait Scope {
   /**
     * Descendants that are Calls
     */
-  lazy val calls: Set[Call] = descendants.collect({ case c: Call => c })
+  lazy val calls: Set[WdlCall] = descendants.collect({ case c: WdlCall => c })
   
-  lazy val taskCalls: Set[TaskCall] = calls collect { case c: TaskCall => c }
+  lazy val taskCalls: Set[WdlTaskCall] = calls collect { case c: WdlTaskCall => c }
   
-  lazy val workflowCalls: Set[WorkflowCall] = calls collect { case c: WorkflowCall => c }
+  lazy val workflowCalls: Set[WdlWorkflowCall] = calls collect { case c: WdlWorkflowCall => c }
 
   /**
     * Descendants that are Scatters
@@ -151,7 +151,7 @@ trait Scope {
     * Performs scope resolution starting from this scope and walking up the lexical hierarchy
     * until it finds a GraphNode with the `name` as its unqualifiedName
     */
-  def resolveVariable(name: String, relativeTo: Scope = this): Option[GraphNode] = {
+  def resolveVariable(name: String, relativeTo: Scope = this): Option[WdlGraphNode] = {
     val siblingScopes = if (children.contains(relativeTo))
       // For declarations, only resolve to declarations that are lexically before this declaration
       children.dropRight(children.size - children.indexOf(relativeTo) )
@@ -159,7 +159,7 @@ trait Scope {
 
     val localLookup = siblingScopes collect {
       case d: Declaration if d.unqualifiedName == name => d
-      case c: TaskCall if c.unqualifiedName == name => c
+      case c: WdlTaskCall if c.unqualifiedName == name => c
       case o: TaskOutput if o.unqualifiedName == name => o
     }
 
@@ -215,7 +215,7 @@ trait Scope {
       }
     }
     
-    def fromOutputs(node: GraphNode) = {
+    def fromOutputs(node: WdlGraphNode) = {
       def withShard(s: Scatter) = {
         shards.get(s) map { shard =>
           outputResolver(node, Option(shard))
@@ -252,7 +252,7 @@ trait Scope {
       fromOutputs(declaration) recoverWith { case _ => evaluate }
     }
 
-    def handleCallEvaluation(call: Call): Try[WdlValue] = fromOutputs(call)
+    def handleCallEvaluation(call: WdlCall): Try[WdlValue] = fromOutputs(call)
 
     def lookup(name: String): WdlValue = {
       val scopeResolvedValue = resolveVariable(name, relativeTo) map {
@@ -261,7 +261,7 @@ trait Scope {
           knownInputs.get(scope.fullyQualifiedName) map Success.apply getOrElse {
             Failure(new VariableLookupException(s"Could not find value in inputs map."))
           }
-        case call: Call => handleCallEvaluation(call)
+        case call: WdlCall => handleCallEvaluation(call)
         case scatter: Scatter => handleScatterResolution(scatter)
         case declaration: DeclarationInterface if declaration.expression.isDefined => handleDeclarationEvaluation(declaration)
         case scope => Failure(new VariableLookupException(s"Variable $name resolved to scope ${scope.fullyQualifiedName} but cannot be evaluated."))

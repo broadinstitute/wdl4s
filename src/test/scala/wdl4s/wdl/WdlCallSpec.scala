@@ -8,7 +8,7 @@ import wdl4s.wdl.values._
 
 import scala.util.{Failure, Success, Try}
 
-class CallSpec extends WordSpec with Matchers {
+class WdlCallSpec extends WordSpec with Matchers {
 
   "evaluate its declarations" in {
     val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.TaskDeclarationsWdl.wdlSource(), Seq.empty).get
@@ -19,7 +19,7 @@ class CallSpec extends WordSpec with Matchers {
 
     val inputs = namespace.coerceRawInputs(SampleWdl.TaskDeclarationsWdl.rawInputs).get
     
-    def outputResolver(call: GraphNode, index: Option[Int]): Try[WdlValue] = {
+    def outputResolver(call: WdlGraphNode, index: Option[Int]): Try[WdlValue] = {
       (call, index) match {
         case (c, Some(2)) if c == callT => Success(WdlCallOutputsObject(callT, Map("o" -> WdlString(s"c ${index.getOrElse(-1)}"))))
         case (c, Some(2)) if c == callT3 => Success(WdlCallOutputsObject(callT, Map("o" -> WdlString(s"c ${index.getOrElse(-1)}"))))

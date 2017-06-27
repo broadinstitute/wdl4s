@@ -9,10 +9,10 @@
   "w.$scatter_0": "Scatter",
   "w.$scatter_1": "Scatter",
   "w.array": "Declaration",
-  "w.inner": "TaskCall",
+  "w.inner": "WdlTaskCall",
   "w.inner.i": "Declaration",
   "w.inner.out": "CallOutput",
-  "w.outer": "TaskCall",
+  "w.outer": "WdlTaskCall",
   "w.outer.matrix": "Declaration",
   "w.outer.tsv": "CallOutput"
 }

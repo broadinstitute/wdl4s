@@ -4,18 +4,18 @@ import wdl4s.wdl.AstTools.EnhancedAstNode
 import wdl4s.wdl.exception.{ValidationException, VariableLookupException, VariableNotFoundException}
 import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
-import wdl4s.wdl.types.{WdlAnyType, WdlOptionalType}
+import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.values.{WdlOptionalValue, WdlValue}
 
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
-object Call {
+object WdlCall {
   def apply(ast: Ast,
             namespaces: Seq[WdlNamespace],
             tasks: Seq[WdlTask],
             workflows: Seq[WdlWorkflow],
-            wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Call = {
+            wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): WdlCall = {
     val alias: Option[String] = ast.getAttribute("alias") match {
       case x: Terminal => Option(x.getSourceString)
       case _ => None
@@ -30,8 +30,8 @@ object Call {
     val callInputSectionMappings = processCallInput(ast, wdlSyntaxErrorFormatter)
 
     callable match {
-      case task: WdlTask => new TaskCall(alias, task, callInputSectionMappings, ast)
-      case workflow: WdlWorkflow => new WorkflowCall(alias, workflow, callInputSectionMappings, ast)
+      case task: WdlTask => WdlTaskCall(alias, task, callInputSectionMappings, ast)
+      case workflow: WdlWorkflow => WdlWorkflowCall(alias, workflow, callInputSectionMappings, ast)
     }
   }
 
@@ -57,22 +57,22 @@ object Call {
  * @param inputMappings A map of task-local input names and corresponding expression for the
  *                      value of those inputs
  */
-sealed abstract class Call(val alias: Option[String],
-                           val callable: WdlCallable,
-                           val inputMappings: Map[String, WdlExpression],
-                           val ast: Ast) extends GraphNodeWithInputs with WorkflowScoped {
+sealed abstract class WdlCall(val alias: Option[String],
+                              val callable: WdlCallable,
+                              val inputMappings: Map[String, WdlExpression],
+                              val ast: Ast) extends WdlGraphNodeWithInputs with WorkflowScoped {
   val unqualifiedName: String = alias getOrElse callable.unqualifiedName
-  
+
   def callType: String
-  
+
   def toCallOutput(output: Output) = output match {
     case taskOutput: TaskOutput => CallOutput(this, taskOutput.copy(parent = Option(this)))
     case workflowOutput: WorkflowOutput => CallOutput(this, workflowOutput.copy(parent = Option(this)))
     case error => throw new Exception(s"Invalid output type ${error.getClass.getSimpleName}")
   }
-  
+
   lazy val outputs: Seq[CallOutput] = callable.outputs map toCallOutput
-  
+
   override def children: Seq[Scope] = super.children ++ outputs
 
   /**
@@ -118,7 +118,7 @@ sealed abstract class Call(val alias: Option[String],
       currentInputs + (declaration -> coercedDeclaration)
     }
 
-    val declarationAttempts = callable.declarations.foldLeft[EvaluatedDeclarations](Map.empty)(doDeclaration _)
+    val declarationAttempts = callable.declarations.foldLeft[EvaluatedDeclarations](Map.empty)(doDeclaration)
 
     val (success, errors) = declarationAttempts partition {
       case (_, Success(_)) => true
@@ -129,7 +129,7 @@ sealed abstract class Call(val alias: Option[String],
       val throwables = errors.toList map { _._2.failed.get }
       Failure(ValidationException(s"Input evaluation for Call $fullyQualifiedName failed.", throwables))
     } else {
-      Success(success map { case (d, v) => d -> v.get } toMap)
+      Success(success map { case (d, v) => d -> v.get })
     }
   }
 
@@ -195,14 +195,14 @@ sealed abstract class Call(val alias: Option[String],
           }
       }
     }
-    
+
     lookup
   }
 }
 
-case class TaskCall(override val alias: Option[String], task: WdlTask, override val inputMappings: Map[String, WdlExpression], override val ast: Ast) extends Call(alias, task, inputMappings, ast) {
+case class WdlTaskCall(override val alias: Option[String], task: WdlTask, override val inputMappings: Map[String, WdlExpression], override val ast: Ast) extends WdlCall(alias, task, inputMappings, ast) {
   override val callType = "call"
 }
-case class WorkflowCall(override val alias: Option[String], calledWorkflow: WdlWorkflow, override val inputMappings: Map[String, WdlExpression], override val ast: Ast) extends Call(alias, calledWorkflow, inputMappings, ast) {
+case class WdlWorkflowCall(override val alias: Option[String], calledWorkflow: WdlWorkflow, override val inputMappings: Map[String, WdlExpression], override val ast: Ast) extends WdlCall(alias, calledWorkflow, inputMappings, ast) {
   override val callType = "workflow"
 }

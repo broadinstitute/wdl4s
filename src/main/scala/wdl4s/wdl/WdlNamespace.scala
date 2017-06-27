@@ -41,15 +41,13 @@ sealed trait WdlNamespace extends WdlValue with Scope {
   }
   def resolveCallOrOutputOrDeclaration(fqn: FullyQualifiedName): Option[Scope] = {
     val callsAndOutputs = descendants collect { 
-      case c: Call => c
+      case c: WdlCall => c
       case d: Declaration => d
       case o: TaskOutput => o
       case o: CallOutput => o
     }
     callsAndOutputs.find(d => d.fullyQualifiedName == fqn || d.fullyQualifiedNameWithIndexScopes == fqn)
   }
-
-  lazy val allCallables: Seq[Callable] = tasks.map(_.womTaskDefinition) ++ workflows.map(_.womWorkflowDefinition) ++ namespaces.flatMap(_.allCallables)
 }
 
 /**
@@ -77,9 +75,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
                                     wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
                                     ast: Ast) extends WdlNamespace {
 
-
-  lazy val entryPoint = workflow.womWorkflowDefinition
-  lazy val womExecutable = Executable(entryPoint, allCallables.diff(List(entryPoint)).toSet)
+  lazy val womExecutable = Executable(workflow.womWorkflowDefinition)
 
   override val workflows = Seq(workflow)
 
@@ -243,7 +239,7 @@ object WdlNamespace {
 
     def getScope(scopeAst: Ast, parent: Option[Scope]): Scope = {
       val scope = scopeAst.getName match {
-        case AstNodeName.Call => Call(scopeAst, namespaces, topLevelTasks, workflows, wdlSyntaxErrorFormatter)
+        case AstNodeName.Call => WdlCall(scopeAst, namespaces, topLevelTasks, workflows, wdlSyntaxErrorFormatter)
         case AstNodeName.Workflow => WdlWorkflow(scopeAst, wdlSyntaxErrorFormatter)
         case AstNodeName.Declaration => Declaration(scopeAst, wdlSyntaxErrorFormatter, parent)
         case AstNodeName.Scatter =>
@@ -346,7 +342,7 @@ object WdlNamespace {
       * SYNTAX CHECKS
       */
 
-    val callInputSectionErrors = namespace.descendants.collect({ case c: TaskCall => c }).flatMap(
+    val callInputSectionErrors = namespace.descendants.collect({ case c: WdlTaskCall => c }).flatMap(
       validateCallInputSection(_, wdlSyntaxErrorFormatter)
     )
     
@@ -456,7 +452,7 @@ object WdlNamespace {
     val resolved = from.resolveVariable(n)
     resolved match {
       case Some(d: DeclarationInterface) => d.relativeWdlType(from)
-      case Some(c: Call) => WdlCallOutputsObjectType(c)
+      case Some(c: WdlCall) => WdlCallOutputsObjectType(c)
       case Some(s: Scatter) => s.collection.evaluateType(lookupType(s), new WdlStandardLibraryFunctionsType, Option(from)) match {
         case Success(a: WdlArrayType) => a.memberType
         case _ => throw new VariableLookupException(s"Variable $n references a scatter block ${s.fullyQualifiedName}, but the collection does not evaluate to an array")
@@ -488,7 +484,7 @@ object WdlNamespace {
     }
   }
 
-  private def validateCallInputSection(call: TaskCall, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Seq[SyntaxError] = {
+  private def validateCallInputSection(call: WdlTaskCall, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Seq[SyntaxError] = {
     val callInputSections = AstTools.callInputSectionIOMappings(call.ast, wdlSyntaxErrorFormatter)
 
     val invalidCallInputReferences = callInputSections flatMap { ast =>
@@ -514,8 +510,8 @@ object WdlNamespace {
         val requestedValue = memberAccess.rhs
         val resolvedScope: Option[Scope] = call.resolveVariable(memberAccess.lhs)
         resolvedScope match {
-          case Some(c: Call) if c.outputs.exists(_.unqualifiedName == requestedValue) => None
-          case Some(c: Call) =>
+          case Some(c: WdlCall) if c.outputs.exists(_.unqualifiedName == requestedValue) => None
+          case Some(c: WdlCall) =>
             Option(new SyntaxError(wdlSyntaxErrorFormatter.memberAccessReferencesAbsentCallOutput(memberAccessAst, c)))
           case Some(s: Scatter) => 
             s.collection.evaluateType(lookupType(s), new WdlStandardLibraryFunctionsType) map {

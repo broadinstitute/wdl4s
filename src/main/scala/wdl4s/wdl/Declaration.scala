@@ -49,7 +49,7 @@ object DeclarationInterface {
   *
   * Both the definition of test_file and wf_string are declarations
   */
-trait DeclarationInterface extends GraphNodeWithUpstreamReferences {
+trait DeclarationInterface extends WdlGraphNodeWithUpstreamReferences {
   def wdlType: WdlType
   def expression: Option[WdlExpression]
   def ast: Ast

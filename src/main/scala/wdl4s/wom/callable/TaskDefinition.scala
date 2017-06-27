@@ -1,23 +1,29 @@
 package wdl4s.wom.callable
 
+import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.wdl._
 import wdl4s.wdl.command.CommandPart
 import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.util.StringUtil
-import wdl4s.wdl.values.{WdlFile, WdlValue}
+import wdl4s.wdl.values.WdlValue
+import wdl4s.wom.expression.Expression
+import wdl4s.wom.graph.{Graph, TaskCall}
 
 import scala.language.postfixOps
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 case class TaskDefinition(name: String,
-                          commandTemplate: Seq[CommandPart],
-                          runtimeAttributes: RuntimeAttributes,
-                          meta: Map[String, String],
-                          parameterMeta: Map[String, String],
-                          outputs: Set[Callable.OutputDefinition],
-                          inputs: Set[_ >: Callable.InputDefinition]) extends Callable {
+               commandTemplate: Seq[CommandPart],
+               runtimeAttributes: RuntimeAttributes,
+               meta: Map[String, String],
+               parameterMeta: Map[String, String],
+               outputs: Set[Callable.OutputDefinition],
+               inputs: Set[_ <: Callable.InputDefinition],
+               declarations: List[(String, Expression)]) extends Callable {
 
   val unqualifiedName: LocallyQualifiedName = name
+
+  override lazy val graph: ErrorOr[Graph] = TaskCall.graphFromDefinition(this)
 
   def lookupFunction(knownInputs: WorkflowCoercedInputs,
                      wdlFunctions: WdlFunctions[WdlValue],
@@ -36,32 +42,6 @@ case class TaskDefinition(name: String,
 
   override def toString: String = s"[Task name=$name commandTemplate=$commandTemplate}]"
 
-  /**
-    * A lookup function that restricts known task values to input declarations
-    */
-  def inputsLookupFunction(inputs: WorkflowCoercedInputs,
-                           wdlFunctions: WdlFunctions[WdlValue],
-                           shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): String => WdlValue = ???
-
-  def evaluateFilesFromCommand(inputs: WorkflowCoercedInputs,
-                               functions: WdlFunctions[WdlValue]) = ???
-
-  /**
-    * Tries to determine files that will be created by the outputs of this task.
-    */
-  def findOutputFiles(inputs: WorkflowCoercedInputs,
-                      functions: WdlFunctions[WdlValue],
-                      silenceEvaluationErrors: Boolean = true): Seq[WdlFile] = {
-    val outputFiles = outputs.toList flatMap { taskOutput =>
-      val lookup = NoLookup // TODO: Reinstate: val lookup = lookupFunction(inputs, functions, relativeTo = taskOutput)
-      taskOutput.expression.evaluateFiles(lookup, functions, taskOutput.womType) match {
-        case Success(wdlFiles) => wdlFiles
-        case Failure(ex) => if (silenceEvaluationErrors) Seq.empty[WdlFile] else throw ex
-      }
-    }
-
-    outputFiles.distinct
-  }
 
   // TODO: fixup? The general version in Callable might not be good enough for Task:
 //  def evaluateOutputs(inputs: EvaluatedTaskInputs,
@@ -101,5 +81,4 @@ case class TaskDefinition(name: String,
 //    } toMap
     Map.empty
   }
-
 }

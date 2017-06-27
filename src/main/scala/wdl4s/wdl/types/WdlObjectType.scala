@@ -1,7 +1,7 @@
 package wdl4s.wdl.types
 
 import spray.json.JsObject
-import wdl4s.wdl.Call
+import wdl4s.wdl.WdlCall
 import wdl4s.wdl.values._
 
 import scala.util.{Failure, Success, Try}
@@ -49,7 +49,7 @@ case object WdlObjectType extends WdlType {
   def isMapCoercable(m: WdlMap) = isMapTypeCoercable(m.wdlType)
 }
 
-case class WdlCallOutputsObjectType(call: Call) extends WdlType {
+case class WdlCallOutputsObjectType(call: WdlCall) extends WdlType {
   val toWdlString: String = "Object"
 
   override protected def coercion = {
