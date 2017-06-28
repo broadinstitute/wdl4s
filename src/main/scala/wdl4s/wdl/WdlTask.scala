@@ -3,13 +3,16 @@ package wdl4s.wdl
 import java.util.regex.Pattern
 
 import lenthall.util.TryUtil
-import wdl4s.wdl.command.{CommandPart, ParameterCommandPart, StringCommandPart}
-import wdl4s.wdl.expression.{WdlFunctions, WdlStandardLibraryFunctions}
 import wdl4s.parser.WdlParser._
 import wdl4s.wdl.AstTools._
+import wdl4s.wdl.command.{CommandPart, ParameterCommandPart, StringCommandPart}
+import wdl4s.wdl.expression.{WdlFunctions, WdlStandardLibraryFunctions}
+import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.util.StringUtil
 import wdl4s.wdl.values.{WdlFile, WdlValue}
-import wdl4s.wom.callable.TaskDefinition
+import wdl4s.wom.callable.Callable.{OptionalInputDefinition, OptionalInputDefinitionWithDefault, RequiredInputDefinition}
+import wdl4s.wom.callable.{Callable, TaskDefinition}
+import wdl4s.wom.expression.{Expression, PlaceholderExpression}
 
 import scala.collection.JavaConverters._
 import scala.language.postfixOps
@@ -45,6 +48,7 @@ object WdlTask {
   }
 
   def empty: WdlTask = new WdlTask("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, null)
+
 }
 
 /**
@@ -63,6 +67,8 @@ case class WdlTask(name: String,
                    meta: Map[String, String],
                    parameterMeta: Map[String, String],
                    ast: Ast) extends WdlCallable {
+  
+  override lazy val womDefinition = buildWomTaskDefinition
 
   override val unqualifiedName: LocallyQualifiedName = name
 
@@ -204,4 +210,28 @@ case class WdlTask(name: String,
     } toMap
   }
 
+  private def buildWomTaskDefinition: TaskDefinition = TaskDefinition(
+    name,
+    commandTemplate,
+    runtimeAttributes,
+    meta,
+    parameterMeta,
+    outputs.map(_.womOutputDefinition).toSet,
+    buildWomInputs,
+    buildWomDeclarations
+  )
+
+  private def buildWomDeclarations: List[(String, Expression)] = declarations.toList collect {
+    case d if d.expression.nonEmpty =>
+      d.unqualifiedName -> PlaceholderExpression(d.wdlType)
+  }
+
+  private def buildWomInputs: Set[Callable.InputDefinition] = declarations collect {
+    case d if d.expression.isEmpty && !d.wdlType.isInstanceOf[WdlOptionalType] =>
+      RequiredInputDefinition(d.unqualifiedName, d.wdlType)
+    case d if d.expression.isEmpty && d.wdlType.isInstanceOf[WdlOptionalType] =>
+      OptionalInputDefinition(d.unqualifiedName, d.wdlType.asInstanceOf[WdlOptionalType])
+    case d if d.expression.nonEmpty && d.wdlType.isInstanceOf[WdlOptionalType] =>
+      OptionalInputDefinitionWithDefault(d.unqualifiedName, d.wdlType.asInstanceOf[WdlOptionalType], PlaceholderExpression(d.wdlType))
+  } toSet
 }

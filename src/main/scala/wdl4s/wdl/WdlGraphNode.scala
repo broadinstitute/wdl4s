@@ -1,7 +1,6 @@
 package wdl4s.wdl
 
-import wdl4s.parser.WdlParser.Terminal
-import wdl4s.wdl.AstTools.EnhancedAstNode
+import wdl4s.wdl.AstTools.{EnhancedAstNode, VariableReference}
 
 sealed trait WdlGraphNode extends Scope {
 
@@ -44,12 +43,12 @@ object WdlGraphNode {
 }
 
 trait WdlGraphNodeWithUpstreamReferences extends WdlGraphNode {
-  def upstreamReferences: Iterable[Terminal]
+  def upstreamReferences: Iterable[VariableReference]
 
   // If we have variable reference to other graph nodes, then they are upstream from us.
   override final def referencedNodes = for {
       variable <- upstreamReferences
-      node <- resolveVariable(variable.sourceString)
+      node <- resolveVariable(variable.terminal.sourceString)
       if node.fullyQualifiedNameWithIndexScopes != fullyQualifiedNameWithIndexScopes
     } yield node
 }
@@ -60,6 +59,7 @@ trait WdlGraphNodeWithInputs extends WdlGraphNode {
   override final def referencedNodes = for {
     expr <- inputMappings.values
     variable <- expr.variableReferences
-    node <- parent.flatMap{ _.resolveVariable(variable.sourceString) }
+    scope <- parent
+    node <- scope.resolveVariable(variable.terminal.sourceString)
   } yield node
 }

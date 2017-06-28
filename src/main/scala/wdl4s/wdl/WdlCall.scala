@@ -1,11 +1,13 @@
 package wdl4s.wdl
 
+import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.wdl.AstTools.EnhancedAstNode
 import wdl4s.wdl.exception.{ValidationException, VariableLookupException, VariableNotFoundException}
 import wdl4s.wdl.expression.WdlFunctions
-import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.values.{WdlOptionalValue, WdlValue}
+import wdl4s.wom.graph.CallNode.CallWithInputs
+import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphNodePort}
 
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
@@ -43,6 +45,30 @@ object WdlCall {
       (key, expression)
     } toMap
   }
+  
+  private def buildWomNodeAndInputs(wdlCall: WdlCall): CallWithInputs = {
+    val inputToOutputPort: Map[String, GraphNodePort.DeclarationOutputPort] = for {
+      (inputName, expr) <- wdlCall.inputMappings
+      variable <- expr.variableReferences
+      parent <- wdlCall.parent
+      node <- parent.resolveVariable(variable.terminal.sourceString)
+      outputPort = outputPortFromNode(node, variable.terminalSubIdentifier)
+    } yield inputName -> outputPort
+
+    CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), wdlCall.callable.womDefinition, inputToOutputPort)
+  }
+
+  private def outputPortFromNode(node: WdlGraphNode, terminal: Option[Terminal]): GraphNodePort.DeclarationOutputPort = {
+    (node, terminal) match {
+      case (wdlCall: WdlCall, Some(subTerminal)) =>
+        wdlCall.womGraphOutputPorts.find(_.name == subTerminal.sourceString) getOrElse {
+          throw new Exception(s"Cannot find referenced variable ${subTerminal.sourceString} in call ${wdlCall.unqualifiedName}")
+        }
+        // TODO implement when declarations are in WOM
+      case (_: Declaration, None) => throw new Exception("Declaration not yet supported in WOM")
+      case _ => throw new Exception(s"Unsupported node $node and terminal $terminal")
+    }
+  }
 }
 
 /**
@@ -64,6 +90,14 @@ sealed abstract class WdlCall(val alias: Option[String],
   val unqualifiedName: String = alias getOrElse callable.unqualifiedName
 
   def callType: String
+
+  private lazy val CallWithInputs(womNode, womInputs) = WdlCall.buildWomNodeAndInputs(this)
+
+  lazy val womCallNode: CallNode = womNode
+
+  lazy val womGraphInputNodes: Set[GraphInputNode] = womInputs
+
+  lazy val womGraphOutputPorts: Seq[GraphNodePort.DeclarationOutputPort] = outputs.map(_.toWomOutputPort)
 
   def toCallOutput(output: Output) = output match {
     case taskOutput: TaskOutput => CallOutput(this, taskOutput.copy(parent = Option(this)))
@@ -182,17 +216,15 @@ sealed abstract class WdlCall(val alias: Option[String],
 
       val resolutions = Seq(inputMappingsLookup, declarationExprLookup, declarationLookup, taskParentResolution)
 
-      resolutions.collectFirst({ case Success(value) => value}) match {
-        case Some(value) => value
-        case None =>
-          resolutions.toList.flatMap({
-            case Failure(ex: VariableNotFoundException) => None
-            case Failure(ex) => Option(ex) // Only take failures that are not VariableNotFoundExceptions
-            case _ => None
-          }) match {
-            case Nil => throw VariableNotFoundException(name)
-            case exs => throw new VariableLookupException(name, exs)
-          }
+      resolutions collectFirst { case Success(value) => value } getOrElse {
+        resolutions.toList.flatMap({
+          case Failure(_: VariableNotFoundException) => None
+          case Failure(ex) => Option(ex) // Only take failures that are not VariableNotFoundExceptions
+          case _ => None
+        }) match {
+          case Nil => throw VariableNotFoundException(name)
+          case exs => throw new VariableLookupException(name, exs)
+        }
       }
     }
 

@@ -4,6 +4,7 @@ import java.nio.file.Path
 
 import better.files._
 import wdl4s.wdl.WdlExpression.AstForExpressions
+import wdl4s.wdl.WdlExpression.AstNodeForExpressions
 import wdl4s.parser.WdlParser
 import wdl4s.parser.WdlParser._
 import wdl4s.wdl.types._
@@ -190,12 +191,12 @@ object AstTools {
   }
 
   /**
-   * Given a WDL file, this will simply parse it and return the syntax tree
+    * Given a WDL file, this will simply parse it and return the syntax tree
     *
     * @param wdlFile The file to parse
-   * @return an Abstract Syntax Tree (WdlParser.Ast) representing the structure of the code
-   * @throws WdlParser.SyntaxError if there was a problem parsing the source code
-   */
+    * @return an Abstract Syntax Tree (WdlParser.Ast) representing the structure of the code
+    * @throws WdlParser.SyntaxError if there was a problem parsing the source code
+    */
   def getAst(wdlFile: Path): Ast = getAst(File(wdlFile).contentAsString, File(wdlFile).name)
 
   def findAsts(ast: AstNode, name: String): Seq[Ast] = {
@@ -231,12 +232,28 @@ object AstTools {
     }
   }.keys
 
+  final case class VariableReference(terminal: Terminal, trail: Iterable[AstNode]) {
+    /**
+      * If this is a simple MemberAccess (both sides are terminals),
+      * find the rhs corresponding to "terminal" in the trail.
+      * e.g
+      * 
+      * if terminal is "a" and the trail contains a MemberAccess(lhs: Terminal("a"), rhs: Terminal("b")),
+      * this will return Some(Terminal("b"))
+      */
+    lazy val terminalSubIdentifier: Option[Terminal] = trail.collectFirst {
+      case a: Ast if a.isMemberAccess 
+        && a.getAttribute("lhs") == terminal
+        && a.getAttribute("rhs").isTerminal => a.getAttribute("rhs").asInstanceOf[Terminal]
+    }
+  }
+
   /**
     * All variable references in the expression AstNode that are not part of MemberAccess ASTs
     *
     * These represent anything that would need to be have scope resolution done on it to determine the value
     */
-  def findVariableReferences(expr: AstNode): Iterable[Terminal] = {
+  def findVariableReferences(expr: AstNode): Iterable[VariableReference] = {
     def isMemberAccessRhs(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
       /** e.g. for MemberAccess ast representing source code A.B.C, this would return true for only B,C and not A */
       trail.collect({ case a: Ast if a.isMemberAccess && a.getAttribute("rhs") == identifier => a }).nonEmpty
@@ -247,20 +264,50 @@ object AstTools {
         case _ => false
       }
     }
+
+   /* terminal is the "lefter" lhs
+    * trail is how we arrived to identifier from the original ast
+    * e.g #1 (in "pseudo ast code"):
+    * 
+    * If MemberAccess is "a.b"
+    * terminal will be Terminal("a")
+    * trail will be Seq(
+    *   MemberAccess(
+    *     lhs: Terminal("a"),
+    *     rhs: Terminal("b")
+    *   )  
+    * )
+    * 
+    * e.g #2:
+    * If MemberAccess is "a.b.c"
+    * terminal will be Terminal("a")
+    * trail will be Seq(
+    *   MemberAccess(
+    *     lhs: MemberAccess(lhs: Terminal("a"), rhs: Terminal("b")),
+    *     rhs: Terminal("c")
+    *   ),
+    *   MemberAccess(
+    *     lhs: Terminal("a"),
+    *     rhs: Terminal("b")
+    *   )
+    * )
+    * 
+    * There also might be other types of nodes in trail than MemberAccess depending the expression.
+    */
     expr.findTerminalsWithTrail("identifier").collect({
-      case (terminal, trail) if !isMemberAccessRhs(terminal, trail) && !isFunctionName(terminal, trail) => terminal
+      case (terminal, trail) if !isMemberAccessRhs(terminal, trail) && !isFunctionName(terminal, trail) => VariableReference(terminal, trail)
     })
   }
 
   /**
-   * Given a Call AST, this will validate that there is 0 or 1 'input' section with non-empty
-   * key/value pairs (if the input section is specified).  This will then return a Seq of
-   * IOMapping(key=<terminal> value=<expression ast>)
-   *
-   * @param ast The call AST
-   * @param wdlSyntaxErrorFormatter The wdl syntax error formatter
-   * @return Seq[Ast] where the AST is a IOMapping(key=<terminal> value=<expression ast>)
-   */
+    * Given a Call AST, this will validate that there is 0 or 1 'input' section with non-empty
+    * key/value pairs (if the input section is specified).  This will then return a Seq of
+    * IOMapping(key=<terminal> value=<expression ast>)
+    *
+    * @param ast The call AST
+    * @param wdlSyntaxErrorFormatter The wdl syntax error formatter
+    * @return Seq[Ast] where the AST is a IOMapping(key=<terminal> value=<expression ast>)
+    */
   def callInputSectionIOMappings(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Seq[Ast] = {
     val callTaskName = ast.getAttribute("task").asInstanceOf[Terminal]
 

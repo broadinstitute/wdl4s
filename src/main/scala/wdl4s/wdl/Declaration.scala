@@ -1,7 +1,7 @@
 package wdl4s.wdl
 
-import wdl4s.wdl.AstTools.EnhancedAstNode
 import wdl4s.parser.WdlParser.{Ast, AstNode}
+import wdl4s.wdl.AstTools.EnhancedAstNode
 import wdl4s.wdl.types.{WdlArrayType, WdlOptionalType, WdlType}
 
 object DeclarationInterface {
