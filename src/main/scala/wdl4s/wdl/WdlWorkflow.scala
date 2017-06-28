@@ -1,13 +1,15 @@
 package wdl4s.wdl
 
+import cats.data.Validated.{Invalid, Valid}
 import lenthall.util.TryUtil
 import wdl4s.parser.WdlParser._
 import wdl4s.wdl.AstTools._
+import wdl4s.wdl.exception.ValidationException
 import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlType
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.callable.WorkflowDefinition
-import wdl4s.wom.graph.Graph
+import wdl4s.wom.graph.{Graph, GraphNode}
 
 import scala.language.postfixOps
 import scala.util.Try
@@ -47,7 +49,16 @@ object WdlWorkflow {
     new WdlWorkflow(name, workflowOutputsWildcards, wdlSyntaxErrorFormatter, meta, parameterMeta, ast)
   }
 
-  def buildWomGraph(wdlWorkflow: WdlWorkflow): Graph = ???
+  def buildWomGraph(wdlWorkflow: WdlWorkflow): Graph = {
+    val graphNodes = wdlWorkflow.calls.foldLeft(Set.empty[GraphNode])({
+      case (currentNodes, call) => currentNodes ++ call.womGraphInputNodes + call.womCallNode
+    })
+
+    Graph.validateAndConstruct(graphNodes) match {
+      case Valid(wg) => wg.withDefaultOutputs
+      case Invalid(errors) => throw ValidationException("Unable to validate graph", errors.map(new Exception(_)).toList)
+    }
+  }
 
   /**
     * Convert this WdlWorkflow into a wom.components.Workflow
@@ -72,7 +83,7 @@ case class WdlWorkflow(unqualifiedName: String,
   /**
     * Convert this WdlWorkflow into a wom.components.Workflow
     */
-  lazy val womWorkflowDefinition: WorkflowDefinition = WdlWorkflow.womWorkflowDefinition(this)
+  override lazy val womDefinition: WorkflowDefinition = WdlWorkflow.womWorkflowDefinition(this)
 
   /**
    * FQNs for all inputs to this workflow and their associated types and possible postfix quantifiers.

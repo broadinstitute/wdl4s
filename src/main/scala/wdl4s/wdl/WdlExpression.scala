@@ -1,7 +1,7 @@
 package wdl4s.wdl
 
 import lenthall.exception.ThrowableAggregation
-import wdl4s.wdl.AstTools.EnhancedAstNode
+import wdl4s.wdl.AstTools.{EnhancedAstNode, VariableReference}
 import wdl4s.wdl.WdlExpression._
 import wdl4s.wdl.expression._
 import wdl4s.wdl.formatter.{NullSyntaxHighlighter, SyntaxHighlighter}
@@ -54,6 +54,8 @@ object WdlExpression {
           rhs.containsFunctionCalls
         case _ => false
       }
+    
+    def isTerminal: Boolean = astNode.isInstanceOf[Terminal]
   }
 
   val parser = new WdlParser()
@@ -183,7 +185,7 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
     this.topLevelMemberAccesses map { _.lhs }
   }
   def topLevelMemberAccesses: Set[MemberAccess] = AstTools.findTopLevelMemberAccesses(ast) map { MemberAccess(_) } toSet
-  def variableReferences: Iterable[Terminal] = AstTools.findVariableReferences(ast)
+  def variableReferences: Iterable[VariableReference] = AstTools.findVariableReferences(ast)
 }
 
 object TernaryIf {

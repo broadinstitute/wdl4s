@@ -4,14 +4,13 @@ import java.nio.file.{Path, Paths}
 
 import better.files._
 import lenthall.util.TryUtil
+import wdl4s.parser.WdlParser._
 import wdl4s.wdl.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.wdl.command.ParameterCommandPart
 import wdl4s.wdl.exception._
 import wdl4s.wdl.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStandardLibraryFunctionsType}
-import wdl4s.parser.WdlParser._
 import wdl4s.wdl.types._
 import wdl4s.wdl.values._
-import wdl4s.wom.callable.Callable
 import wdl4s.wom.executable.Executable
 
 import scala.collection.JavaConverters._
@@ -75,7 +74,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
                                     wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
                                     ast: Ast) extends WdlNamespace {
 
-  lazy val womExecutable = Executable(workflow.womWorkflowDefinition)
+  lazy val womExecutable = Executable(workflow.womDefinition)
 
   override val workflows = Seq(workflow)
 
@@ -405,8 +404,8 @@ object WdlNamespace {
       task <- namespace.tasks
       param <- task.commandTemplate.collect({ case p: ParameterCommandPart => p })
       variable <- param.expression.variableReferences
-      if !task.declarations.map(_.unqualifiedName).contains(variable.getSourceString)
-    } yield new SyntaxError(wdlSyntaxErrorFormatter.commandExpressionContainsInvalidVariableReference(task.ast.getAttribute("name").asInstanceOf[Terminal], variable))
+      if !task.declarations.map(_.unqualifiedName).contains(variable.terminal.getSourceString)
+    } yield new SyntaxError(wdlSyntaxErrorFormatter.commandExpressionContainsInvalidVariableReference(task.ast.getAttribute("name").asInstanceOf[Terminal], variable.terminal))
 
     val all = workflowOutputErrors ++ declarationErrors ++ scatterErrors ++ callInputSectionErrors ++ taskCommandReferenceErrors ++ duplicateSiblingScopeNameErrors
 
@@ -432,7 +431,7 @@ object WdlNamespace {
     * Determine the list of references in this expression to values which were never declared
     */
   def referencesToAbsentValues(container: Scope, expression: WdlExpression): Iterable[Terminal] =
-    expression.variableReferences filter { variable => container.resolveVariable(variable.sourceString).isEmpty }
+    expression.variableReferences collect { case variable if container.resolveVariable(variable.terminal.sourceString).isEmpty => variable.terminal }
 
   def validateDeclaration(declaration: DeclarationInterface, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Seq[SyntaxError] = {
     val invalidVariableReferences = for {
