@@ -25,37 +25,26 @@ object GraphNodePort {
     // TODO: Might end up wanting a backwards link to the InputPorts that use this (eg def downstream: Set[InputPort])?
   }
 
-  final case class ConnectedInputPort(name: String, womType: WdlType, upstreamPort: OutputPort, g: () => GraphNode) extends InputPort {
-    override def upstream = upstreamPort
-    override lazy val graphNode: GraphNode = g()
+  /**
+    * A mixin trait that allows a port with a 'g: Unit => GraphNode' be linked to its [[wdl4s.wom.graph.GraphNode]]
+    * after the GraphNode is constructed, using the [[wdl4s.wom.graph.GraphNode.GraphNodeSetter]]
+    */
+  sealed trait DelayedGraphNodePort { this: GraphNodePort =>
+    val g: Unit => GraphNode
+    override lazy val graphNode = g.apply(())
   }
 
-  final case class GraphOutputNodePort(upstreamPort: OutputPort, graphOutputNode: GraphOutputNode) extends InputPort {
-    override lazy val name = graphOutputNode.name
-    override lazy val womType = graphOutputNode.womType
-    override val graphNode = graphOutputNode
-
-    override def upstream: OutputPort = upstreamPort
-  }
+  final case class ConnectedInputPort(name: String, womType: WdlType, upstream: OutputPort, g: Unit => GraphNode) extends InputPort with DelayedGraphNodePort
 
   /**
     * For any graph node that uses a declarations to produce outputs (e.g. call, declaration):
     */
-  final case class DeclarationOutputPort(name: String, womType: WdlType, graphNode: GraphNode) extends OutputPort
+  final case class GraphNodeOutputPort(name: String, womType: WdlType, graphNode: GraphNode) extends OutputPort
 
   // TODO: For these next two, the graphNode should be a ScatterNode and IfNode respectively (once those exist):
   /**
     * Represents the gathered output from a call/declaration in a scatter.
     */
-  final case class ScatterGathererPort(name: String, womType: WdlArrayType, outputToGather: OutputPort, graphNode: GraphNode) extends OutputPort
+  final case class ScatterGathererPort(name: String, womType: WdlArrayType, outputToGather: GraphOutputNode, g: Unit => GraphNode) extends OutputPort with DelayedGraphNodePort
   final case class ConditionalOutputPort(name: String, womType: WdlOptionalType, outputToExpose: OutputPort, graphNode: GraphNode) extends OutputPort
-
-  /**
-    * For workflow inputs to provide values as a source:
-    */
-  final case class GraphInputNodePort(graphInputNode: GraphInputNode) extends OutputPort {
-    override val name = graphInputNode.name
-    override val womType = graphInputNode.womType
-    override val graphNode = graphInputNode
-  }
 }
