@@ -8,14 +8,23 @@ import wdl4s.wom.graph.GraphNodePort.{ConnectedInputPort, DeclarationOutputPort,
 import scala.language.postfixOps
 import cats.implicits._
 
-final case class CallNode private(name: String, callable: Callable, inputPorts: Set[GraphNodePort.InputPort]) extends GraphNode {
-  val callType: String = callable match {
-    case _: TaskDefinition => "task"
-    case _: WorkflowDefinition => "workflow"
+sealed abstract class CallNode extends GraphNode {
+  def name: String
+  def callable: Callable
+  def callType: String
+}
+
+final case class TaskCallNode private(name: String, callable: TaskDefinition, inputPorts: Set[GraphNodePort.InputPort]) extends CallNode {
+  val callType: String = "task"
+  override val outputPorts: Set[GraphNodePort.OutputPort] = {
+    callable.outputs.map(o => DeclarationOutputPort(o.name, o.womType, this))
   }
-  override val outputPorts: Set[GraphNodePort.OutputPort] = callable match {
-    case t: TaskDefinition => t.outputs.map(o => DeclarationOutputPort(o.name, o.womType, this))
-    case w: WorkflowDefinition => w.innerGraph.nodes.collect { case gon: GraphOutputNode => DeclarationOutputPort(gon.name, gon.womType, this) }
+}
+
+final case class WorkflowCallNode private(name: String, callable: WorkflowDefinition, inputPorts: Set[GraphNodePort.InputPort]) extends CallNode {
+  val callType: String = "workflow"
+  override val outputPorts: Set[GraphNodePort.OutputPort] = {
+    callable.innerGraph.nodes.collect { case gon: GraphOutputNode => DeclarationOutputPort(gon.name, gon.womType, this) }
   }
 }
 
@@ -76,7 +85,10 @@ object CallNode {
     val linkedInputPorts = linkedInputPortsAndGraphInputNodes.map(_._1)
     val graphInputNodes = linkedInputPortsAndGraphInputNodes collect { case (_, Some(gin)) => gin }
 
-    val callNode = CallNode(name, callable, linkedInputPorts)
+    val callNode = callable match {
+      case t: TaskDefinition => TaskCallNode(name, t, linkedInputPorts)
+      case w: WorkflowDefinition => WorkflowCallNode(name, w, linkedInputPorts)
+    }
 
     graphNodeSetter._graphNode = callNode
     (callNode, graphInputNodes)
