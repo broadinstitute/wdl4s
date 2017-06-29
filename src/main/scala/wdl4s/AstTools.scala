@@ -10,7 +10,6 @@ import wdl4s.types._
 import wdl4s.values._
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable
 import scala.language.postfixOps
 
 object AstTools {
@@ -258,7 +257,8 @@ object AstTools {
     * @return
     */
   def isMemberAccess(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
-    trail.collect({ case a: Ast if a.isMemberAccess => a }).nonEmpty
+    trail.collect({ case a: Ast if a.isMemberAccess &&
+      (a.getAttribute("lhs") == identifier || a.getAttribute("rhs") == identifier) => a }).nonEmpty
   }
   
   /**
