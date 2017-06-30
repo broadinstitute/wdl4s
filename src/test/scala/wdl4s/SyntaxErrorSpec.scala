@@ -981,7 +981,7 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         |    call bye { input: instring = hello }
         |                                 ^
         |
-        |Calls and workflows cannot be used directly as inputs. Did you mean to use one of their output instead ?
+        |Calls and workflows cannot be used directly as inputs. Did you mean to use one of their outputs instead ?
       """.stripMargin
   }
 
