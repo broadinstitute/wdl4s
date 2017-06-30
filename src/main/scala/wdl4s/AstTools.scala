@@ -33,6 +33,13 @@ object AstTools {
         case _ => Map.empty[Terminal, Seq[AstNode]]
       }
     }
+    
+    def findSingleIdentifiers(): Iterable[Terminal] = {
+      findTerminalsWithTrail("identifier").collect({
+        case (terminal, trail) if !AstTools.isMemberAccess(terminal, trail) && !isFunctionName(terminal, trail) => terminal
+      })
+    }
+    
     def findFirstTerminal: Option[Terminal] = {
       Option(astNode) flatMap {
         case l: AstList => l.astListAsVector.flatMap(_.findFirstTerminal).headOption
@@ -231,22 +238,35 @@ object AstTools {
     }
   }.keys
 
+  def isFunctionName(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
+    trail.lastOption match {
+      case Some(last: Ast) if last.isFunctionCall && last.getAttribute("name") == identifier => true
+      case _ => false
+    }
+  }
+
+  def isMemberAccessRhs(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
+    /** e.g. for MemberAccess ast representing source code A.B.C, this would return true for only B,C and not A */
+    trail.collect({ case a: Ast if a.isMemberAccess && a.getAttribute("rhs") == identifier => a }).nonEmpty
+  }
+
+  /**
+    * Returns true if identifier is part of a member access
+    * @param identifier
+    * @param trail
+    * @return
+    */
+  def isMemberAccess(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
+    trail.collect({ case a: Ast if a.isMemberAccess &&
+      (a.getAttribute("lhs") == identifier || a.getAttribute("rhs") == identifier) => a }).nonEmpty
+  }
+  
   /**
     * All variable references in the expression AstNode that are not part of MemberAccess ASTs
     *
     * These represent anything that would need to be have scope resolution done on it to determine the value
     */
   def findVariableReferences(expr: AstNode): Iterable[Terminal] = {
-    def isMemberAccessRhs(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
-      /** e.g. for MemberAccess ast representing source code A.B.C, this would return true for only B,C and not A */
-      trail.collect({ case a: Ast if a.isMemberAccess && a.getAttribute("rhs") == identifier => a }).nonEmpty
-    }
-    def isFunctionName(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
-      trail.lastOption match {
-        case Some(last: Ast) if last.isFunctionCall && last.getAttribute("name") == identifier => true
-        case _ => false
-      }
-    }
     expr.findTerminalsWithTrail("identifier").collect({
       case (terminal, trail) if !isMemberAccessRhs(terminal, trail) && !isFunctionName(terminal, trail) => terminal
     })

@@ -216,6 +216,8 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
         |
         |    input: pattern=psBAD.procs
         |                         ^
+        |
+        |Cannot resolve variable procs
       """.stripMargin
   }
 
@@ -945,6 +947,44 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       """.stripMargin
   }
 
+  case object InvalidInputMapping extends ErrorWdl {
+    val testString = "detect when an invalid input mapping is provided to a call"
+    val wdl =
+      """task hello {
+        |    command {
+        |        #nothing
+        |    }
+        |    output {
+        |        String out = "out"
+        |    }
+        |}
+        |
+        |task bye {
+        |    String instring = "bye"
+        |    command {
+        |        echo ${instring}
+        |    }
+        |    output {
+        |        String out = read_string(stdout())
+        |    }
+        |}
+        |
+        |workflow w {
+        |    call hello
+        |    call bye { input: instring = hello }
+        |}
+      """.stripMargin
+
+    val errors =
+      """ERROR: Expression will not evaluate (line 22, col 34):
+        |
+        |    call bye { input: instring = hello }
+        |                                 ^
+        |
+        |Calls and workflows cannot be used directly as inputs. Did you mean to use one of their outputs instead ?
+      """.stripMargin
+  }
+
   val syntaxErrorWdlTable = Table(
     "errorWdl",
     CallReferencesBadInput,
@@ -982,7 +1022,8 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
     MultipleVariableDeclarationsInScope8,
     MultipleVariableDeclarationsInScope9,
     OldStyleWorkflowOutputReferenceNonExistingCall,
-    NewStyleWorkflowOutputReferenceNonExistingCall
+    NewStyleWorkflowOutputReferenceNonExistingCall,
+    InvalidInputMapping
   )
 
   forAll(syntaxErrorWdlTable) { (errorWdl) =>

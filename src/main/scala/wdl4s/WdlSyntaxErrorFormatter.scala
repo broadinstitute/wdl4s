@@ -185,6 +185,26 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
     s"""ERROR: Expression will not evaluate (line ${rhsAst.getLine}, col ${rhsAst.getColumn}):
      |
      |${pointToSource(rhsAst)}
+     |
+     |Cannot resolve variable ${rhsAst.getSourceString}
+     """.stripMargin
+  }
+
+  def undefinedIdentifier(terminal: Terminal): String = {
+    s"""ERROR: Expression will not evaluate (line ${terminal.getLine}, col ${terminal.getColumn}):
+     |
+     |${pointToSource(terminal)}
+     |
+     |Cannot resolve variable ${terminal.getSourceString}
+     """.stripMargin
+  }
+
+  def illegalIdentifier(terminal: Terminal): String = {
+    s"""ERROR: Expression will not evaluate (line ${terminal.getLine}, col ${terminal.getColumn}):
+     |
+     |${pointToSource(terminal)}
+     |
+     |Calls and workflows cannot be used directly as inputs. Did you mean to use one of their outputs instead ?
      """.stripMargin
   }
 

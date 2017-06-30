@@ -501,7 +501,7 @@ object WdlNamespace {
       * so it's the same thing
       */
     val invalidMemberAccesses = callInputSections flatMap { ast =>
-      ast.getAttribute("value").findTopLevelMemberAccesses flatMap { memberAccessAst =>
+      val memberAccessValidation = ast.getAttribute("value").findTopLevelMemberAccesses flatMap { memberAccessAst =>
         val memberAccess = MemberAccess(memberAccessAst)
         val requestedValue = memberAccess.rhs
         val resolvedScope: Option[Scope] = call.resolveVariable(memberAccess.lhs)
@@ -525,6 +525,21 @@ object WdlNamespace {
             Option(new SyntaxError(wdlSyntaxErrorFormatter.undefinedMemberAccess(memberAccessAst)))
         }
       }
+
+      val identifiers = ast.getAttribute("value").findSingleIdentifiers()
+      // Validates single identifiers. They can be declarations but not calls or workflows
+      val identifierValidation = identifiers flatMap { singleIdentifier =>
+        val resolvedScope = call.resolveVariable(singleIdentifier.sourceString)
+        resolvedScope match {
+          case Some(_: Call) =>
+            Option(new SyntaxError(wdlSyntaxErrorFormatter.illegalIdentifier(singleIdentifier)))
+          case None =>
+            Option(new SyntaxError(wdlSyntaxErrorFormatter.undefinedIdentifier(singleIdentifier)))
+          case _ => None
+        }
+      }
+      
+      memberAccessValidation ++ identifierValidation
     }
 
     invalidMemberAccesses ++ invalidCallInputReferences
