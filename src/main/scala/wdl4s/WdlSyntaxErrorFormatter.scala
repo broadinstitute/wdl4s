@@ -204,7 +204,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
      |
      |${pointToSource(terminal)}
      |
-     |Calls and workflows cannot be used directly as inputs. Did you mean to use one of their output instead ?
+     |Calls and workflows cannot be used directly as inputs. Did you mean to use one of their outputs instead ?
      """.stripMargin
   }
 

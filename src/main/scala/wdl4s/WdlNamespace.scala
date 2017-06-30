@@ -529,7 +529,7 @@ object WdlNamespace {
       val identifiers = ast.getAttribute("value").findSingleIdentifiers()
       // Validates single identifiers. They can be declarations but not calls or workflows
       val identifierValidation = identifiers flatMap { singleIdentifier =>
-          val resolvedScope = call.resolveVariable(singleIdentifier.sourceString)
+        val resolvedScope = call.resolveVariable(singleIdentifier.sourceString)
         resolvedScope match {
           case Some(_: Call) =>
             Option(new SyntaxError(wdlSyntaxErrorFormatter.illegalIdentifier(singleIdentifier)))
