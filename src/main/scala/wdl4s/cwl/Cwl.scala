@@ -15,11 +15,11 @@ sealed trait Cwl {
 }
 
 case class Workflow(
-  cwlVersion: Option[CwlVersion] = None,
-  `class`: String,
-  inputs: WorkflowInput,
-  outputs: WorkflowOutput,
-  steps: WorkflowSteps) extends Cwl
+                     cwlVersion: Option[CwlVersion] = None,
+                     `class`: String,
+                     inputs: WorkflowInput,
+                     outputs: WorkflowOutput,
+                     steps: WorkflowSteps) extends Cwl
 
 /**
   *
@@ -43,12 +43,12 @@ case class Workflow(
   */
 case class CommandLineTool(
                             inputs:
-                              CommandInputParameter :+:
+                            CommandInputParameter :+:
                               Map[CommandInputParameter#Id, CommandInputParameter#`type`] :+:
                               Map[CommandInputParameter#Id, CommandInputParameter] :+:
                               CNil,
                             outputs:
-                              Array[CommandOutputParameter] :+:
+                            Array[CommandOutputParameter] :+:
                               Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
                               Map[CommandOutputParameter#Id, CommandOutputParameter] :+:
                               CNil,
@@ -67,3 +67,14 @@ case class CommandLineTool(
                             successCodes: Option[Array[Int]],
                             temporaryFailCodes: Option[Array[Int]],
                             permanentFailCodes: Option[Array[Int]]) extends Cwl
+
+case class MockCommandLineTool(
+                                inputs:
+                                MockCommandInputParameter :+:
+                                  Map[MockCommandInputParameter#Id, MockCommandInputParameter#`type`] :+:
+                                  Map[MockCommandInputParameter#Id, MockCommandInputParameter] :+:
+                                  CNil,
+                                `class`: String,
+                                cwlVersion: Option[CwlVersion],
+                                stdin: Option[ECMAScriptExpression :+: String :+: CNil]
+                              ) extends Cwl

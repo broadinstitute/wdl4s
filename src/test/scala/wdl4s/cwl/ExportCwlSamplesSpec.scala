@@ -4,25 +4,47 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless.{:+:, CNil, Coproduct}
-
 import io.circe.syntax._
 import io.circe._
 import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
-
+import wdl4s.cwl.CwlVersion.CwlVersion
+import io.circe.generic.semiauto.deriveEncoder
+import wdl4s.cwl.CwlEncoders._
 
 /**
   * wdl4s
   * Created by oruebenacker on 03.07.17.
   */
-case class AB(a: Int, b: String)
+sealed trait ABT {
+  val cwlVersion: Option[CwlVersion]
+}
+
+case class AB(cwlVersion: Option[CwlVersion], b: String)
 
 case class ABC(ab: AB, `type`: String :+: Int :+: CNil)
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
-  //  implicit val commandLineToolEncoder:Encoder[CommandLineTool] = deriveEncoder[CommandLineTool]
+  it should "export mock tool" in {
+    val mockTool = MockCommandLineTool(
+      inputs = Coproduct[
+        MockCommandInputParameter :+:
+          Map[MockCommandInputParameter#Id, MockCommandInputParameter#`type`] :+:
+          Map[MockCommandInputParameter#Id, MockCommandInputParameter] :+:
+          CNil](Map("message" -> MockCommandInputParameter(
+        id = None
+      ))),
+      `class` = CommandLineTool.getClass.getSimpleName,
+      cwlVersion = Some(CwlVersion.Version1),
+      stdin = None
+    )
+    val mockToolJson = mockTool.asJson
+    val mockToolJsonString = mockToolJson.toString
+    println(mockToolJsonString)
+    mockToolJsonString.length > 3 shouldBe true
+  }
 
   it should "export 1st tool" in {
     val tool =
@@ -68,16 +90,17 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         successCodes = None,
         temporaryFailCodes = None,
         permanentFailCodes = None)
-    val ab = AB(1, "yo")
-    val abc = ABC(ab, Coproduct[String :+: Int :+: CNil](1))
-    val abcJson = abc.asJson
-    val abcJsonString = abcJson.toString
-    println(abcJsonString)
-    abcJsonString.length > 3 shouldBe true
-//    val toolJson = tool.asJson
-//    toolJson.toString.length > 10 shouldBe true
-//    //    toolJson.as[CommandLineTool].isRight shouldBe true
-
+    val ab = AB(cwlVersion = Some(CwlVersion.Version1), "yo")
+    val versionJson = CwlVersion.Version1.asJson
+    val versionJsonString = versionJson.toString
+    println(versionJsonString)
+    val abJson = ab.asJson
+    val abJsonString = abJson.toString
+    println(abJsonString)
+    abJsonString.length > 3 shouldBe true
+//        val toolJson = tool.asJson
+//        toolJson.toString.length > 10 shouldBe true
+//        toolJson.as[CommandLineTool].isRight shouldBe true
     tool.toString.length > 10 shouldBe true
   }
 

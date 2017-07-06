@@ -7,6 +7,12 @@ import shapeless.{:+:, CNil}
 import wdl4s.cwl.CwlVersion._
 import wdl4s.cwl.CwlType._
 
+case class MockCommandInputParameter(
+                                    id: Option[String]
+                                    ) {
+  type Id = String
+  type `type` = MyriadCommandInputType
+}
 
 case class CommandInputParameter(
                                   id: Option[String],
