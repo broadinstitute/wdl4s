@@ -1,16 +1,25 @@
 package wdl4s.cwl
 
-import io.circe.Encoder
 import io.circe.generic.auto._
-import io.circe.generic.semiauto.deriveEncoder
 import io.circe.syntax._
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless.{:+:, CNil, Coproduct}
+
+import io.circe.syntax._
+import io.circe._
+import io.circe.parser._
+import io.circe.shapes._
+import io.circe.generic.auto._
+
 
 /**
   * wdl4s
   * Created by oruebenacker on 03.07.17.
   */
+case class AB(a: Int, b: String)
+
+case class ABC(ab: AB, `type`: String :+: Int :+: CNil)
+
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
   //  implicit val commandLineToolEncoder:Encoder[CommandLineTool] = deriveEncoder[CommandLineTool]
@@ -59,8 +68,16 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         successCodes = None,
         temporaryFailCodes = None,
         permanentFailCodes = None)
-    //    val toolJson = tool.asJson
-    //    toolJson.as[CommandLineTool].isRight shouldBe true
+    val ab = AB(1, "yo")
+    val abc = ABC(ab, Coproduct[String :+: Int :+: CNil](1))
+    val abcJson = abc.asJson
+    val abcJsonString = abcJson.toString
+    println(abcJsonString)
+    abcJsonString.length > 3 shouldBe true
+//    val toolJson = tool.asJson
+//    toolJson.toString.length > 10 shouldBe true
+//    //    toolJson.as[CommandLineTool].isRight shouldBe true
+
     tool.toString.length > 10 shouldBe true
   }
 
