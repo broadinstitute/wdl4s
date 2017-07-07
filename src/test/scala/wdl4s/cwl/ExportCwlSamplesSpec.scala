@@ -98,9 +98,9 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
     val abJsonString = abJson.toString
     println(abJsonString)
     abJsonString.length > 3 shouldBe true
-//        val toolJson = tool.asJson
-//        toolJson.toString.length > 10 shouldBe true
-//        toolJson.as[CommandLineTool].isRight shouldBe true
+//    val toolJson = tool.asJson
+//    toolJson.toString.length > 10 shouldBe true
+//    toolJson.as[CommandLineTool].isRight shouldBe true
     tool.toString.length > 10 shouldBe true
   }
 

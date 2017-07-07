@@ -1,8 +1,10 @@
 package wdl4s.cwl
 
+import eu.timepit.refined.api.Refined
 import io.circe.{Encoder, Json}
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.CwlVersion.CwlVersion
+import io.circe.syntax.EncoderOps
 
 /**
   * wdl4s
@@ -15,4 +17,6 @@ object CwlEncoders {
     (a: ECMAScriptExpression) => Json.fromString(a.toString)
   implicit val cwlTypeEncoder: Encoder[CwlType] =
     (cwlType: CwlType) => Json.fromString(cwlType.toString)
+  implicit def refinedEncoder[V,P](implicit valueEncoder: Encoder[V]): Encoder[Refined[V, P]] =
+    (refined: Refined[V, P]) => refined.value.asJson
 }
