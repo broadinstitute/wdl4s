@@ -27,25 +27,6 @@ case class ABC(ab: AB, `type`: String :+: Int :+: CNil)
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
-  it should "export mock tool" in {
-    val mockTool = MockCommandLineTool(
-      inputs = Coproduct[
-        MockCommandInputParameter :+:
-          Map[MockCommandInputParameter#Id, MockCommandInputParameter#`type`] :+:
-          Map[MockCommandInputParameter#Id, MockCommandInputParameter] :+:
-          CNil](Map("message" -> MockCommandInputParameter(
-        id = None
-      ))),
-      `class` = CommandLineTool.getClass.getSimpleName,
-      cwlVersion = Some(CwlVersion.Version1),
-      stdin = None
-    )
-    val mockToolJson = mockTool.asJson
-    val mockToolJsonString = mockToolJson.toString
-    println(mockToolJsonString)
-    mockToolJsonString.length > 3 shouldBe true
-  }
-
   it should "export 1st tool" in {
     val tool =
       CommandLineTool(
@@ -98,8 +79,8 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
     val abJsonString = abJson.toString
     println(abJsonString)
     abJsonString.length > 3 shouldBe true
-//    val toolJson = tool.asJson
-//    toolJson.toString.length > 10 shouldBe true
+    val toolJson = tool.asJson
+    toolJson.toString.length > 10 shouldBe true
 //    toolJson.as[CommandLineTool].isRight shouldBe true
     tool.toString.length > 10 shouldBe true
   }

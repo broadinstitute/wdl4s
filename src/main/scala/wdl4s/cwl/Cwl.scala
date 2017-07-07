@@ -68,13 +68,3 @@ case class CommandLineTool(
                             temporaryFailCodes: Option[Array[Int]],
                             permanentFailCodes: Option[Array[Int]]) extends Cwl
 
-case class MockCommandLineTool(
-                                inputs:
-                                MockCommandInputParameter :+:
-                                  Map[MockCommandInputParameter#Id, MockCommandInputParameter#`type`] :+:
-                                  Map[MockCommandInputParameter#Id, MockCommandInputParameter] :+:
-                                  CNil,
-                                `class`: String,
-                                cwlVersion: Option[CwlVersion],
-                                stdin: Option[ECMAScriptExpression :+: String :+: CNil]
-                              ) extends Cwl

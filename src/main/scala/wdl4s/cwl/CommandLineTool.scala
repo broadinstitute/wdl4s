@@ -7,13 +7,6 @@ import shapeless.{:+:, CNil}
 import wdl4s.cwl.CwlVersion._
 import wdl4s.cwl.CwlType._
 
-case class MockCommandInputParameter(
-                                    id: Option[String]
-                                    ) {
-  type Id = String
-  type `type` = MyriadCommandInputType
-}
-
 case class CommandInputParameter(
                                   id: Option[String],
                                   label: Option[String],
@@ -24,7 +17,6 @@ case class CommandInputParameter(
                                   inputBinding: Option[CommandLineBinding],
                                   default: Option[String], //TODO Any type here
                                   `type`: Option[MyriadInputType]
-
                                 ) {
   type Id = String
   type `type` = MyriadCommandInputType
@@ -50,18 +42,18 @@ case class CommandInputEnumSchema(
 
 case class CommandInputArraySchema(
                                     items:
-                                      CwlType :+:
+                                    CwlType :+:
                                       CommandInputRecordSchema :+:
                                       CommandInputEnumSchema :+:
                                       CommandInputArraySchema :+:
                                       String :+:
                                       Array[
                                         CwlType :+:
-                                        CommandInputRecordSchema :+:
-                                        CommandInputEnumSchema :+:
-                                        CommandInputArraySchema :+:
-                                        String :+:
-                                        CNil] :+:
+                                          CommandInputRecordSchema :+:
+                                          CommandInputEnumSchema :+:
+                                          CommandInputArraySchema :+:
+                                          String :+:
+                                          CNil] :+:
                                       CNil,
                                     `type`: String Refined MatchesRegex[W.`"array"`.T],
                                     label: Option[String],
