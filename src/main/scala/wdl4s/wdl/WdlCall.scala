@@ -7,6 +7,7 @@ import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.values.{WdlOptionalValue, WdlValue}
 import wdl4s.wom.graph.CallNode.CallWithInputs
+import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
 import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphNodePort}
 
 import scala.language.postfixOps
@@ -47,7 +48,7 @@ object WdlCall {
   }
   
   private def buildWomNodeAndInputs(wdlCall: WdlCall): CallWithInputs = {
-    val inputToOutputPort: Map[String, GraphNodePort.DeclarationOutputPort] = for {
+    val inputToOutputPort: Map[String, GraphNodeOutputPort] = for {
       (inputName, expr) <- wdlCall.inputMappings
       variable <- expr.variableReferences
       parent <- wdlCall.parent
@@ -58,7 +59,7 @@ object WdlCall {
     CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), wdlCall.callable.womDefinition, inputToOutputPort)
   }
 
-  private def outputPortFromNode(node: WdlGraphNode, terminal: Option[Terminal]): GraphNodePort.DeclarationOutputPort = {
+  private def outputPortFromNode(node: WdlGraphNode, terminal: Option[Terminal]): GraphNodeOutputPort = {
     (node, terminal) match {
       case (wdlCall: WdlCall, Some(subTerminal)) =>
         wdlCall.womGraphOutputPorts.find(_.name == subTerminal.sourceString) getOrElse {
@@ -97,7 +98,7 @@ sealed abstract class WdlCall(val alias: Option[String],
 
   lazy val womGraphInputNodes: Set[GraphInputNode] = womInputs
 
-  lazy val womGraphOutputPorts: Seq[GraphNodePort.DeclarationOutputPort] = outputs.map(_.toWomOutputPort)
+  lazy val womGraphOutputPorts: Seq[GraphNodeOutputPort] = outputs.map(_.toWomOutputPort)
 
   def toCallOutput(output: Output) = output match {
     case taskOutput: TaskOutput => CallOutput(this, taskOutput.copy(parent = Option(this)))

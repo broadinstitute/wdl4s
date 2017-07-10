@@ -2,12 +2,12 @@ package wdl4s.wom.graph
 
 import wdl4s.wdl.types.{WdlOptionalType, WdlType}
 import wdl4s.wom.expression.Expression
-import wdl4s.wom.graph.GraphNodePort.GraphInputNodePort
+import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
 
 sealed trait GraphInputNode extends GraphNode {
   def name: String
   def womType: WdlType
-  val singleOutputPort: GraphInputNodePort = GraphInputNodePort(this)
+  val singleOutputPort: GraphNodeOutputPort = GraphNodeOutputPort(name, womType, this)
 
   override val inputPorts: Set[GraphNodePort.InputPort] = Set.empty
   override val outputPorts: Set[GraphNodePort.OutputPort] = Set(singleOutputPort)

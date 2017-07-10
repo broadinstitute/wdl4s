@@ -3,6 +3,8 @@ package wdl4s.wom.graph
 import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.wom.graph.GraphNodePort.InputPort
 import cats.implicits._
+import wdl4s.wom.callable.Callable
+import wdl4s.wom.callable.Callable.RequiredInputDefinition
 
 /**
   * A sealed set of graph nodes.
