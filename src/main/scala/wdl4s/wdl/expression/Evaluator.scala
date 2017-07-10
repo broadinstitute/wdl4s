@@ -2,7 +2,6 @@ package wdl4s.wdl.expression
 
 import wdl4s.parser.WdlParser.AstNode
 
-import scala.language.postfixOps
 import scala.util.Try
 
 trait Evaluator {

@@ -52,7 +52,7 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
 
     val value = expression.evaluate(lookup, ParameterCommandPart.withPostProcesser(valueMapper, functions)) match {
       case Success(v) => v match {
-        case WdlOptionalValue(memberType, opt) => opt.getOrElse(defaultString)
+        case WdlOptionalValue(_, opt) => opt.getOrElse(defaultString)
         case _ => v
       }
       case Failure(OptionalNotSuppliedException(_)) => defaultString
@@ -63,7 +63,7 @@ case class ParameterCommandPart(attributes: Map[String, String], expression: Wdl
       case b: WdlBoolean if attributes.contains("true") && attributes.contains("false") => if (b.value) attributes.get("true").head else attributes.get("false").head
       case p: WdlPrimitive => p.valueString
       case a: WdlArray if attributes.contains("sep") => a.value.map(_.valueString).mkString(attributes.get("sep").head)
-      case a: WdlArray => throw new UnsupportedOperationException(s"Expression '${expression.toString}' evaluated to an Array but no 'sep' was specified")
+      case _: WdlArray => throw new UnsupportedOperationException(s"Expression '${expression.toString}' evaluated to an Array but no 'sep' was specified")
       case _ => throw new UnsupportedOperationException(s"Could not string-ify value: $value")
     }
   }

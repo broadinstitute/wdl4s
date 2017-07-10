@@ -3,7 +3,6 @@ package wdl4s.wdl.types
 import spray.json._
 import wdl4s.wdl.values.{WdlPair, WdlValue}
 
-import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 case class WdlPairType(leftType: WdlType, rightType: WdlType) extends WdlType {

@@ -1,24 +1,11 @@
 package wdl4s.cwl
 
-import wdl4s.cwl._
-
-import io.circe.syntax._
-import io.circe._
-import io.circe.parser._
-import io.circe.shapes._
-import io.circe.generic.auto._
 import org.scalatest._
 import io.circe.yaml.parser
-import io.circe.Json
 
-import io.circe.syntax._
-import io.circe._
 import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
-import shapeless._, poly._//, ops.union._, union._
-import shapeless.ops.coproduct._
-import cats._, implicits._//, instances._
 
 import io.circe.yaml.parser
 import io.circe._
@@ -78,13 +65,11 @@ steps:
 
   it should "produce coproducts easily" in {
     import shapeless.syntax.inject._
-    import shapeless.ops.coproduct.Inject
-    val m = new Workflow(
+    new Workflow(
       `class` = "hi",
       inputs = Array.empty[InputParameter].inject[WorkflowInput],
       outputs = Array.empty[WorkflowOutputParameter].inject[WorkflowOutput],
       steps = Array.empty[WorkflowStep].inject[WorkflowSteps])
   }
-
 
 }

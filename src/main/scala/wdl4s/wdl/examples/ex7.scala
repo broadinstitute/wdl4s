@@ -8,13 +8,13 @@ import wdl4s.wdl.values._
 import scala.util.{Success, Try}
 
 object ex7 {
-  def main(args: Array[String]) {
-    val wdl = """
+  def main(args: Array[String]): Unit = {
+    val wdl = s"""
       |task a {
       |  String prefix
       |  Array[Int] ints
       |  command {
-      |    python script.py ${write_lines(ints)} > ${prefix + ".out"}
+      |    python script.py $${write_lines(ints)} > $${prefix + ".out"}
       |  }
       |}
       |workflow wf {

@@ -16,23 +16,23 @@ class ThreeStepImportSpec extends FlatSpec with Matchers {
     |  }
     |}""".stripMargin
 
-  val cgrepTaskWdl = """
+  val cgrepTaskWdl = s"""
     |task cgrep {
     |  String pattern
     |  File in_file
     |  command {
-    |    grep '${pattern}' ${in_file} | wc -l
+    |    grep '$${pattern}' $${in_file} | wc -l
     |  }
     |  output {
     |    Int count = read_int(stdout())
     |  }
     |}""".stripMargin
 
-  val wcTaskWdl = """
+  val wcTaskWdl = s"""
     |task wc {
     |  File in_file
     |  command {
-    |    cat ${in_file} | wc -l
+    |    cat $${in_file} | wc -l
     |  }
     |  output {
     |    Int count = read_int(stdout())
@@ -79,9 +79,10 @@ class ThreeStepImportSpec extends FlatSpec with Matchers {
     def badResolver(s: String): String = {
       throw new RuntimeException(s"Can't Resolve")
     }
-      val badBinding = WdlNamespace.loadUsingSource(workflowWdl, None, Option(Seq(badResolver))) match {
-        case Failure(_: ValidationException) =>
-        case x => fail(s"Expecting an exception to be thrown when using badResolver but got $x")
+
+    WdlNamespace.loadUsingSource(workflowWdl, None, Option(Seq(badResolver))) match {
+      case Failure(_: ValidationException) =>
+      case x => fail(s"Expecting an exception to be thrown when using badResolver but got $x")
     }
   }
 }

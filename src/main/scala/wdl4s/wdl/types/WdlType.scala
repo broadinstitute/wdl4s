@@ -1,9 +1,9 @@
 package wdl4s.wdl.types
 
+import wdl4s.parser.WdlParser
 import wdl4s.wdl.AstTools.EnhancedAstNode
 import wdl4s.wdl.values._
-import wdl4s.wdl.{WdlExpressionException, WdlSource, WdlSyntaxErrorFormatter}
-import wdl4s.parser.WdlParser
+import wdl4s.wdl.{WdlExpressionException, WdlSyntaxErrorFormatter, WorkflowSource}
 
 import scala.collection.JavaConverters._
 import scala.runtime.ScalaRunTime
@@ -47,13 +47,13 @@ trait WdlType {
   /**
    * Converts WDL source into a WdlValue of this type, if possible.
    *
-   * @param wdlSource source code representing the WdlValue
+   * @param workflowSource source code representing the WdlValue
    * @return The WdlValue
    */
   //TODO: return a Try ?
-  def fromWdlString(wdlSource: WdlSource): WdlValue = {
-    val tokens = WdlType.parser.lex(wdlSource, "string")
-    val terminalMap = tokens.asScala.toVector.map {(_, wdlSource)}.toMap
+  def fromWdlString(workflowSource: WorkflowSource): WdlValue = {
+    val tokens = WdlType.parser.lex(workflowSource, "string")
+    val terminalMap = tokens.asScala.toVector.map {(_, workflowSource)}.toMap
     val wdlSyntaxErrorFormatter = WdlSyntaxErrorFormatter(terminalMap)
 
     /* Parsing as an expression is not sufficient... only a subset of these

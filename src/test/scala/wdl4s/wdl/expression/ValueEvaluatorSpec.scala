@@ -107,7 +107,7 @@ class ValueEvaluatorSpec extends FlatSpec with Matchers {
 
   def identifierEvalError(exprStr: String): Unit = {
     expr(exprStr).evaluate(identifierLookup, new TestValueFunctions()).asInstanceOf[Try[WdlPrimitive]] match {
-      case Failure(ex) => // Expected
+      case Failure(_) => // Expected
       case Success(v) => fail(s"Operation was supposed to fail, instead I got value: $v")
     }
   }
@@ -361,10 +361,10 @@ class ValueEvaluatorSpec extends FlatSpec with Matchers {
     (""" append("a", "b", "c", "d") """, WdlString("abcd")),
 
     // String Interpolation
-    ("\"prefix.${a}.suffix\"", WdlString("prefix.1.suffix")),
-    ("\"prefix.${a}${a}.suffix${a}\"", WdlString("prefix.11.suffix1")),
-    ("\"${b}prefix.${b}${a}${a}.suffix${a}\"", WdlString("2prefix.211.suffix1")),
-    ("\"${s}...${s}\"", WdlString("s...s")),
+    (s""""prefix.$${a}.suffix"""", WdlString("prefix.1.suffix")),
+    (s""""prefix.$${a}$${a}.suffix$${a}"""", WdlString("prefix.11.suffix1")),
+    (s""""$${b}prefix.$${b}$${a}$${a}.suffix$${a}"""", WdlString("2prefix.211.suffix1")),
+    (s""""$${s}...$${s}"""", WdlString("s...s")),
 
     // Array Indexing
     ("array_str[0]", WdlString("foo")),
@@ -527,7 +527,6 @@ class ValueEvaluatorSpec extends FlatSpec with Matchers {
   "Optional values" should "fail to perform addition with the + operator if the argument is None" in {
     val hello = WdlString("hello ")
     val noneWorld = WdlOptionalValue.none(WdlStringType)
-    val expectedMessage = "Sorry! Operation + is not supported on empty optional values. You might resolve this using select_first([optional, default]) to guarantee that you have a filled value."
     hello.add(noneWorld) should be(Failure(OptionalNotSuppliedException("+")))
   }
 

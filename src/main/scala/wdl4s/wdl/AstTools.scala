@@ -22,7 +22,7 @@ object AstTools {
           val thisAst = if (x.getName.equals(name)) Map(x -> trail) else Map.empty[Ast, Seq[AstNode]]
           combine(x.getAttributes.values.asScala.flatMap{_.findAstsWithTrail(name, trail :+ x)}.toMap, thisAst)
         case x: AstList => x.asScala.toVector.flatMap{_.findAstsWithTrail(name, trail :+ x)}.toMap
-        case x: Terminal => Map.empty[Ast, Seq[AstNode]]
+        case _: Terminal => Map.empty[Ast, Seq[AstNode]]
         case _ => Map.empty[Ast, Seq[AstNode]]
       }
     }
@@ -37,7 +37,7 @@ object AstTools {
     def findFirstTerminal: Option[Terminal] = {
       Option(astNode) flatMap {
         case l: AstList => l.astListAsVector.flatMap(_.findFirstTerminal).headOption
-        case a: Ast => a.getAttributes.asScala.toMap.flatMap({ case (k, v) => v.findFirstTerminal }).headOption
+        case a: Ast => a.getAttributes.asScala.toMap.flatMap({ case (_, v) => v.findFirstTerminal }).headOption
         case t: Terminal => Option(t)
       }
     }
@@ -182,10 +182,10 @@ object AstTools {
     val If = "If"
   }
 
-  def getAst(wdlSource: WdlSource, resource: String): Ast = {
+  def getAst(workflowSource: WorkflowSource, resource: String): Ast = {
     val parser = new WdlParser()
-    val tokens = parser.lex(wdlSource, resource)
-    val terminalMap = (tokens.asScala.toVector map {(_, wdlSource)}).toMap
+    val tokens = parser.lex(workflowSource, resource)
+    val terminalMap = (tokens.asScala.toVector map {(_, workflowSource)}).toMap
     val syntaxErrorFormatter = WdlSyntaxErrorFormatter(terminalMap)
     parser.parse(tokens, syntaxErrorFormatter).toAst.asInstanceOf[Ast]
   }
@@ -205,7 +205,7 @@ object AstTools {
         val thisAst = if (x.getName.equals(name)) Seq(x) else Seq.empty[Ast]
         x.getAttributes.values.asScala.flatMap(findAsts(_, name)).toSeq ++ thisAst
       case x: AstList => x.asScala.toVector.flatMap(findAsts(_, name))
-      case x: Terminal => Seq.empty[Ast]
+      case _: Terminal => Seq.empty[Ast]
       case _ => Seq.empty[Ast]
     }
   }
@@ -226,7 +226,7 @@ object AstTools {
     * would have its own MemberAccess - "a.b.c" and "a.b.d"
     */
   def findTopLevelMemberAccesses(expr: AstNode): Iterable[Ast] = expr.findAstsWithTrail("MemberAccess").filterNot {
-    case (k, v) => v exists {
+    case (_, v) => v exists {
       case a: Ast => a.getName == "MemberAccess"
       case _ => false
     }
@@ -255,7 +255,7 @@ object AstTools {
     */
   def findVariableReferences(expr: AstNode): Iterable[VariableReference] = {
     def isMemberAccessRhs(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
-      /** e.g. for MemberAccess ast representing source code A.B.C, this would return true for only B,C and not A */
+      // e.g. for MemberAccess ast representing source code A.B.C, this would return true for only B,C and not A
       trail.collect({ case a: Ast if a.isMemberAccess && a.getAttribute("rhs") == identifier => a }).nonEmpty
     }
     def isFunctionName(identifier: Terminal, trail: Seq[AstNode]): Boolean = {
@@ -331,7 +331,7 @@ object AstTools {
     }
   }
 
-  def terminalMap(ast: Ast, source: WdlSource) = (findTerminals(ast) map {(_, source)}).toMap
+  def terminalMap(ast: Ast, source: WorkflowSource) = (findTerminals(ast) map {(_, source)}).toMap
 
   def wdlSectionToStringMap(ast: Ast, node: String, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Map[String, String] = {
     ast.findAsts(node) match {

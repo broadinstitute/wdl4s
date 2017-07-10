@@ -11,7 +11,7 @@ import scala.util.{Failure, Success, Try}
 class WdlCallSpec extends WordSpec with Matchers {
 
   "evaluate its declarations" in {
-    val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.TaskDeclarationsWdl.wdlSource(), Seq.empty).get
+    val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.TaskDeclarationsWdl.workflowSource(), Seq.empty).get
     val callT = namespace.calls.find(_.unqualifiedName == "t").get
     val callT2 = namespace.calls.find(_.unqualifiedName == "t2").get
     val callT3 = namespace.calls.find(_.unqualifiedName == "t3").get
@@ -73,11 +73,11 @@ class WdlCallSpec extends WordSpec with Matchers {
   "find workflows" in {
 
     val subWorkflow =
-      """
+      s"""
         |task hello2 {
         |  String addressee = "hey"
         |  command {
-        |    echo "Hello ${addressee}!"
+        |    echo "Hello $${addressee}!"
         |  }
         |  output {
         |    String salutation = read_string(stdout())
@@ -119,11 +119,11 @@ class WdlCallSpec extends WordSpec with Matchers {
   
   "bubble up evaluation exception" in {
     val wdl =
-      """
+      s"""
         |task hello {
         |  String addressee
         |  command {
-        |    echo "Hello ${addressee}!"
+        |    echo "Hello $${addressee}!"
         |  }
         |  runtime {
         |      docker: "ubuntu:latest"

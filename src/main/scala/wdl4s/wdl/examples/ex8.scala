@@ -6,7 +6,7 @@ import wdl4s.wdl.AstTools
 import wdl4s.wdl.AstTools.EnhancedAstNode
 
 object ex8 {
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     /* Create syntax tree from contents of file */
     val ast = AstTools.getAst(Paths.get(args(0)))
 

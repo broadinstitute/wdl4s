@@ -58,9 +58,9 @@ sealed abstract case class WdlArray(wdlType: WdlArrayType, value: Seq[WdlValue])
 
   def tsvSerialize: Try[String] = {
     wdlType.memberType match {
-      case t: WdlPrimitiveType => Success(value.map(_.valueString).mkString(start = "", sep = "\n", end = "\n"))
+      case _: WdlPrimitiveType => Success(value.map(_.valueString).mkString(start = "", sep = "\n", end = "\n"))
       case WdlObjectType => WdlObject.tsvSerializeArray(value map { _.asInstanceOf[WdlObject] })
-      case WdlArrayType(t: WdlPrimitiveType) =>
+      case WdlArrayType(_: WdlPrimitiveType) =>
         val tsvString = value.collect({ case a: WdlArray => a }) map { a =>
           a.value.collect({ case p: WdlPrimitive => p.valueString }).mkString(start = "", sep = "\t", end = "\n")
         } mkString

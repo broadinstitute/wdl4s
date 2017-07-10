@@ -1,7 +1,7 @@
 package wdl4s.wdl.types
 import wdl4s.wdl.values.{WdlOptionalValue, WdlValue}
 
-import scala.util.{Success, Try}
+import scala.util.Try
 
 case class WdlOptionalType(memberType: WdlType) extends WdlType {
   /**

@@ -54,7 +54,7 @@ class ThreeStepImportNamespaceSpec extends FlatSpec with Matchers {
     |  }
     |}""".stripMargin
 
-  def resolver(importUri: String): WdlSource = {
+  def resolver(importUri: String): WorkflowSource = {
     importUri match {
       case "ps" => psTaskWdl
       case "cgrep" => cgrepTaskWdl
@@ -79,7 +79,7 @@ class ThreeStepImportNamespaceSpec extends FlatSpec with Matchers {
     def badResolver(s: String): String = {
       throw new RuntimeException(s"Can't Resolve")
     }
-    val badBinding = WdlNamespace.loadUsingSource(workflowWdl, None, Option(Seq(badResolver))) match {
+    WdlNamespace.loadUsingSource(workflowWdl, None, Option(Seq(badResolver))) match {
       case Failure(_: ValidationException) =>
       case x => fail(s"Expecting ValidationException to be thrown when using badResolver but got $x")
     }

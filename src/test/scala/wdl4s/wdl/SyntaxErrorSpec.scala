@@ -19,19 +19,19 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       |  }
       |}""".stripMargin
 
-  private val cgrepTaskWdl = """
+  private val cgrepTaskWdl = s"""
      |task cgrep {
      |  String pattern
      |  File in_file
      |  command {
-     |    grep '${pattern}' ${in_file} | wc -l
+     |    grep '$${pattern}' $${in_file} | wc -l
      |  }
      |  output {
      |    Int count = read_int(stdout())
      |  }
      |}""".stripMargin
 
-  private def resolver(importUri: String): WdlSource = {
+  private def resolver(importUri: String): WorkflowSource = {
     importUri match {
       case "ps" => psTaskWdl
       case "cgrep" => cgrepTaskWdl
@@ -43,7 +43,7 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
 
   trait ErrorWdl {
     def testString: String
-    def wdl: WdlSource
+    def wdl: WorkflowSource
     def errors: String
   }
 
@@ -357,10 +357,10 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
   case object MultipleCallInputSections extends ErrorWdl {
     val testString = "detect when a call has multiple input sections"
     val wdl =
-      """task x {
+      s"""task x {
         |  String a
         |  String b
-        |  command {  ./script ${a} ${b} }
+        |  command {  ./script $${a} $${b} }
         |}
         |
         |workflow wf {
@@ -546,9 +546,9 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
   case object CommandExpressionVariableReferenceIntegrity extends ErrorWdl {
     val testString = s"detect when expressions in command section reference missing task inputs"
     val wdl =
-      """task a {
+      s"""task a {
         |  Int x
-        |  command { ./script ${x+y} }
+        |  command { ./script $${x+y} }
         |}
         |
         |workflow w {
@@ -557,9 +557,9 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
       """.stripMargin
 
     val errors =
-      """ERROR: Variable y does not reference any declaration in the task (line 3, col 26):
+      s"""ERROR: Variable y does not reference any declaration in the task (line 3, col 26):
         |
-        |  command { ./script ${x+y} }
+        |  command { ./script $${x+y} }
         |                         ^
         |
         |Task defined here (line 1, col 6):
@@ -646,10 +646,10 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
   case object MultipleVariableDeclarationsInScope extends ErrorWdl {
     val testString = "detect when a variable is declared more than once (1)"
     val wdl =
-      """task inputOops {
+      s"""task inputOops {
         |  Int a = 5
         |  Int a = 10
-        |  command { echo ${a} }
+        |  command { echo $${a} }
         |}
         |workflow a { call inputOops }
       """.stripMargin

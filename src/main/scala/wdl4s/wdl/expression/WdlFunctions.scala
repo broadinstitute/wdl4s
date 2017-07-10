@@ -1,6 +1,5 @@
 package wdl4s.wdl.expression
 
-import scala.language.postfixOps
 import scala.util.{Failure, Try}
 
 trait WdlFunctions[T] {

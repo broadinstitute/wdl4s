@@ -17,7 +17,7 @@ case object WdlFloatType extends WdlPrimitiveType {
     case s: WdlString => WdlFloat(s.value.toDouble)
   }
 
-  override def fromWdlString(rawString: String) = WdlFloat(rawString.toFloat)
+  override def fromWdlString(rawString: String) = WdlFloat(rawString.toDouble)
 
   private def binaryOperator(rhs: WdlType, symbol: String): Try[WdlType] = rhs match {
     case WdlIntegerType => Success(WdlFloatType)

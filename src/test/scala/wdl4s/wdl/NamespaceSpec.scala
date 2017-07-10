@@ -1,12 +1,6 @@
 package wdl4s.wdl
 
-import cats.syntax.validated._
 import better.files._
-import cats.data.Validated._
-import cats.syntax.cartesian._
-import lenthall.validation.ErrorOr._
-import wdl4s.wdl.expression.WdlStandardLibraryFunctionsType
-import wdl4s.wdl.types._
 import wdl4s.wdl.values.WdlString
 
 import scala.util.{Failure, Success, Try}

@@ -1,11 +1,7 @@
 package wdl4s.cwl
 
 import shapeless.{:+:, CNil}
-import eu.timepit.refined._
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.string._
-import CwlVersion._
-import CwlType._
+import wdl4s.cwl.CwlVersion._
 
 sealed trait Cwl {
 

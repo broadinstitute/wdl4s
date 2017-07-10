@@ -42,28 +42,6 @@ class WdlValueSpec extends FlatSpec with Matchers {
     }
   }
 
-  val wdlFloatSpecials = Table(
-    ("wdlValue", "rawString", "validateFloat"),
-    (WdlFloat(Double.MinPositiveValue), "4.9E-324", { d: Double => d == 0.0 }),
-    (WdlFloat(Double.NaN), "NaN", { d: Double => d.isNaN }),
-    (WdlFloat(Double.MaxValue), "1.7976931348623157E308", { d: Double => d.isPosInfinity }),
-    (WdlFloat(Double.MinValue), "-1.7976931348623157E308", { d: Double => d.isNegInfinity }))
-
-  forAll(wdlFloatSpecials) { (wdlValue, rawString, validateFloat) =>
-    it should s"convert a special ${wdlValue.typeName} to/from raw string '$rawString'" in {
-      val toRawString = wdlValue.toWdlString
-      toRawString should be(rawString)
-
-      val wdlType = wdlValue.wdlType
-      val fromRawString = wdlType.fromWdlString(toRawString)
-      // Test that this is a special conversion, and is not
-      // expected to be equal after a round-trip conversion.
-      fromRawString shouldNot be(wdlValue)
-      validateFloat(fromRawString.value) should be(true)
-      fromRawString.wdlType should be(wdlType)
-    }
-  }
-
   val wdlExpressionRawStrings = Table(
     ("wdlValue", "rawString"),
     (WdlExpression.fromString(" 1 != 0 "), "1 != 0"),
@@ -90,7 +68,7 @@ class WdlValueSpec extends FlatSpec with Matchers {
   }
 
   val testCall = {
-    val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.ThreeStep.wdlSource(), Seq.empty).get
+    val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.ThreeStep.workflowSource(), Seq.empty).get
     namespace.calls.find(_.unqualifiedName == "wc").get
   }
 

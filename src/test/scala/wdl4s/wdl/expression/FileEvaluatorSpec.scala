@@ -1,12 +1,11 @@
 package wdl4s.wdl.expression
 
-import wdl4s.wdl.{NoLookup, WdlExpression}
-import wdl4s.wdl.types._
-import wdl4s.wdl.values._
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FlatSpec, Matchers}
+import wdl4s.wdl.WdlExpression
+import wdl4s.wdl.types._
+import wdl4s.wdl.values._
 
-import scala.language.postfixOps
 
 class FileEvaluatorSpec extends FlatSpec with Matchers {
   val expressions = Table(

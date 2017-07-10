@@ -9,7 +9,6 @@ import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.expression.Expression
 import wdl4s.wom.graph.{Graph, TaskCall}
 
-import scala.language.postfixOps
 import scala.util.Try
 
 case class TaskDefinition(name: String,
@@ -29,7 +28,7 @@ case class TaskDefinition(name: String,
                      wdlFunctions: WdlFunctions[WdlValue],
                      outputResolver: OutputResolver = NoOutputResolver,
                      shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
-                     relativeTo: Scope = ???): String => WdlValue = ???
+                     relativeTo: Scope = null): String => WdlValue = ???
 
   def instantiateCommand(taskInputs: EvaluatedTaskInputs,
                          functions: WdlFunctions[WdlValue],

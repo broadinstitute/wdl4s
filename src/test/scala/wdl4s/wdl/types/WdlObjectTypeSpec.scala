@@ -42,14 +42,14 @@ class WdlObjectTypeSpec extends FlatSpec with Matchers {
       case Success(v) => 
         v.wdlType shouldEqual WdlObjectType
         v.toWdlString shouldEqual abcObject.toWdlString
-      case Failure(f) => fail("Failed to coerce a map to an object")
+      case Failure(_) => fail("Failed to coerce a map to an object")
     }
   }
 
   it should "NOT successfully coerce a NON coerceable map into a WdlObject" in {
     WdlObjectType.coerceRawValue(nonCoerceableMap) match {
-      case Success(v) => fail("should not have succeeded")
-      case Failure(f) => // expected
+      case Success(_) => fail("should not have succeeded")
+      case Failure(_) => // expected
     }
   }
 

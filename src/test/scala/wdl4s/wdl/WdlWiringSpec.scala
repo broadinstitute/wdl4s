@@ -110,7 +110,7 @@ class WdlWiringSpec extends FlatSpec with Matchers {
 
     expectedParentsFile.contentAsString.parseJson.asInstanceOf[JsObject].fields.asInstanceOf[Map[String, JsValue]] map {
       case (k, v: JsString) => k -> Option(v.value)
-      case (k, v) => k -> None
+      case (k, _) => k -> None
     }
   }
 

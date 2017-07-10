@@ -6,11 +6,11 @@ import wdl4s.wom.callable.Callable.InputDefinition
 
 sealed trait Expression {
   def inputs: Set[InputDefinition]
-  def evaluate(variableValues: Map[String, WdlValue])
+  def evaluate(variableValues: Map[String, WdlValue]): Unit
   def womType: WdlType
 }
 
 case class PlaceholderExpression(womType: WdlType) extends Expression {
   override def inputs: Set[InputDefinition] = ???
-  override def evaluate(variableValues: Map[String, WdlValue]) = ???
+  override def evaluate(variableValues: Map[String, WdlValue]): Unit = ???
 }
