@@ -10,6 +10,8 @@ import io.circe.generic.auto._
 import org.scalatest._
 import io.circe.yaml.parser
 import io.circe.Json
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined._
 
 import io.circe.syntax._
 import io.circe._
@@ -23,11 +25,15 @@ import cats._, implicits._//, instances._
 import io.circe.yaml.parser
 import io.circe._
 
+import eu.timepit.refined.string._
+
 import io.circe.refined._
+import some._
 
 class ParseBigThreeSpec extends FlatSpec with Matchers {
   val namespace = "cwl"
 
+  /*
   it should "parse 1st tool" in {
   val firstTool = """
 cwlVersion: v1.0
@@ -80,10 +86,30 @@ steps:
     import shapeless.syntax.inject._
     import shapeless.ops.coproduct.Inject
     val m = new Workflow(
-      `class` = "hi",
+      `class` = refineMV[MatchesRegex[W.`"Workflow"`.T]]("Workflow"),
       inputs = Array.empty[InputParameter].inject[WorkflowInput],
       outputs = Array.empty[WorkflowOutputParameter].inject[WorkflowOutput],
       steps = Array.empty[WorkflowStep].inject[WorkflowSteps])
+  }
+  */
+
+  it should "parse env cwl" in {
+    val envCwl = """
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: env
+requirements:
+  EnvVarRequirement:
+    envDef:
+      HELLO: $(inputs.message)
+inputs:
+  message: string
+outputs: []
+"""
+
+    val output = decodeCwl(envCwl)
+    println(output)
+    output.isRight should be (true)
   }
 
 

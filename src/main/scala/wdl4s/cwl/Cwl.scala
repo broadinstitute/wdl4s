@@ -10,13 +10,11 @@ import CwlType._
 sealed trait Cwl {
 
   val cwlVersion: Option[CwlVersion]
-
-  val `class`: String
 }
 
 case class Workflow(
   cwlVersion: Option[CwlVersion] = None,
-  `class`: String,
+  `class`: String Refined MatchesRegex[W.`"Workflow"`.T],
   inputs: WorkflowInput,
   outputs: WorkflowOutput,
   steps: WorkflowSteps) extends Cwl
@@ -52,7 +50,7 @@ case class CommandLineTool(
                               Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
                               Map[CommandOutputParameter#Id, CommandOutputParameter] :+:
                               CNil,
-                            `class`: String,
+                            `class`: String Refined MatchesRegex[W.`"CommandLineTool"`.T],
                             id: Option[String],
                             requirements: Option[Array[Requirement]],
                             hints: Option[Array[String]], //TODO: Any?

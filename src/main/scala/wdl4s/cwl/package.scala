@@ -1,31 +1,37 @@
 package wdl4s
 
 import wdl4s.cwl._
-
 import io.circe.syntax._
 import io.circe._
 import io.circe.parser._
 import io.circe.shapes._
-import io.circe.generic.auto._
-import io.circe.generic.semiauto._
+import io.circe.generic.extras.auto._
+import io.circe.generic.decoding.DerivedDecoder
+import io.circe.generic.extras.defaults._
+import io.circe.generic.extras.semiauto._
 import io.circe.yaml.{parser => YamlParser}
 import io.circe.Json
-
 import io.circe.syntax._
 import io.circe._
 import io.circe.parser._
 import io.circe.shapes._
-import io.circe.generic.auto._
-import shapeless._, poly._//, ops.union._, union._
+import shapeless._
+import poly._
 import shapeless.ops.coproduct._
-import cats._, implicits._//, instances._
+import cats._
+import implicits._
 import cats.data.Kleisli
 import io.circe._
-import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.{Refined, Validate}
 import eu.timepit.refined.string._
 import eu.timepit.refined._
+import eu.timepit.refined.auto._
+import io.circe.Decoder.Result
 
+import scala.util.Try
 import io.circe.refined._
+import io.circe.literal._
+import some._
 
 /**
  * This package is intended to parse all CWL files.
@@ -73,12 +79,112 @@ package object cwl {
   import CwlType._
   import CwlVersion._
   import ScatterMethod._
+  import RequirementClass._
 
   type Yaml = String
 
   implicit val cwlTypeDecoder = Decoder.enumDecoder(CwlType)
   implicit val cwlVersionDecoder = Decoder.enumDecoder(CwlVersion)
   implicit val scatterMethodDecoder = Decoder.enumDecoder(ScatterMethod)
+  implicit val argumentClass = Decoder.enumDecoder(RequirementClass)
+  implicit val scatterMethodEncoder = Encoder.enumEncoder(ScatterMethod)
+
+  def mapDecoder[T, S](implicit d: Decoder[Map[String, String Refined S => T]], v: Validate[String, S]) =
+    d.emap {
+      _.toList.head match {
+        case (key, valueFn) => refineV[S](key).map(valueFn)
+      }
+    }
+  /*
+  def mapDecoder[T, S](implicit d: Decoder[(String, String Refined S => T)], v: Validate[String, S],
+    imp: Lazy[DerivedDecoder[T]]) =  {
+    deriveDecoder[T]
+    d.emap {
+      case (key, valueFn) => refineV[S](key).map(valueFn)
+    }
+  }
+
+
+  //implicit def envVarDecoder = mapDecoder[EnvVarRequirement, MatchesRegex[W.`"EnvVarRequirement"`.T]]
+
+  implicit def envVarDecoder: Decoder[EnvVarRequirement] = {
+
+    val envvarDecoder2: Decoder[EnvVarRequirement] = Decoder[
+      Map[String, RequirementClass => EnvVarRequirement]].
+        emap {
+           _.toList.head match {
+             case (key, valueFn) => Try(RequirementClass.withName(key)).toEither.leftMap(_.getMessage).map(valueFn)
+           }
+        }
+
+    //deriveDecoder[EnvVarRequirement] or envvarDecoder2
+    envvarDecoder2
+  }
+  */
+ def arrayCoproduct[T, S](
+   implicit d: Decoder[Map[String, String Refined S => T]],
+   v: Validate[String, S],
+   inj: shapeless.ops.coproduct.Inject[wdl4s.cwl.Requirement,T]
+   ): Decoder[Array[Requirement]] =
+     mapDecoder[T, S].map(Coproduct[Requirement](_)).map(Array(_))
+
+     /*
+ implicit def ultimate(implicit rd: io.circe.generic.extras.decoding.ConfiguredDecoder[Array[wdl4s.cwl.Requirement]]
+   ): Decoder[Array[Requirement]] = {
+  arrayCoproduct[EnvVarRequirement, MatchesRegex[W.`"EnvVarRequirement"`.T]] or
+  deriveDecoder[Array[Requirement]]
+ }
+ */
+
+ /*
+  implicit def p: Decoder[Array[Requirement]] = new Decoder[Array[Requirement]] {
+    override def apply(c: HCursor): Result[Array[Requirement]] = ???
+  }
+  */
+
+ //val f = Decoder[S :+: CNil]
+
+
+ /*
+ type CoproductFn = Fn :+: CNil
+
+  implicit def envVarDecoder: Decoder[Requirement] = {
+
+    val envvarDecoder2: Decoder[Requirement] = Decoder[
+      Map[String, CoproductFn]].
+        emap {
+           _.toList.head match {
+             case (key, valueFn) =>
+               Try(RequirementClass.withName(key)).
+               toEither.
+               leftMap(_.getMessage).
+               map(valueFn).
+               map(Coproduct.apply[Requirement])
+           }
+        }
+
+    //deriveDecoder[EnvVarRequirement] or envvarDecoder2
+    envvarDecoder2
+  }
+
+  implicit def envVarDecoder: Decoder[EnvVarRequirement] = {
+
+    val envvarDecoder2 = Decoder[
+      Map[String, String Refined MatchesRegex[W.`"EnvVarRequirement"`.T] => EnvVarRequirement]].
+        emap {
+           _.toList.head match {
+             case (key, valueFn) => refineV[MatchesRegex[W.`"EnvVarRequirement"`.T]](key).map(valueFn)
+           }
+        }
+
+    deriveDecoder[EnvVarRequirement] or envvarDecoder2
+  }
+  */
+
+
+
+
+
   /*
   implicit def encodeAdtNoDiscr[A, Repr <: Coproduct](implicit
     gen: Generic.Aux[A, Repr],
@@ -95,7 +201,12 @@ package object cwl {
       YamlParser.
         parse(_).
         map(_.noSpaces).
-        flatMap(json => decode[CommandLineTool](json) orElse decode[Workflow](json))
+        flatMap{json =>
+            println(json)
+            val clt = decode[CommandLineTool](json)
+            println(clt)
+            clt orElse decode[Workflow](json)
+        }
 
   type WorkflowStepInputId = String
 
