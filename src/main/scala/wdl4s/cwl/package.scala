@@ -31,7 +31,6 @@ import io.circe.Decoder.Result
 import scala.util.Try
 import io.circe.refined._
 import io.circe.literal._
-import some._
 
 /**
  * This package is intended to parse all CWL files.
@@ -89,6 +88,77 @@ package object cwl {
   implicit val argumentClass = Decoder.enumDecoder(RequirementClass)
   implicit val scatterMethodEncoder = Encoder.enumEncoder(ScatterMethod)
 
+  import CwlType._
+  import CwlVersion._
+  import ScatterMethod._
+
+  type EVR = W.`"EnvVarRequirement"`.T => EnvVarRequirement
+  type IJR = W.`"InlineJavascriptRequirement"`.T => InlineJavascriptRequirement
+  type SR = W.`"SoftwareRequirement"`.T => SoftwareRequirement
+  type SFT = W.`"SubworkflowFeatureRequirement"`.T => SubworkflowFeatureRequirement
+  type SDR = W.`"SchemaDefRequirement"`.T => SchemaDefRequirement
+  type DR = W.`"DockerRequirement"`.T => DockerRequirement
+  type IWDR = W.`"InitialWorkDirRequirement"`.T => InitialWorkDirRequirement
+  type SCR = W.`"ShellCommandRequirement"`.T => ShellCommandRequirement
+  type RR = W.`"ResourceRequirement"`.T => ResourceRequirement
+  type SFR = W.`"ScatterFeatureRequirement"`.T => ScatterFeatureRequirement
+  type MIFR = W.`"MultipleInputFeatureRequirement"`.T => MultipleInputFeatureRequirement
+  type SIER = W.`"StepInputExpressionRequirement"`.T => StepInputExpressionRequirement
+
+  //This compiles
+  deriveDecoder[ResourceRequirement]
+  //This fails..
+  deriveDecoder[RR]
+
+  type Target =
+    EVR :+:
+    IJR :+:
+    SR :+:
+    SFT :+:
+    SDR :+:
+    DR :+:
+    IWDR :+:
+    EVR :+:
+    SCR :+:
+    RR :+:
+    SFR :+:
+    MIFR :+:
+    SIER :+:
+    CNil
+
+    /*
+  implicit val envvarD = deriveDecoder[EVR]
+  implicit val ijr = Decoder[IJR]
+  implicit val sr = Decoder[SR]
+  implicit val sw = Decoder[SFT]
+  implicit def sdr = deriveDecoder[SDR]
+  implicit def rr = deriveDecoder[RR]
+  implicit def iwdr = deriveDecoder[IWDR]
+  */
+  /*
+  implicit val dr = Decoder[DR]
+  implicit val scr = Decoder[SCR]
+  implicit val sfr = Decoder[SFR]
+  implicit val mifr = Decoder[MIFR]
+  implicit val sier = Decoder[SIER]
+  implicit val X = Decoder[Map[String, Target]]
+
+  type V[A] = ValidatedNel[String,A]
+
+  //FAILSAFE
+  //implicit val parser2: Decoder[Array[Requirement]] =
+   // Decoder[Map[String, EVR]].map{_ => println("b"); Array.empty}
+
+  implicit val parser: Decoder[Array[Requirement]] =
+    Decoder[Map[String, Target]].
+        emap {
+          m =>
+           m.toList.traverse[V,Requirement] {
+             case ("EnvVarRequirement", valueFns) => valueFns.select[EVR].toValidNel("wrong").map(_("EnvVarRequirement")).map(Coproduct[Requirement](_))
+             case (_,__) => invalidNel("bad")
+           }.toEither.leftMap(_.toList.mkString(", ")).map(_.toArray)
+        }
+        */
   def mapDecoder[T, S](implicit d: Decoder[Map[String, String Refined S => T]], v: Validate[String, S]) =
     d.emap {
       _.toList.head match {

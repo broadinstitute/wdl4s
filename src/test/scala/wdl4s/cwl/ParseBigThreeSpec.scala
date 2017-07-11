@@ -28,7 +28,6 @@ import io.circe._
 import eu.timepit.refined.string._
 
 import io.circe.refined._
-import some._
 
 class ParseBigThreeSpec extends FlatSpec with Matchers {
   val namespace = "cwl"
