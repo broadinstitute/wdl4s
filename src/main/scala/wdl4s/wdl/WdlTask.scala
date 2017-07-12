@@ -126,7 +126,7 @@ case class WdlTask(name: String,
                            wdlFunctions: WdlFunctions[WdlValue],
                            shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): String => WdlValue = {
     outputs.toList match {
-      case head :: others => super.lookupFunction(inputs, wdlFunctions, NoOutputResolver, shards, relativeTo = head)
+      case head :: _ => super.lookupFunction(inputs, wdlFunctions, NoOutputResolver, shards, relativeTo = head)
       case _ => super.lookupFunction(inputs, wdlFunctions, NoOutputResolver, shards, this)
     }
   }

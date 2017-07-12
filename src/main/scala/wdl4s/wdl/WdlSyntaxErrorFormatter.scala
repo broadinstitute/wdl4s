@@ -5,7 +5,7 @@ import wdl4s.parser.WdlParser._
 
 import scala.collection.JavaConverters._
 
-case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extends SyntaxErrorFormatter {
+case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WorkflowSource]) extends SyntaxErrorFormatter {
 
   private def pointToSource(t: Terminal): String = s"${line(t)}\n${" " * (t.getColumn - 1)}^"
   private def line(t:Terminal): String = terminalMap(t).split("\n")(t.getLine - 1)
@@ -314,7 +314,7 @@ case class WdlSyntaxErrorFormatter(terminalMap: Map[Terminal, WdlSource]) extend
     val (parentName, missingType) = parent match {
       case Some(t: WdlTask) => (s"task '${t.unqualifiedName}'" , "value")
       case Some(t: WdlTaskCall) => (s"task '${t.task.unqualifiedName}'" , "value")
-      case Some(other) => ("workflow", "value or call")
+      case Some(_) => ("workflow", "value or call")
       case None => ("", "")
     }
 

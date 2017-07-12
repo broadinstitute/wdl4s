@@ -2,18 +2,17 @@ package wdl4s.wdl
 
 import java.nio.file.{Files, Path}
 
-import scala.language.postfixOps
-
 // FIXME: Figure out if anything can be removed from cromwell completely or pulled from here
 
 trait SampleWdl extends TestFileUtil {
-  def wdlSource(runtime: String = ""): WdlSource
+  def workflowSource(runtime: String = ""): WorkflowSource
   def rawInputs: WorkflowRawInputs
 
   def createFileArray(base: Path): Unit = {
     createFile("f1", base, "line1\nline2\n")
     createFile("f2", base, "line3\nline4\n")
     createFile("f3", base, "line5\n")
+    ()
   }
 
   def cleanupFileArray(base: Path) = {
@@ -27,7 +26,7 @@ trait SampleWdl extends TestFileUtil {
 
 object SampleWdl {
   trait ThreeStepTemplate extends SampleWdl {
-    override def wdlSource(runtime: String = "") = sourceString()
+    override def workflowSource(runtime: String = "") = sourceString()
     private val outputSectionPlaceholder = "OUTPUTSECTIONPLACEHOLDER"
     def sourceString(outputsSection: String = "") = {
       val withPlaceholders =
@@ -86,8 +85,8 @@ object SampleWdl {
 
 
   object NestedScatterWdl extends SampleWdl {
-    override def wdlSource(runtime: String = "") =
-      """
+    override def workflowSource(runtime: String = "") =
+      s"""
         task A {
         |  command {
         |    echo -n -e "jeff\nchris\nmiguel\nthibault\nkhalid\nscott"
@@ -100,7 +99,7 @@ object SampleWdl {
         |task B {
         |  String B_in
         |  command {
-        |    python -c "print(len('${B_in}'))"
+        |    python -c "print(len('$${B_in}'))"
         |  }
         |  output {
         |    Int B_out = read_int(stdout())
@@ -110,7 +109,7 @@ object SampleWdl {
         |task C {
         |  Int C_in
         |  command {
-        |    python -c "print(${C_in}*100)"
+        |    python -c "print($${C_in}*100)"
         |  }
         |  output {
         |    Int C_out = read_int(stdout())
@@ -120,7 +119,7 @@ object SampleWdl {
         |task D {
         |  Array[Int] D_in
         |  command {
-        |    python -c "print(${sep = '+' D_in})"
+        |    python -c "print($${sep = '+' D_in})"
         |  }
         |  output {
         |    Int D_out = read_int(stdout())
@@ -160,7 +159,7 @@ object SampleWdl {
 
 
   class ScatterWdl extends SampleWdl {
-    val tasks = """task A {
+    val tasks = s"""task A {
       |  command {
       |    echo -n -e "jeff\nchris\nmiguel\nthibault\nkhalid\nscott"
       |  }
@@ -172,7 +171,7 @@ object SampleWdl {
       |task B {
       |  String B_in
       |  command {
-      |    python -c "print(len('${B_in}'))"
+      |    python -c "print(len('$${B_in}'))"
       |  }
       |  output {
       |    Int B_out = read_int(stdout())
@@ -182,7 +181,7 @@ object SampleWdl {
       |task C {
       |  Int C_in
       |  command {
-      |    python -c "print(${C_in}*100)"
+      |    python -c "print($${C_in}*100)"
       |  }
       |  output {
       |    Int C_out = read_int(stdout())
@@ -192,7 +191,7 @@ object SampleWdl {
       |task D {
       |  Array[Int] D_in
       |  command {
-      |    python -c "print(${sep = '+' D_in})"
+      |    python -c "print($${sep = '+' D_in})"
       |  }
       |  output {
       |    Int D_out = read_int(stdout())
@@ -209,7 +208,7 @@ object SampleWdl {
       |}
     """.stripMargin
 
-    override def wdlSource(runtime: String = "") =
+    override def workflowSource(runtime: String = "") =
       s"""$tasks
         |
         |workflow w {
@@ -227,7 +226,7 @@ object SampleWdl {
   }
 
   class DeclarationsWdl extends SampleWdl {
-    override def wdlSource(runtime: String = "") =
+    override def workflowSource(runtime: String = "") =
       """task a {
         |  String foo = "notfoo"
         |  String bar = "bar"
@@ -266,7 +265,7 @@ object SampleWdl {
   }
 
   object TaskDeclarationsWdl extends SampleWdl {
-    override def wdlSource(runtime: String = "") =
+    override def workflowSource(runtime: String = "") =
       """
       |task t {
       |   String s

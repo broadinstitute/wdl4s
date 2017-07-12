@@ -1,14 +1,12 @@
 package wdl4s.wom.graph
 
+import cats.implicits._
 import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.wom.callable.Callable.OutputDefinition
 import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
-import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
-
-import scala.language.postfixOps
-import cats.implicits._
 import wdl4s.wom.graph.CallNode.CallWithInputs
 import wdl4s.wom.graph.GraphNode.LinkedInputPort
+import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 
 sealed abstract class CallNode extends GraphNode {
   def name: String

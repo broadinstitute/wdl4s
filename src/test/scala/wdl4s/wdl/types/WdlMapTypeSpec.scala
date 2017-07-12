@@ -1,9 +1,9 @@
 package wdl4s.wdl.types
 
-import wdl4s.wdl.values.{WdlObject, WdlMap, WdlInteger, WdlString}
-import wdl4s.parser.WdlParser.SyntaxError
 import org.scalatest.{FlatSpec, Matchers}
-import spray.json.{JsObject, JsArray, JsNumber}
+import spray.json.{JsNumber, JsObject}
+import wdl4s.parser.WdlParser.SyntaxError
+import wdl4s.wdl.values.{WdlInteger, WdlMap, WdlObject, WdlString}
 
 import scala.util.{Failure, Success}
 
@@ -45,7 +45,7 @@ class WdlMapTypeSpec extends FlatSpec with Matchers  {
       case Success(v) =>
         v.wdlType shouldEqual WdlMapType(WdlStringType, WdlIntegerType)
         v.toWdlString shouldEqual stringIntMap.toWdlString
-      case Failure(f) => fail("Failed to coerce a map to an object")
+      case Failure(_) => fail("Failed to coerce a map to an object")
     }
   }
   it should "NOT successfully convert WDL source code to WdlMap if passed a bogus AST" in {

@@ -19,29 +19,29 @@ class ParameterCommandPartSpec extends WdlTest {
     }
     val paramsByName = task.commandTemplate.collect({ case p: ParameterCommandPart => p })
 
-    "Stringify the ${...} tags correctly" in {
+    s"Stringify the $${...} tags correctly" in {
       paramsByName.size shouldEqual 6
-      paramsByName.head.toString shouldEqual "${a}"
-      paramsByName(1).toString shouldEqual "${\"-p \" + b}"
-      paramsByName(2).toString shouldEqual "${sep=\",\" c}"
-      paramsByName(3).toString shouldEqual "${default=\"9\" d}"
-      paramsByName(4).toString shouldEqual "${sep=\"\\t\" e}"
-      paramsByName(5).toString shouldEqual "${true=\"--true\" false=\"--false\" f}"
+      paramsByName.head.toString shouldEqual s"$${a}"
+      paramsByName(1).toString shouldEqual s"""$${"-p " + b}"""
+      paramsByName(2).toString shouldEqual s"""$${sep="," c}"""
+      paramsByName(3).toString shouldEqual s"""$${default="9" d}"""
+      paramsByName(4).toString shouldEqual s"""$${sep="\\t" e}"""
+      paramsByName(5).toString shouldEqual s"""$${true="--true" false="--false" f}"""
     }
 
     "raise exception if 'true' attribute is specified but 'false' is not" in {
       WdlNamespace.loadUsingSource(
-        """task param_test {
+        s"""task param_test {
             |  Boolean f
             |
             |  command <<<
-            |  ./binary ${true="--true" f}
+            |  ./binary $${true="--true" f}
             |  >>>
             |}
             |
             |workflow wf {call param_test}
           """.stripMargin, None, None) match {
-        case Failure(s: SyntaxError) => // expected
+        case Failure(_: SyntaxError) => // expected
         case x => fail(s"Expecting a syntax error but got $x")
       }
     }

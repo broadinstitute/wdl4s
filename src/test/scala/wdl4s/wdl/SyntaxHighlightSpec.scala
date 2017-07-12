@@ -256,28 +256,28 @@ class SyntaxHighlightSpec extends WordSpec with Matchers {
                        |}
                      """.stripMargin
 
-    def resolver(importUri: String): WdlSource = {
+    def resolver(importUri: String): WorkflowSource = {
       importUri match {
         case "foo.wdl" => fooTaskWdl
         case _ => throw new RuntimeException(s"Can't resolve $importUri")
       }
     }
 
-    val namespace = WdlNamespace.loadUsingSource(
-      """import "foo.wdl" as foo_ns
+    val source = s"""
+        |import "foo.wdl" as foo_ns
         |
         |task t {
         |  String f
         |  Int p
         |  command {
-        |    ./cmd ${f} ${p}
+        |    ./cmd $${f} $${p}
         |  }
         |}
         |
         |task s {
         |  Array[File] input_file
         |  command <<<
-        |    cat ${sep=' ' input_file} | awk '{s+=$1} END {print s}'
+        |    cat $${sep=' ' input_file} | awk '{s+=$$1} END {print s}'
         |  >>>
         |  output {
         |    String s = read_string(stdout())
@@ -294,24 +294,25 @@ class SyntaxHighlightSpec extends WordSpec with Matchers {
         |  call t as u {
         |    input: f="abc", p=p
         |  }
-        |}""".stripMargin, None, Option(Seq(resolver))
-    ).get
+        |}""".stripMargin
+
+    val namespace = WdlNamespace.loadUsingSource(source, None, Option(Seq(resolver))).get
 
     val console =
-      """\u001b[38;5;214mimport\u001b[0m 'foo.wdl' as foo_ns
+      s"""\u001b[38;5;214mimport\u001b[0m 'foo.wdl' as foo_ns
         |
         |\u001b[38;5;214mtask\u001b[0m \u001b[38;5;253mt\u001b[0m {
         |  \u001b[38;5;33mString\u001b[0m \u001b[38;5;112mf\u001b[0m
         |  \u001b[38;5;33mInt\u001b[0m \u001b[38;5;112mp\u001b[0m
         |  \u001b[38;5;214mcommand\u001b[0m {
-        |    ./cmd ${f} ${p}
+        |    ./cmd $${f} $${p}
         |  }
         |}
         |
         |\u001b[38;5;214mtask\u001b[0m \u001b[38;5;253ms\u001b[0m {
         |  \u001b[38;5;33mArray[File]\u001b[0m \u001b[38;5;112minput_file\u001b[0m
         |  \u001b[38;5;214mcommand\u001b[0m <<<
-        |    cat ${sep=" " input_file} | awk '{s+=$1} END {print s}'
+        |    cat $${sep=" " input_file} | awk '{s+=$$1} END {print s}'
         |  >>>
         |  \u001b[38;5;214moutput\u001b[0m {
         |    \u001b[38;5;33mString\u001b[0m \u001b[38;5;112ms\u001b[0m = \u001b[38;5;13mread_string\u001b[0m(\u001b[38;5;13mstdout\u001b[0m())
@@ -333,20 +334,20 @@ class SyntaxHighlightSpec extends WordSpec with Matchers {
         |}""".stripMargin
 
     val html =
-      """<span class="keyword">import</span> 'foo.wdl' as foo_ns
+      s"""<span class="keyword">import</span> 'foo.wdl' as foo_ns
         |
         |<span class="keyword">task</span> <span class="name">t</span> {
         |  <span class="type">String</span> <span class="variable">f</span>
         |  <span class="type">Int</span> <span class="variable">p</span>
         |  <span class="section">command</span> {
-        |    <span class="command">./cmd ${f} ${p}</span>
+        |    <span class="command">./cmd $${f} $${p}</span>
         |  }
         |}
         |
         |<span class="keyword">task</span> <span class="name">s</span> {
         |  <span class="type">Array[File]</span> <span class="variable">input_file</span>
         |  <span class="section">command</span> <<<
-        |    <span class="command">cat ${sep=" " input_file} | awk '{s+=$1} END {print s}'</span>
+        |    <span class="command">cat $${sep=" " input_file} | awk '{s+=$$1} END {print s}'</span>
         |  >>>
         |  <span class="section">output</span> {
         |    <span class="type">String</span> <span class="variable">s</span> = <span class="function">read_string</span>(<span class="function">stdout</span>())

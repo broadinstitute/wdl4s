@@ -6,7 +6,6 @@ import wdl4s.wdl.types._
 import wdl4s.wdl.util.FileUtil
 import wdl4s.wdl.values.WdlArray.WdlArrayLike
 
-import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 object WdlMap {
@@ -19,8 +18,8 @@ object WdlMap {
       case _ =>
         val mapCoerced = coerced map { case (k, v) => k.get -> v.get }
 
-        val keyType = WdlType.homogeneousTypeFromValues(mapCoerced map { case (k, v) => k })
-        val valueType = WdlType.homogeneousTypeFromValues(mapCoerced map { case (k, v) => v })
+        val keyType = WdlType.homogeneousTypeFromValues(mapCoerced map { case (k, _) => k })
+        val valueType = WdlType.homogeneousTypeFromValues(mapCoerced map { case (_, v) => v })
 
         WdlMap(WdlMapType(keyType, valueType), mapCoerced)
     }
@@ -43,7 +42,7 @@ object WdlMap {
 }
 
 case class WdlMap(wdlType: WdlMapType, value: Map[WdlValue, WdlValue]) extends WdlValue with WdlArrayLike with TsvSerializable {
-  val typesUsedInKey = value.map { case (k,v) => k.wdlType }.toSet
+  val typesUsedInKey = value.map { case (k, _) => k.wdlType }.toSet
 
   if (typesUsedInKey.size == 1 && typesUsedInKey.head != wdlType.keyType)
     throw new UnsupportedOperationException(s"Could not construct a $wdlType as this value: $value")
@@ -51,7 +50,7 @@ case class WdlMap(wdlType: WdlMapType, value: Map[WdlValue, WdlValue]) extends W
   if (typesUsedInKey.size > 1)
     throw new UnsupportedOperationException(s"Cannot construct $wdlType with mixed types: $value")
 
-  val typesUsedInValue = value.map { case (k,v) => v.wdlType }.toSet
+  val typesUsedInValue = value.map { case (_, v) => v.wdlType }.toSet
 
   if (typesUsedInValue.size == 1 && typesUsedInValue.head != wdlType.valueType)
     throw new UnsupportedOperationException(s"Could not construct a $wdlType as this value: $value")
@@ -64,7 +63,7 @@ case class WdlMap(wdlType: WdlMapType, value: Map[WdlValue, WdlValue]) extends W
 
   def tsvSerialize: Try[String] = {
     (wdlType.keyType, wdlType.valueType) match {
-      case (wdlTypeKey: WdlPrimitiveType, wdlTypeValue: WdlPrimitiveType) =>
+      case (_: WdlPrimitiveType, _: WdlPrimitiveType) =>
         Success(value.map({case (k, v) => s"${k.valueString}\t${v.valueString}"}).mkString("\n"))
       case _ =>
         Failure(new UnsupportedOperationException("Can only TSV serialize a Map[Primitive, Primitive]"))

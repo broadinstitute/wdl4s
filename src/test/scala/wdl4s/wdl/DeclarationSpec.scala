@@ -8,7 +8,7 @@ import wdl4s.wdl.values.{WdlOptionalValue, WdlString, WdlValue}
 import scala.util.{Failure, Success}
 
 class DeclarationSpec extends FlatSpec with Matchers {
-  lazy val wdlSource = (new SampleWdl.DeclarationsWdl).wdlSource()
+  lazy val wdlSource = (new SampleWdl.DeclarationsWdl).workflowSource()
   lazy val namespace = WdlNamespaceWithWorkflow.load(wdlSource, Seq.empty).get
 
   "A Workflow with declarations" should "have declarations defined properly" in {

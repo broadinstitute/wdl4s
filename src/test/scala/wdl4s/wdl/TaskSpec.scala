@@ -58,7 +58,7 @@ class TaskSpec extends WdlTest {
         "param_test.b" -> WdlString("b_val"),
         "param_test.c" -> WdlArray(WdlArrayType(WdlStringType), Seq(WdlString("c0"), WdlString("c1"), WdlString("c2"))),
         "param_test.d" -> WdlInteger(1),
-        "param_test.e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(0, 1, 2).map(WdlInteger(_))),
+        "param_test.e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(0, 1, 2) map WdlInteger.apply),
         "param_test.f" -> WdlBoolean.False
       )
       paramTestTask.instantiateCommand(paramTestTask.inputsFromMap(inputs), NoFunctions).get shouldEqual "./binary a_val -p b_val c0,c1,c2 1 0\t1\t2 --false"
@@ -69,7 +69,7 @@ class TaskSpec extends WdlTest {
         "param_test.a" -> WdlString("a_val"),
         "param_test.b" -> WdlString("b_val"),
         "param_test.c" -> WdlArray(WdlArrayType(WdlStringType), Seq(WdlString("c0"), WdlString("c1"), WdlString("c2"))),
-        "param_test.e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(0, 1, 2).map(WdlInteger(_))),
+        "param_test.e" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(0, 1, 2) map WdlInteger.apply),
         "param_test.f" -> WdlBoolean.True
       )
       paramTestTask.instantiateCommand(paramTestTask.inputsFromMap(inputs), NoFunctions).get shouldEqual "./binary a_val -p b_val c0,c1,c2 9 0\t1\t2 --true"
@@ -152,7 +152,7 @@ class TaskSpec extends WdlTest {
     }
 
     "instantiate command (4)" in {
-      val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.TaskDeclarationsWdl.wdlSource(), Seq.empty).get
+      val namespace = WdlNamespaceWithWorkflow.load(SampleWdl.TaskDeclarationsWdl.workflowSource(), Seq.empty).get
       val callV = namespace.taskCalls.find(_.unqualifiedName == "v").get
       val inputs = callV.task.inputsFromMap(
         Map(

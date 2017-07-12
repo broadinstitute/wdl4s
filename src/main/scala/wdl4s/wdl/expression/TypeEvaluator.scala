@@ -51,7 +51,7 @@ case class TypeEvaluator(override val lookup: String => WdlType, override val fu
           ifTrueType <- evaluate(ifTrue)
           ifFalseType <- evaluate(ifFalse)
         } yield WdlType.lowestCommonSubtype(Seq(ifTrueType, ifFalseType))
-        case other => Failure(new WdlExpressionException("The condition of a ternary 'if' must be a Boolean."))
+        case _ => Failure(new WdlExpressionException("The condition of a ternary 'if' must be a Boolean."))
       }
     case a: Ast if a.isArrayLiteral =>
       val evaluatedElements = a.getAttribute("values").astListAsVector map evaluate
@@ -72,9 +72,9 @@ case class TypeEvaluator(override val lookup: String => WdlType, override val fu
         case (_, failures) if failures.nonEmpty =>
           val message = failures.collect { case f: Failure[_] => f.exception.getMessage }.mkString("\n")
           Failure(new WdlExpressionException(s"Could not evaluate expression:\n$message"))
-        case (successes, _) =>
-          val keyType = WdlType.homogeneousTypeFromTypes(evaluatedMap map { case (k, v) => k.get} )
-          val valueType = WdlType.homogeneousTypeFromTypes(evaluatedMap map { case (k, v) => v.get} )
+        case good @ _ =>
+          val keyType = WdlType.homogeneousTypeFromTypes(evaluatedMap map { case (k, _) => k.get} )
+          val valueType = WdlType.homogeneousTypeFromTypes(evaluatedMap map { case (_, v) => v.get} )
           Success(WdlMapType(keyType, valueType))
       }
     case a: Ast if a.isMemberAccess =>
@@ -102,7 +102,7 @@ case class TypeEvaluator(override val lookup: String => WdlType, override val fu
     case a: Ast if a.isArrayOrMapLookup =>
       (evaluate(a.getAttribute("lhs")), evaluate(a.getAttribute("rhs"))) match {
         case (Success(a: WdlArrayType), Success(WdlIntegerType)) => Success(a.memberType)
-        case (Success(m: WdlMapType), Success(v: WdlType)) => Success(m.valueType)
+        case (Success(m: WdlMapType), Success(_: WdlType)) => Success(m.valueType)
         case (Failure(ex), _) => Failure(ex)
         case (_, Failure(ex)) => Failure(ex)
         case (_, _) => Failure(new WdlExpressionException(s"Can't index ${a.toPrettyString}"))

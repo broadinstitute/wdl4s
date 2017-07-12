@@ -1,23 +1,16 @@
 package wdl4s
 
-import wdl4s.cwl._
-
-import io.circe.syntax._
 import io.circe._
 import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
-import io.circe.generic.semiauto._
 import io.circe.yaml.{parser => YamlParser}
-import io.circe.Json
 
-import io.circe.syntax._
 import io.circe._
 import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
-import shapeless._, poly._//, ops.union._, union._
-import shapeless.ops.coproduct._
+import shapeless._
 import cats._, implicits._//, instances._
 import cats.data.Kleisli
 import io.circe._
@@ -71,8 +64,6 @@ package object cwl {
   type CirceRead[A] = Kleisli[CirceError, String, A]
 
   import CwlType._
-  import CwlVersion._
-  import ScatterMethod._
 
   type Yaml = String
 

@@ -3,7 +3,7 @@ package wdl4s.wdl
 import org.scalatest.{FlatSpec, Matchers}
 
 class AstSpec extends FlatSpec with Matchers {
-  val namespace = WdlNamespace.loadUsingSource(SampleWdl.ThreeStep.wdlSource(), None, None).get
+  val namespace = WdlNamespace.loadUsingSource(SampleWdl.ThreeStep.workflowSource(), None, None).get
 
   "Parser" should "produce AST with 3 Task nodes" in {
     AstTools.findAsts(namespace.ast, "Task").size shouldEqual 3

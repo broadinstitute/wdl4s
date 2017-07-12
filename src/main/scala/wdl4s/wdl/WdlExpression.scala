@@ -1,11 +1,11 @@
 package wdl4s.wdl
 
+import wdl4s.parser.WdlParser
+import wdl4s.parser.WdlParser.{Ast, AstList, AstNode, Terminal}
 import wdl4s.wdl.AstTools.{EnhancedAstNode, VariableReference}
 import wdl4s.wdl.WdlExpression._
 import wdl4s.wdl.expression._
 import wdl4s.wdl.formatter.{NullSyntaxHighlighter, SyntaxHighlighter}
-import wdl4s.parser.WdlParser
-import wdl4s.parser.WdlParser.{Ast, AstList, AstNode, Terminal}
 import wdl4s.wdl.types._
 import wdl4s.wdl.values._
 
@@ -91,7 +91,7 @@ object WdlExpression {
   def evaluateType(ast: AstNode, lookup: (String) => WdlType, functions: WdlFunctions[WdlType], from: Option[Scope] = None) =
     TypeEvaluator(lookup, functions, from).evaluate(ast)
 
-  def fromString(expression: WdlSource): WdlExpression = {
+  def fromString(expression: WorkflowSource): WdlExpression = {
     val tokens = parser.lex(expression, "string")
     val terminalMap = (tokens.asScala.toVector map {(_, expression)}).toMap
     val parseTree = parser.parse_e(tokens, WdlSyntaxErrorFormatter(terminalMap))
@@ -190,7 +190,7 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
 object TernaryIf {
   def unapply(arg: Ast): Option[(AstNode, AstNode, AstNode)] = {
     if (arg.getName.equals("TernaryIf")) {
-      Option(arg.getAttribute("cond"), arg.getAttribute("iftrue"), arg.getAttribute("iffalse"))
+      Option((arg.getAttribute("cond"), arg.getAttribute("iftrue"), arg.getAttribute("iffalse")))
     } else {
       None
     }

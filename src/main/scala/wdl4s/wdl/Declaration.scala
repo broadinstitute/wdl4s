@@ -26,7 +26,7 @@ object DeclarationInterface {
   def relativeWdlType(from: Scope, target: DeclarationInterface, wdlType: WdlType): WdlType = {
     target.closestCommonAncestor(from) map { ancestor =>
       target.ancestrySafe.takeWhile(_ != ancestor).foldLeft(wdlType){
-        case (acc, scatter: Scatter) => WdlArrayType(acc)
+        case (acc, _: Scatter) => WdlArrayType(acc)
         case (acc, _: If) => WdlOptionalType(acc)
         case (acc, _) => acc
       }
@@ -57,12 +57,12 @@ trait DeclarationInterface extends WdlGraphNodeWithUpstreamReferences {
   def relativeWdlType(from: Scope): WdlType = DeclarationInterface.relativeWdlType(from, this, wdlType)
 
   def asTaskInput: Option[TaskInput] = expression match {
-    case Some(expr) => None
+    case Some(_) => None
     case None => Option(TaskInput(unqualifiedName, wdlType))
   }
 
   def asWorkflowInput: Option[WorkflowInput] = expression match {
-    case Some(expr) => None
+    case Some(_) => None
     case None => Some(WorkflowInput(fullyQualifiedName, wdlType))
   }
 

@@ -1,7 +1,6 @@
 package wdl4s.wdl
 
 import wdl4s.parser.WdlParser.{Ast, Terminal}
-import wdl4s.wdl.AstTools.EnhancedAstNode
 
 object Scatter {
   val FQNIdentifier = "$scatter"

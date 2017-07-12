@@ -8,7 +8,7 @@ import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.values.{WdlOptionalValue, WdlValue}
 import wdl4s.wom.graph.CallNode.CallWithInputs
 import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
-import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphNodePort}
+import wdl4s.wom.graph.{CallNode, GraphInputNode}
 
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}

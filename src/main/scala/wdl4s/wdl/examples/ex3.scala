@@ -1,9 +1,9 @@
 package wdl4s.wdl.examples
 
-import wdl4s.wdl.{WdlSource, WdlNamespaceWithWorkflow}
+import wdl4s.wdl.{WorkflowSource, WdlNamespaceWithWorkflow}
 
 object ex3 {
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val wdl = """
       |import "some_string" as my_namespace
       |task a {
@@ -13,7 +13,7 @@ object ex3 {
       | call a
       |}""".stripMargin
 
-    def resolver(importString: String): WdlSource = {
+    def resolver(importString: String): WorkflowSource = {
       importString match {
         case "some_string" => "task imported { command {ps} }"
         case _ => throw new NotImplementedError()

@@ -65,7 +65,7 @@ case class FileEvaluator(valueEvaluator: ValueEvaluator, coerceTo: WdlType = Wdl
     valueEvaluator.evaluate(ast) match {
         // If the ast can successfully be evaluated, then just find the WdlFiles that it contains
       case Success(v) => Success(findWdlFiles(v))
-      case Failure(ex) => evaluateRecursive(ast, anticipatedType)
+      case Failure(_) => evaluateRecursive(ast, anticipatedType)
     }
   }
 
@@ -139,7 +139,7 @@ case class FileEvaluator(valueEvaluator: ValueEvaluator, coerceTo: WdlType = Wdl
               case Success(v) => Success(v.flatten)
               case f => f.map(_.flatten)
             }
-          case other => Failure(new WdlExpressionException(s"Failed to parse $a for files. Found an unexpected Array literal but anticipated a ${anticipatedType.toWdlString}"))
+          case _ => Failure(new WdlExpressionException(s"Failed to parse $a for files. Found an unexpected Array literal but anticipated a ${anticipatedType.toWdlString}"))
         }
       case a: Ast if a.isTupleLiteral =>
         val unevaluatedElements = a.getAttribute("values").astListAsVector
@@ -152,7 +152,7 @@ case class FileEvaluator(valueEvaluator: ValueEvaluator, coerceTo: WdlType = Wdl
                 left <- evaluate(unevaluatedElements.head, leftType)
                 right <- evaluate(unevaluatedElements(1), rightType)
               } yield left ++ right
-            case other => Failure(new WdlExpressionException(s"Failed to parse $a for files. Found an unexpected Pair literal but anticipated a ${anticipatedType.toWdlString}"))
+            case _ => Failure(new WdlExpressionException(s"Failed to parse $a for files. Found an unexpected Pair literal but anticipated a ${anticipatedType.toWdlString}"))
           }
 
         } else {
@@ -175,7 +175,7 @@ case class FileEvaluator(valueEvaluator: ValueEvaluator, coerceTo: WdlType = Wdl
               case (successes, _) =>
                 Success(successes.flatMap(_.get))
             }
-          case other => Failure(new WdlExpressionException(s"Failed to parse $a for files. Found an unexpected Map literal but anticipated a ${anticipatedType.toWdlString}"))
+          case _ => Failure(new WdlExpressionException(s"Failed to parse $a for files. Found an unexpected Map literal but anticipated a ${anticipatedType.toWdlString}"))
         }
 
 

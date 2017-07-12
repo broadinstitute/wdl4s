@@ -203,7 +203,7 @@ case class WdlWorkflow(unqualifiedName: String,
       namespace.resolveCallOrOutputOrDeclaration(outputFqn) match {
         case Some(call: WdlCall) if output.wildcard && calls.contains(call) => toWorkflowOutputs(call)
         case Some(declaration: DeclarationInterface) if descendants.contains(declaration) => toWorkflowOutputs(declaration)
-        case e => throw new SyntaxError(wdlSyntaxErrorFormatter.badOldStyleWorkflowOutput(output.ast))
+        case _ => throw new SyntaxError(wdlSyntaxErrorFormatter.badOldStyleWorkflowOutput(output.ast))
       }
     }
   }

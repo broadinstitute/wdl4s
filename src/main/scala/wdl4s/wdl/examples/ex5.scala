@@ -3,7 +3,7 @@ package wdl4s.wdl.examples
 import wdl4s.wdl.{WdlTaskCall, WdlNamespaceWithWorkflow}
 
 object ex5 {
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val wdl = """
       |task a {
       |  command { ps }

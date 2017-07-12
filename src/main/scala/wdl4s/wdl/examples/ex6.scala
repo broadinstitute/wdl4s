@@ -5,7 +5,7 @@ import wdl4s.wdl.expression.NoFunctions
 import wdl4s.wdl.values.{WdlString, WdlValue}
 
 object ex6 {
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val wdl = """
       |workflow wf {
       |  String a = "foo" + "bar"

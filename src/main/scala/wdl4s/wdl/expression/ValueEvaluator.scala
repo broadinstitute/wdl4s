@@ -145,7 +145,7 @@ case class ValueEvaluator(override val lookup: String => WdlValue, override val 
                     }
                 }
               case array: WdlArray if array.wdlType == WdlArrayType(WdlObjectType) =>
-                /**
+                /*
                  * This case is for slicing an Array[Object], used mainly for scatter-gather.
                  * For example, if 'call foo' was in a scatter block, foo's outputs (e.g. Int x)
                  * would be an Array[Int].  If a downstream call has an input expression "foo.x",

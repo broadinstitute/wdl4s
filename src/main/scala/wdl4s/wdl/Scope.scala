@@ -1,12 +1,11 @@
 package wdl4s.wdl
 
+import wdl4s.parser.WdlParser.Ast
 import wdl4s.wdl.exception.{ScatterIndexNotFound, VariableLookupException, VariableNotFoundException}
 import wdl4s.wdl.expression.WdlFunctions
-import wdl4s.parser.WdlParser.Ast
 import wdl4s.wdl.values.WdlArray.WdlArrayLike
 import wdl4s.wdl.values.WdlValue
 
-import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 trait Scope {

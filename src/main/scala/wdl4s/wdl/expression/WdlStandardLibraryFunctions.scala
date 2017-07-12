@@ -2,14 +2,13 @@ package wdl4s.wdl.expression
 
 import cats.instances.try_._
 import cats.syntax.cartesian._
+import lenthall.exception.AggregatedException
+import wdl4s.wdl.expression.WdlStandardLibraryFunctions.{crossProduct => stdLibCrossProduct, _}
 import wdl4s.wdl.types._
 import wdl4s.wdl.values._
 import wdl4s.wdl.{TsvSerializable, WdlExpressionException}
 
-import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
-import WdlStandardLibraryFunctions.{crossProduct => stdLibCrossProduct, _}
-import lenthall.exception.AggregatedException
 
 trait WdlStandardLibraryFunctions extends WdlFunctions[WdlValue] {
   def fileContentsToString(path: String): String = readFile(path)
@@ -77,8 +76,8 @@ trait WdlStandardLibraryFunctions extends WdlFunctions[WdlValue] {
   def basename(params: Seq[Try[WdlValue]]): Try[WdlString] = {
 
     val arguments: Try[(WdlValue, WdlValue)] = params.toList match {
-      case Success(f) :: Nil => Success(f, WdlString(""))
-      case Success(f) :: Success(s) :: Nil => Success(f, s)
+      case Success(f) :: Nil => Success((f, WdlString("")))
+      case Success(f) :: Success(s) :: Nil => Success((f, s))
       case s if s.size > 2 || s.size < 1 => Failure(new IllegalArgumentException(s"Bad number of arguments to basename(filename, suffixToStrip = ''): ${params.size}"))
       case _ =>
         val failures = params collect {
@@ -117,7 +116,7 @@ trait WdlStandardLibraryFunctions extends WdlFunctions[WdlValue] {
     case class ExpandedTwoDimensionalArray(innerType: WdlType, value: Seq[Seq[WdlValue]])
     def validateAndExpand(value: WdlValue): Try[ExpandedTwoDimensionalArray] = value match {
       case WdlArray(WdlArrayType(WdlArrayType(innerType)), array: Seq[WdlValue]) => expandWdlArray(array) map { ExpandedTwoDimensionalArray(innerType, _) }
-      case array @ WdlArray(WdlArrayType(nonArrayType), _) => Failure(new IllegalArgumentException(s"Array must be two-dimensional to be transposed but given array of $nonArrayType"))
+      case WdlArray(WdlArrayType(nonArrayType), _) => Failure(new IllegalArgumentException(s"Array must be two-dimensional to be transposed but given array of $nonArrayType"))
       case otherValue => Failure(new IllegalArgumentException(s"Function 'transpose' must be given a two-dimensional array but instead got ${otherValue.typeName}"))
     }
 
@@ -161,7 +160,7 @@ trait WdlStandardLibraryFunctions extends WdlFunctions[WdlValue] {
       case (WdlString(p), WdlArray(WdlArrayType(etype), es)) if etype.isInstanceOf[WdlPrimitiveType] =>
         val result = es map { e => WdlString(p + e.valueString) }
         Success(WdlArray(WdlArrayType(WdlStringType), result))
-      case (x, y) =>
+      case (_, _) =>
         Failure(new UnsupportedOperationException(s"The function prefix expect arguments (String, Array[X]) where X is a primitive type, but got (${prefixString.wdlType.toWdlString}, ${elements.wdlType.toWdlString})"))
     }
 
@@ -213,7 +212,7 @@ trait WdlStandardLibraryFunctions extends WdlFunctions[WdlValue] {
         case WdlOptionalValue(_, Some(wdlValue)) => wdlValue
         case wdlValue if memberType.isCoerceableFrom(wdlValue.wdlType) =>
           memberType.coerceRawValue(wdlValue).get}).map(Success(_)).getOrElse(Failure(new IllegalArgumentException("select_first failed. All provided values were empty.")))
-    case allValid @ WdlArray(WdlArrayType(_), arrayValue) => if (arrayValue.isEmpty) SelectFirstEmptyInput else Success(arrayValue.head)
+    case WdlArray(WdlArrayType(_), arrayValue) => if (arrayValue.isEmpty) SelectFirstEmptyInput else Success(arrayValue.head)
     case other => Failure(new IllegalArgumentException(s"select_first must take an array but got ${other.wdlType.toWdlString}: ${other.toWdlString}"))
   }
 
@@ -382,7 +381,7 @@ class WdlStandardLibraryFunctionsType extends WdlFunctions[WdlType] {
     case _ => Failure(new Exception(s"Unexpected basename arguments: $params"))
   }
   def transpose(params: Seq[Try[WdlType]]): Try[WdlType] = params.toList match {
-    case Success(t @ WdlArrayType(WdlArrayType(wdlType))) :: Nil => Success(t)
+    case Success(t @ WdlArrayType(WdlArrayType(_))) :: Nil => Success(t)
     case _ => Failure(new Exception(s"Unexpected transpose target: $params"))
   }
   def select_first(params: Seq[Try[WdlType]]): Try[WdlType] = extractSingleArgument("select_first", params) flatMap {

@@ -55,7 +55,7 @@ class SyntaxFormatter(highlighter: SyntaxHighlighter = NullSyntaxHighlighter) {
   def format(namespace: WdlNamespace): String = {
     val imports = namespace.imports.map(formatImport) match {
       case v if v.nonEmpty => v.mkString("\n") + "\n\n"
-      case v => ""
+      case _ => ""
     }
 
     /*

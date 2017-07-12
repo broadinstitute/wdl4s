@@ -34,9 +34,7 @@ object WdlObject {
   //TODO: Try to stream this out to avoid memory overhead
   def tsvSerializeArray(input: Seq[WdlObject]): Try[String] = {
 
-    /**
-     * Validates that all objects have the same attributes.
-     */
+    // Validates that all objects have the same attributes.
     def attributesMatch(objects: Seq[WdlObject]): Boolean = {
       val attributesSet = objects map { _.orderedAttributes }
       val intersection = attributesSet reduce (_.intersect(_))
