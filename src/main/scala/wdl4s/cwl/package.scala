@@ -1,30 +1,17 @@
 package wdl4s
 
-import wdl4s.cwl._
-
-import io.circe.syntax._
 import io.circe._
-import io.circe.parser._
-import io.circe.shapes._
 import io.circe.generic.auto._
-import io.circe.generic.semiauto._
 import io.circe.yaml.{parser => YamlParser}
-import io.circe.Json
 
-import io.circe.syntax._
-import io.circe._
 import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
-import shapeless._, poly._//, ops.union._, union._
-import shapeless.ops.coproduct._
-import cats._, implicits._//, instances._
-import cats.data.Kleisli
-import io.circe._
+import shapeless.{:+:, CNil}
+import cats.syntax.either._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string._
 import eu.timepit.refined._
-
 import io.circe.refined._
 
 /**
@@ -65,10 +52,7 @@ import io.circe.refined._
  * @see <a href="https://github.com/fthomas/refined">Refined</a>
  * @see <a href="https://github.com/milessabin/shapeless">Shapeless</a>
  */
-package object cwl {
-
-  type CirceError[A] = Either[io.circe.Error, A]
-  type CirceRead[A] = Kleisli[CirceError, String, A]
+package object cwl extends TypeAliases {
 
   import CwlType._
   import CwlVersion._
@@ -79,17 +63,6 @@ package object cwl {
   implicit val cwlTypeDecoder = Decoder.enumDecoder(CwlType)
   implicit val cwlVersionDecoder = Decoder.enumDecoder(CwlVersion)
   implicit val scatterMethodDecoder = Decoder.enumDecoder(ScatterMethod)
-  /*
-  implicit def encodeAdtNoDiscr[A, Repr <: Coproduct](implicit
-    gen: Generic.Aux[A, Repr],
-    encodeRepr: Encoder[Repr]
-  ): Encoder[A] = encodeRepr.contramap(gen.to)
-
-  implicit def decodeAdtNoDiscr[A, Repr <: Coproduct](implicit
-    gen: Generic.Aux[A, Repr],
-    decodeRepr: Decoder[Repr]
-): Decoder[A] = decodeRepr.map(gen.from)
-        */
 
   def decodeCwl: Yaml => Either[Error, Cwl] =
       YamlParser.
@@ -97,93 +70,4 @@ package object cwl {
         map(_.noSpaces).
         flatMap(json => decode[CommandLineTool](json) orElse decode[Workflow](json))
 
-  type WorkflowStepInputId = String
-
-  type WorkflowStepInputSource = String :+: Array[String] :+: CNil
-
-  /**
-   * These are supposed to be valid ECMAScript Expressions.
-   * See http://www.commonwl.org/v1.0/Workflow.html#Expressions
-   */
-  type ECMAScriptExpression = String Refined MatchesRegex[W.`"$({.*}|{.*})"`.T]
-
-  type Requirement =
-    InlineJavascriptRequirement :+:
-    SchemaDefRequirement :+:
-    DockerRequirement :+:
-    SoftwareRequirement :+:
-    InitialWorkDirRequirement :+:
-    EnvVarRequirement :+:
-    ShellCommandRequirement :+:
-    ResourceRequirement :+:
-    SubworkflowFeatureRequirement :+:
-    ScatterFeatureRequirement :+:
-    MultipleInputFeatureRequirement :+:
-    StepInputExpressionRequirement :+:
-    CNil
-
-  type MyriadInputType =
-    CwlType :+:
-    InputRecordSchema :+:
-    InputEnumSchema :+:
-    InputArraySchema :+:
-    String :+:
-    Array[
-      CwlType :+:
-      InputRecordSchema :+:
-      InputEnumSchema :+:
-      InputArraySchema :+:
-      String :+:
-      CNil
-    ] :+:
-    CNil
-
-  type MyriadOutputType =
-    CwlType :+:
-    OutputRecordSchema :+:
-    OutputEnumSchema :+:
-    OutputArraySchema :+:
-    String :+:
-    Array[
-      CwlType :+:
-      OutputRecordSchema :+:
-      OutputEnumSchema :+:
-      OutputArraySchema :+:
-      String :+:
-      CNil
-    ] :+:
-    CNil
-
-  type MyriadCommandInputType =
-    CwlType :+:
-    CommandInputRecordSchema :+:
-    CommandInputEnumSchema :+:
-    CommandInputArraySchema :+:
-    String :+:
-    Array[
-      CwlType  :+:
-      CommandInputRecordSchema :+:
-      CommandInputEnumSchema :+:
-      CommandInputArraySchema :+:
-      String :+:
-      CNil
-      ] :+:
-    CNil
-
-    type WorkflowInput =
-      Map[InputParameter#Id, InputParameter] :+:
-      Map[InputParameter#Id, InputParameter#`type`] :+:
-      Array[InputParameter] :+:
-      CNil
-
-    type WorkflowOutput =
-      Map[WorkflowOutputParameter#Id, WorkflowOutputParameter] :+:
-      Map[WorkflowOutputParameter#Id, WorkflowOutputParameter#`type`] :+:
-      Array[WorkflowOutputParameter] :+:
-      CNil
-
-    type WorkflowSteps =
-      Map[String, WorkflowStep] :+:
-      Array[WorkflowStep] :+:
-      CNil
 }
