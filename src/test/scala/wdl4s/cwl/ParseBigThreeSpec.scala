@@ -1,14 +1,13 @@
 package wdl4s.cwl
 
-import wdl4s.cwl._
 
 import io.circe.syntax._
 import io.circe._
+import io.circe.generic.extras.auto._
 import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
 import org.scalatest._
-import io.circe.yaml.parser
 import io.circe.Json
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined._

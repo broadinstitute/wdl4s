@@ -1,5 +1,7 @@
 package wdl4s
 
+/*
+<<<<<<< HEAD
 import wdl4s.cwl._
 import io.circe.syntax._
 import io.circe._
@@ -22,15 +24,33 @@ import cats._
 import implicits._
 import cats.data.Kleisli
 import io.circe._
-import eu.timepit.refined.api.{Refined, Validate}
 import eu.timepit.refined.string._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
 import io.circe.Decoder.Result
 
 import scala.util.Try
+=======
+  */
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.yaml.{parser => YamlParser}
+
+import io.circe.parser._
+import io.circe.shapes._
+import io.circe.generic.auto._
+import shapeless.{:+:, CNil, Coproduct}
+import cats.syntax.either._
+import eu.timepit.refined.api.{Refined, Validate}
+import eu.timepit.refined.string._
+import eu.timepit.refined._
 import io.circe.refined._
 import io.circe.literal._
+import cats.data.ValidatedNel
+import cats.data.Validated._
+import cats.syntax.traverse._
+import cats.instances.list._
+import cats.syntax.option._
 
 /**
  * This package is intended to parse all CWL files.
@@ -70,27 +90,11 @@ import io.circe.literal._
  * @see <a href="https://github.com/fthomas/refined">Refined</a>
  * @see <a href="https://github.com/milessabin/shapeless">Shapeless</a>
  */
-package object cwl {
+package object cwl extends TypeAliases with Implicits {
 
-  type CirceError[A] = Either[io.circe.Error, A]
-  type CirceRead[A] = Kleisli[CirceError, String, A]
-
-  import CwlType._
-  import CwlVersion._
-  import ScatterMethod._
-  import RequirementClass._
+  type ECMAScriptExpression = String Refined MatchesRegex[W.`"$({.*}|{.*})"`.T]
 
   type Yaml = String
-
-  implicit val cwlTypeDecoder = Decoder.enumDecoder(CwlType)
-  implicit val cwlVersionDecoder = Decoder.enumDecoder(CwlVersion)
-  implicit val scatterMethodDecoder = Decoder.enumDecoder(ScatterMethod)
-  implicit val argumentClass = Decoder.enumDecoder(RequirementClass)
-  implicit val scatterMethodEncoder = Encoder.enumEncoder(ScatterMethod)
-
-  import CwlType._
-  import CwlVersion._
-  import ScatterMethod._
 
   type EVR = W.`"EnvVarRequirement"`.T => EnvVarRequirement
   type IJR = W.`"InlineJavascriptRequirement"`.T => InlineJavascriptRequirement
@@ -105,11 +109,6 @@ package object cwl {
   type MIFR = W.`"MultipleInputFeatureRequirement"`.T => MultipleInputFeatureRequirement
   type SIER = W.`"StepInputExpressionRequirement"`.T => StepInputExpressionRequirement
 
-  //This compiles
-  deriveDecoder[ResourceRequirement]
-  //This fails..
-  deriveDecoder[RR]
-
   type Target =
     EVR :+:
     IJR :+:
@@ -118,7 +117,6 @@ package object cwl {
     SDR :+:
     DR :+:
     IWDR :+:
-    EVR :+:
     SCR :+:
     RR :+:
     SFR :+:
@@ -126,16 +124,13 @@ package object cwl {
     SIER :+:
     CNil
 
-    /*
-  implicit val envvarD = deriveDecoder[EVR]
+  implicit val envvarD = Decoder[EVR]
   implicit val ijr = Decoder[IJR]
   implicit val sr = Decoder[SR]
   implicit val sw = Decoder[SFT]
-  implicit def sdr = deriveDecoder[SDR]
-  implicit def rr = deriveDecoder[RR]
-  implicit def iwdr = deriveDecoder[IWDR]
-  */
-  /*
+  implicit def sdr = Decoder[SDR]
+  implicit def rr = Decoder[RR]
+  implicit def iwdr = Decoder[IWDR]
   implicit val dr = Decoder[DR]
   implicit val scr = Decoder[SCR]
   implicit val sfr = Decoder[SFR]
@@ -158,39 +153,14 @@ package object cwl {
              case (_,__) => invalidNel("bad")
            }.toEither.leftMap(_.toList.mkString(", ")).map(_.toArray)
         }
-        */
+
   def mapDecoder[T, S](implicit d: Decoder[Map[String, String Refined S => T]], v: Validate[String, S]) =
     d.emap {
       _.toList.head match {
         case (key, valueFn) => refineV[S](key).map(valueFn)
       }
     }
-  /*
-  def mapDecoder[T, S](implicit d: Decoder[(String, String Refined S => T)], v: Validate[String, S],
-    imp: Lazy[DerivedDecoder[T]]) =  {
-    deriveDecoder[T]
-    d.emap {
-      case (key, valueFn) => refineV[S](key).map(valueFn)
-    }
-  }
 
-
-  //implicit def envVarDecoder = mapDecoder[EnvVarRequirement, MatchesRegex[W.`"EnvVarRequirement"`.T]]
-
-  implicit def envVarDecoder: Decoder[EnvVarRequirement] = {
-
-    val envvarDecoder2: Decoder[EnvVarRequirement] = Decoder[
-      Map[String, RequirementClass => EnvVarRequirement]].
-        emap {
-           _.toList.head match {
-             case (key, valueFn) => Try(RequirementClass.withName(key)).toEither.leftMap(_.getMessage).map(valueFn)
-           }
-        }
-
-    //deriveDecoder[EnvVarRequirement] or envvarDecoder2
-    envvarDecoder2
-  }
-  */
  def arrayCoproduct[T, S](
    implicit d: Decoder[Map[String, String Refined S => T]],
    v: Validate[String, S],
@@ -198,75 +168,11 @@ package object cwl {
    ): Decoder[Array[Requirement]] =
      mapDecoder[T, S].map(Coproduct[Requirement](_)).map(Array(_))
 
+
      /*
- implicit def ultimate(implicit rd: io.circe.generic.extras.decoding.ConfiguredDecoder[Array[wdl4s.cwl.Requirement]]
-   ): Decoder[Array[Requirement]] = {
-  arrayCoproduct[EnvVarRequirement, MatchesRegex[W.`"EnvVarRequirement"`.T]] or
-  deriveDecoder[Array[Requirement]]
- }
- */
-
- /*
-  implicit def p: Decoder[Array[Requirement]] = new Decoder[Array[Requirement]] {
-    override def apply(c: HCursor): Result[Array[Requirement]] = ???
-  }
-  */
-
- //val f = Decoder[S :+: CNil]
-
-
- /*
- type CoproductFn = Fn :+: CNil
-
-  implicit def envVarDecoder: Decoder[Requirement] = {
-
-    val envvarDecoder2: Decoder[Requirement] = Decoder[
-      Map[String, CoproductFn]].
-        emap {
-           _.toList.head match {
-             case (key, valueFn) =>
-               Try(RequirementClass.withName(key)).
-               toEither.
-               leftMap(_.getMessage).
-               map(valueFn).
-               map(Coproduct.apply[Requirement])
-           }
-        }
-
-    //deriveDecoder[EnvVarRequirement] or envvarDecoder2
-    envvarDecoder2
-  }
-
-  implicit def envVarDecoder: Decoder[EnvVarRequirement] = {
-
-    val envvarDecoder2 = Decoder[
-      Map[String, String Refined MatchesRegex[W.`"EnvVarRequirement"`.T] => EnvVarRequirement]].
-        emap {
-           _.toList.head match {
-             case (key, valueFn) => refineV[MatchesRegex[W.`"EnvVarRequirement"`.T]](key).map(valueFn)
-           }
-        }
-
-    deriveDecoder[EnvVarRequirement] or envvarDecoder2
-  }
-  */
-
-
-
-
-
-  /*
-  implicit def encodeAdtNoDiscr[A, Repr <: Coproduct](implicit
-    gen: Generic.Aux[A, Repr],
-    encodeRepr: Encoder[Repr]
-  ): Encoder[A] = encodeRepr.contramap(gen.to)
-
-  implicit def decodeAdtNoDiscr[A, Repr <: Coproduct](implicit
-    gen: Generic.Aux[A, Repr],
-    decodeRepr: Decoder[Repr]
-): Decoder[A] = decodeRepr.map(gen.from)
-        */
-
+      * COMMENTED OUT DUE TO HEINOUS COMPILE TIMES
+      * UNCOMMENT when finished
+      *
   def decodeCwl: Yaml => Either[Error, Cwl] =
       YamlParser.
         parse(_).
@@ -278,93 +184,11 @@ package object cwl {
             clt orElse decode[Workflow](json)
         }
 
-  type WorkflowStepInputId = String
+        */
+  //
+  //This compiles
+  //Decoder[ResourceRequirement]
+  //This fails..
+  //Decoder[RR]
 
-  type WorkflowStepInputSource = String :+: Array[String] :+: CNil
-
-  /**
-   * These are supposed to be valid ECMAScript Expressions.
-   * See http://www.commonwl.org/v1.0/Workflow.html#Expressions
-   */
-  type ECMAScriptExpression = String Refined MatchesRegex[W.`"$({.*}|{.*})"`.T]
-
-  type Requirement =
-    InlineJavascriptRequirement :+:
-    SchemaDefRequirement :+:
-    DockerRequirement :+:
-    SoftwareRequirement :+:
-    InitialWorkDirRequirement :+:
-    EnvVarRequirement :+:
-    ShellCommandRequirement :+:
-    ResourceRequirement :+:
-    SubworkflowFeatureRequirement :+:
-    ScatterFeatureRequirement :+:
-    MultipleInputFeatureRequirement :+:
-    StepInputExpressionRequirement :+:
-    CNil
-
-  type MyriadInputType =
-    CwlType :+:
-    InputRecordSchema :+:
-    InputEnumSchema :+:
-    InputArraySchema :+:
-    String :+:
-    Array[
-      CwlType :+:
-      InputRecordSchema :+:
-      InputEnumSchema :+:
-      InputArraySchema :+:
-      String :+:
-      CNil
-    ] :+:
-    CNil
-
-  type MyriadOutputType =
-    CwlType :+:
-    OutputRecordSchema :+:
-    OutputEnumSchema :+:
-    OutputArraySchema :+:
-    String :+:
-    Array[
-      CwlType :+:
-      OutputRecordSchema :+:
-      OutputEnumSchema :+:
-      OutputArraySchema :+:
-      String :+:
-      CNil
-    ] :+:
-    CNil
-
-  type MyriadCommandInputType =
-    CwlType :+:
-    CommandInputRecordSchema :+:
-    CommandInputEnumSchema :+:
-    CommandInputArraySchema :+:
-    String :+:
-    Array[
-      CwlType  :+:
-      CommandInputRecordSchema :+:
-      CommandInputEnumSchema :+:
-      CommandInputArraySchema :+:
-      String :+:
-      CNil
-      ] :+:
-    CNil
-
-    type WorkflowInput =
-      Map[InputParameter#Id, InputParameter] :+:
-      Map[InputParameter#Id, InputParameter#`type`] :+:
-      Array[InputParameter] :+:
-      CNil
-
-    type WorkflowOutput =
-      Map[WorkflowOutputParameter#Id, WorkflowOutputParameter] :+:
-      Map[WorkflowOutputParameter#Id, WorkflowOutputParameter#`type`] :+:
-      Array[WorkflowOutputParameter] :+:
-      CNil
-
-    type WorkflowSteps =
-      Map[String, WorkflowStep] :+:
-      Array[WorkflowStep] :+:
-      CNil
 }

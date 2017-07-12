@@ -14,7 +14,7 @@ sealed trait Cwl {
 
 case class Workflow(
   cwlVersion: Option[CwlVersion] = None,
-  `class`: String Refined MatchesRegex[W.`"Workflow"`.T],
+  `class`: W.`"Workflow"`.T,
   inputs: WorkflowInput,
   outputs: WorkflowOutput,
   steps: WorkflowSteps) extends Cwl
@@ -50,7 +50,7 @@ case class CommandLineTool(
                               Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
                               Map[CommandOutputParameter#Id, CommandOutputParameter] :+:
                               CNil,
-                            `class`: String Refined MatchesRegex[W.`"CommandLineTool"`.T],
+                            `class`: W.`"CommandLineTool"`.T,
                             id: Option[String],
                             requirements: Option[Array[Requirement]],
                             hints: Option[Array[String]], //TODO: Any?
