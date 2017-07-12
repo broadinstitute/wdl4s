@@ -169,10 +169,6 @@ package object cwl extends TypeAliases with Implicits {
      mapDecoder[T, S].map(Coproduct[Requirement](_)).map(Array(_))
 
 
-     /*
-      * COMMENTED OUT DUE TO HEINOUS COMPILE TIMES
-      * UNCOMMENT when finished
-      *
   def decodeCwl: Yaml => Either[Error, Cwl] =
       YamlParser.
         parse(_).
@@ -184,7 +180,6 @@ package object cwl extends TypeAliases with Implicits {
             clt orElse decode[Workflow](json)
         }
 
-        */
   //
   //This compiles
   //Decoder[ResourceRequirement]
