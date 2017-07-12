@@ -1,37 +1,5 @@
 package wdl4s
 
-/*
-<<<<<<< HEAD
-import wdl4s.cwl._
-import io.circe.syntax._
-import io.circe._
-import io.circe.parser._
-import io.circe.shapes._
-import io.circe.generic.extras.auto._
-import io.circe.generic.decoding.DerivedDecoder
-import io.circe.generic.extras.defaults._
-import io.circe.generic.extras.semiauto._
-import io.circe.yaml.{parser => YamlParser}
-import io.circe.Json
-import io.circe.syntax._
-import io.circe._
-import io.circe.parser._
-import io.circe.shapes._
-import shapeless._
-import poly._
-import shapeless.ops.coproduct._
-import cats._
-import implicits._
-import cats.data.Kleisli
-import io.circe._
-import eu.timepit.refined.string._
-import eu.timepit.refined._
-import eu.timepit.refined.auto._
-import io.circe.Decoder.Result
-
-import scala.util.Try
-=======
-  */
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.yaml.{parser => YamlParser}
@@ -99,7 +67,7 @@ package object cwl extends TypeAliases with Implicits {
   type EVR = W.`"EnvVarRequirement"`.T => EnvVarRequirement
   type IJR = W.`"InlineJavascriptRequirement"`.T => InlineJavascriptRequirement
   type SR = W.`"SoftwareRequirement"`.T => SoftwareRequirement
-  type SFT = W.`"SubworkflowFeatureRequirement"`.T => SubworkflowFeatureRequirement
+  type SWFR = W.`"SubworkflowFeatureRequirement"`.T => SubworkflowFeatureRequirement
   type SDR = W.`"SchemaDefRequirement"`.T => SchemaDefRequirement
   type DR = W.`"DockerRequirement"`.T => DockerRequirement
   type IWDR = W.`"InitialWorkDirRequirement"`.T => InitialWorkDirRequirement
@@ -113,7 +81,7 @@ package object cwl extends TypeAliases with Implicits {
     EVR :+:
     IJR :+:
     SR :+:
-    SFT :+:
+    SWFR :+:
     SDR :+:
     DR :+:
     IWDR :+:
@@ -127,7 +95,7 @@ package object cwl extends TypeAliases with Implicits {
   implicit val envvarD = Decoder[EVR]
   implicit val ijr = Decoder[IJR]
   implicit val sr = Decoder[SR]
-  implicit val sw = Decoder[SFT]
+  implicit val sw = Decoder[SWFR]
   implicit def sdr = Decoder[SDR]
   implicit def rr = Decoder[RR]
   implicit def iwdr = Decoder[IWDR]
@@ -140,50 +108,37 @@ package object cwl extends TypeAliases with Implicits {
 
   type V[A] = ValidatedNel[String,A]
 
-  //FAILSAFE
-  //implicit val parser2: Decoder[Array[Requirement]] =
-   // Decoder[Map[String, EVR]].map{_ => println("b"); Array.empty}
+  def select[T](t: Target)(implicit selector: shapeless.ops.coproduct.Selector[Target,T]):ValidatedNel[String, T] =
+             t.select[T].toValidNel(s"Expecting a EnvVarRequirement but got $t instead.")
 
   implicit val parser: Decoder[Array[Requirement]] =
     Decoder[Map[String, Target]].
-        emap {
-          m =>
-           m.toList.traverse[V,Requirement] {
-             case ("EnvVarRequirement", valueFns) => valueFns.select[EVR].toValidNel("wrong").map(_("EnvVarRequirement")).map(Coproduct[Requirement](_))
-             case (_,__) => invalidNel("bad")
-           }.toEither.leftMap(_.toList.mkString(", ")).map(_.toArray)
-        }
-
-  def mapDecoder[T, S](implicit d: Decoder[Map[String, String Refined S => T]], v: Validate[String, S]) =
-    d.emap {
-      _.toList.head match {
-        case (key, valueFn) => refineV[S](key).map(valueFn)
+      emap {
+        m =>
+          m.toList.traverse[V,Requirement] {
+            case ("EnvVarRequirement", target) => select[EVR](target).map(_("EnvVarRequirement")).map(Coproduct[Requirement](_))
+            case ("InlineJavascriptRequirement", target) => select[IJR](target).map(_("InlineJavascriptRequirement")).map(Coproduct[Requirement](_))
+            case ("SchemaDefRequirement", target) => select[SDR](target).map(_("SchemaDefRequirement")).map(Coproduct[Requirement](_))
+            case ("DockerRequirement", target) => select[DR](target).map(_("DockerRequirement")).map(Coproduct[Requirement](_))
+            case ("SoftwareRequirement", target) => select[SR](target).map(_("SoftwareRequirement")).map(Coproduct[Requirement](_))
+            case ("InitialWorkDirRequirement", target) => select[IWDR](target).map(_("InitialWorkDirRequirement")).map(Coproduct[Requirement](_))
+            case ("ShellCommandRequirement", target) => select[SCR](target).map(_("ShellCommandRequirement")).map(Coproduct[Requirement](_))
+            case ("ResourceRequirement", target) => select[RR](target).map(_("ResourceRequirement")).map(Coproduct[Requirement](_))
+            case ("SubworkflowFeatureRequirement", target) => select[SWFR](target).map(_("SubworkflowFeatureRequirement")).map(Coproduct[Requirement](_))
+            case ("ScatterFeatureRequirement", target) => select[SFR](target).map(_("ScatterFeatureRequirement")).map(Coproduct[Requirement](_))
+            case ("MultipleInputFeatureRequirement", target) => select[MIFR](target).map(_("MultipleInputFeatureRequirement")).map(Coproduct[Requirement](_))
+            case ("StepInputExpressionRequirement", target) => select[SIER](target).map(_("StepInputExpressionRequirement")).map(Coproduct[Requirement](_))
+            case (key,__) => invalidNel(s"key $key was not amongst possible values " +
+              "InlineJavascriptRequirement, SchemaDefRequirement, DockerRequirement, SoftwareRequirement, InitialWorkDirRequirement, EnvVarRequirement, ShellCommandRequirement, ResourceRequirement, SubworkflowFeatureRequirement, ScatterFeatureRequirement, MultipleInputFeatureRequirement, StepInputExpressionRequirement")
+          }.toEither.leftMap(_.toList.mkString(", ")).map(_.toArray)
       }
-    }
-
- def arrayCoproduct[T, S](
-   implicit d: Decoder[Map[String, String Refined S => T]],
-   v: Validate[String, S],
-   inj: shapeless.ops.coproduct.Inject[wdl4s.cwl.Requirement,T]
-   ): Decoder[Array[Requirement]] =
-     mapDecoder[T, S].map(Coproduct[Requirement](_)).map(Array(_))
-
 
   def decodeCwl: Yaml => Either[Error, Cwl] =
-      YamlParser.
-        parse(_).
-        map(_.noSpaces).
-        flatMap{json =>
-            println(json)
-            val clt = decode[CommandLineTool](json)
-            println(clt)
-            clt orElse decode[Workflow](json)
-        }
-
-  //
-  //This compiles
-  //Decoder[ResourceRequirement]
-  //This fails..
-  //Decoder[RR]
-
+    YamlParser.
+      parse(_).
+      map(_.noSpaces).
+      flatMap{json =>
+          decode[CommandLineTool](json) orElse
+          decode[Workflow](json)
+      }
 }

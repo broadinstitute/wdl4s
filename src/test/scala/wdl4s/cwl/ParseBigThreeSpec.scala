@@ -4,7 +4,6 @@ package wdl4s.cwl
 import io.circe.syntax._
 import io.circe._
 import io.circe.generic.extras.auto._
-import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
 import org.scalatest._
@@ -21,7 +20,6 @@ import shapeless._, poly._//, ops.union._, union._
 import shapeless.ops.coproduct._
 import cats._, implicits._//, instances._
 
-import io.circe.yaml.parser
 import io.circe._
 
 import eu.timepit.refined.string._
@@ -31,7 +29,6 @@ import io.circe.refined._
 class ParseBigThreeSpec extends FlatSpec with Matchers {
   val namespace = "cwl"
 
-  /*
   it should "parse 1st tool" in {
   val firstTool = """
 cwlVersion: v1.0
@@ -45,8 +42,7 @@ inputs:
 outputs: []
 """
 
-  decode[CommandLineTool](parser.parse(firstTool).right.get.noSpaces)
-    .isRight shouldBe true
+  decodeCwl(firstTool).isRight shouldBe true
   }
 
   it should "parse first workflow" in {
@@ -84,12 +80,12 @@ steps:
     import shapeless.syntax.inject._
     import shapeless.ops.coproduct.Inject
     val m = new Workflow(
-      `class` = refineMV[MatchesRegex[W.`"Workflow"`.T]]("Workflow"),
+      None,
+      `class` = "Workflow",
       inputs = Array.empty[InputParameter].inject[WorkflowInput],
       outputs = Array.empty[WorkflowOutputParameter].inject[WorkflowOutput],
       steps = Array.empty[WorkflowStep].inject[WorkflowSteps])
   }
-  */
 
   it should "parse env cwl" in {
     val envCwl = """

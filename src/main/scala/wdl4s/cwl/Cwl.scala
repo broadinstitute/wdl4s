@@ -1,6 +1,6 @@
 package wdl4s.cwl
 
-import shapeless.{:+:, CNil}
+import shapeless.{:+:, CNil, Witness}
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string._
@@ -14,7 +14,7 @@ sealed trait Cwl {
 
 case class Workflow(
   cwlVersion: Option[CwlVersion] = None,
-  `class`: W.`"Workflow"`.T,
+  `class`: Witness.`"Workflow"`.T,
   inputs: WorkflowInput,
   outputs: WorkflowOutput,
   steps: WorkflowSteps) extends Cwl
