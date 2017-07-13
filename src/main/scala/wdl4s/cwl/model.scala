@@ -9,7 +9,7 @@ case class WorkflowStepInput(src: String)
 
 case class InputParameter(
                            id: Option[String], //not really optional but can be specified upstream
-                           label: Option[String],
+                           label: Option[String] = None,
                            secondaryFiles:
                              Option[
                                ECMAScriptExpression :+:
@@ -18,18 +18,18 @@ case class InputParameter(
                                  ECMAScriptExpression :+:
                                  String :+:
                                  CNil] :+:
-                               CNil],
+                               CNil] = None,
                            format:
                              Option[
                                ECMAScriptExpression :+:
                                String :+:
                                Array[String] :+:
-                               CNil],
-                           streamable: Option[Boolean],
-                           doc: Option[String :+: Array[String] :+: CNil],
-                           inputBinding: Option[CommandLineBinding],
-                           default: Option[String], //can be of type "Any" which... sucks.
-                           `type`: Option[MyriadInputType]) {
+                               CNil] = None,
+                           streamable: Option[Boolean] = None,
+                           doc: Option[String :+: Array[String] :+: CNil] = None,
+                           inputBinding: Option[CommandLineBinding] = None,
+                           default: Option[String] = None, //can be of type "Any" which... sucks.
+                           `type`: Option[MyriadInputType] = None) {
 
   type `type` = MyriadInputType
   type Id = String
@@ -70,12 +70,20 @@ case class CommandLineBinding(
 
 case class WorkflowOutputParameter(
                                     id: Option[String], //Really not optional but can be declared upstream
-                                    label: Option[String],
-                                    secondaryFiles: Option[ECMAScriptExpression :+: String :+: Array[ECMAScriptExpression :+: String :+: CNil] :+: CNil],
-                                    format: Option[ECMAScriptExpression :+: String :+: Array[String] :+: CNil],
-                                    streamable: Option[Boolean],
-                                    doc: Option[String :+: Array[String] :+: CNil],
-                                    `type`: Option[MyriadOutputType]) {
+                                    label: Option[String] = None,
+                                    secondaryFiles:
+                                      Option[
+                                        ECMAScriptExpression :+:
+                                        String :+:
+                                        Array[
+                                          ECMAScriptExpression :+:
+                                          String :+:
+                                          CNil] :+:
+                                        CNil] = None,
+                                    format: Option[ECMAScriptExpression :+: String :+: Array[String] :+: CNil] = None,
+                                    streamable: Option[Boolean] = None,
+                                    doc: Option[String :+: Array[String] :+: CNil] = None,
+                                    `type`: Option[MyriadOutputType] = None) {
 
   type `type` = MyriadOutputType
   type Id = String
