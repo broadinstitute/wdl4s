@@ -6,6 +6,8 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string._
 import CwlVersion._
 import CwlType._
+import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, Inputs, StdChannel}
+
 
 sealed trait Cwl {
 
@@ -40,11 +42,7 @@ case class Workflow(
   * @param permanentFailCodes
   */
 case class CommandLineTool(
-                            inputs:
-                              CommandInputParameter :+:
-                              Map[CommandInputParameter#Id, CommandInputParameter#`type`] :+:
-                              Map[CommandInputParameter#Id, CommandInputParameter] :+:
-                              CNil,
+                            inputs: Inputs,
                             outputs:
                               Array[CommandOutputParameter] :+:
                               Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
@@ -65,3 +63,15 @@ case class CommandLineTool(
                             successCodes: Option[Array[Int]],
                             temporaryFailCodes: Option[Array[Int]],
                             permanentFailCodes: Option[Array[Int]]) extends Cwl
+
+object CommandLineTool {
+  type Inputs =
+    CommandInputParameter :+: Map[CommandInputParameter#Id, CommandInputParameter#`type`] :+:
+      Map[CommandInputParameter#Id, CommandInputParameter] :+: CNil
+  type Outputs =
+    Array[CommandOutputParameter] :+: Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
+      Map[CommandOutputParameter#Id, CommandOutputParameter] :+: CNil
+  type BaseCommand = String :+: Array[String] :+: CNil
+  type Argument = ECMAScriptExpression :+: CommandLineBinding :+: String :+: CNil
+  type StdChannel = ECMAScriptExpression :+: String :+: CNil
+}

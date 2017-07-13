@@ -10,6 +10,8 @@ class ThreeStepSpec extends FlatSpec {
 
   "Cwl Three step" should "convert to Wom" in {
 
+    //val ps = new CommandLineTool()
+
     val patternInput =
       InputParameter(
         Some("pattern"),
@@ -30,7 +32,7 @@ class ThreeStepSpec extends FlatSpec {
 
     val psWfStep  = WorkflowStep(
       id = Some("ps"),
-      in = Coproduct[]
+      inputs = Coproduct[CommandLineTool.Inputs](Array.empty),
     )
 
     val m = new Workflow(
