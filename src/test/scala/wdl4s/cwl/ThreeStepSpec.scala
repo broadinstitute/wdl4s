@@ -28,7 +28,8 @@ class ThreeStepSpec extends FlatSpec {
         id = Some("wc.count"),
         `type` = Some(Coproduct[MyriadOutputType](CwlType.Int)))
 
-    val _outputs = Coproduct[WorkflowInput](Array(outputCgrep, outputWc))
+    /*
+    //val _outputs = Coproduct[WorkflowInput](Array(outputCgrep, outputWc))
 
     val psWfStep  = WorkflowStep(
       id = Some("ps"),
@@ -41,6 +42,7 @@ class ThreeStepSpec extends FlatSpec {
       inputs = _inputs,
       outputs = _outputs
       steps = Array.empty[WorkflowStep].inject[WorkflowSteps])
+    */
   }
 
 

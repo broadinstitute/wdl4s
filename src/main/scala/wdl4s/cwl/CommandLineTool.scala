@@ -4,7 +4,6 @@ import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string._
 import shapeless.{:+:, CNil}
-import wdl4s.cwl.CwlVersion._
 import wdl4s.cwl.CwlType._
 
 

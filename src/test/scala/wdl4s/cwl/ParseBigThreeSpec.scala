@@ -10,15 +10,12 @@ import org.scalatest._
 import io.circe.Json
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined._
+import org.scalatest._
+import io.circe.yaml.parser
 
-import io.circe.syntax._
-import io.circe._
 import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
-import shapeless._, poly._//, ops.union._, union._
-import shapeless.ops.coproduct._
-import cats._, implicits._//, instances._
 
 import io.circe._
 
@@ -105,6 +102,4 @@ outputs: []
     println(output)
     output.isRight should be (true)
   }
-
-
 }

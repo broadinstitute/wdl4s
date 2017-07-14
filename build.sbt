@@ -5,9 +5,9 @@ name := "wdl4s"
 
 organization := "org.broadinstitute"
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.2"
 
-crossScalaVersions := Seq("2.11.8", "2.12.1")
+crossScalaVersions := Seq("2.11.8", "2.12.2")
 
 lazy val versionSettings = Seq(
   // Upcoming release, or current if we're on the master branch
@@ -46,7 +46,9 @@ libraryDependencies ++= {
      */
     "org.typelevel" %% "cats" % "0.9.0"
       exclude("org.typelevel", "cats-laws_2.11")
-      exclude("org.typelevel", "cats-kernel-laws_2.11"),
+      exclude("org.typelevel", "cats-laws_2.12")
+      exclude("org.typelevel", "cats-kernel-laws_2.11")
+      exclude("org.typelevel", "cats-kernel-laws_2.12"),
     "commons-codec" % "commons-codec" % "1.10",
     "commons-io" % "commons-io" % "2.5",
     "org.apache.commons" % "commons-lang3" % "3.4",
@@ -78,11 +80,76 @@ libraryDependencies ++= Seq(
 //
 // https://github.com/sbt/sbt-assembly/issues/69
 // https://github.com/scala/pickling/issues/10
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xmax-classfile-name", "200")
+//
+// Other fancy flags from https://tpolecat.github.io/2017/04/25/scalac-flags.html.
+//
+// Per JG's work in Cromwell, the following can't be turned on without causing piles of errors in wdl4s.  Many of the
+// constructs that are flagged look suspicious and probably warrant further scrutiny, but no time for that now.
+//
+// "-Ywarn-unused:params"              // Warn if a value parameter is unused.
+
+val baseOptions = List(
+  "-unchecked",
+  "-deprecation",
+  "-feature",
+  "-explaintypes",
+  "-Xmax-classfile-name", "200",
+  "-target:jvm-1.8",
+  "-encoding", "UTF-8"
+)
+
+val warningOptions = List(
+  "-Xfuture",
+  "-Xlint:adapted-args",
+  "-Xlint:by-name-right-associative",
+  "-Xlint:constant",
+  "-Xlint:delayedinit-select",
+  "-Xlint:doc-detached",
+  "-Xlint:inaccessible",
+  "-Xlint:infer-any",
+  "-Xlint:missing-interpolator",
+  "-Xlint:nullary-override",
+  "-Xlint:nullary-unit",
+  "-Xlint:option-implicit",
+  "-Xlint:package-object-classes",
+  "-Xlint:poly-implicit-overload",
+  "-Xlint:private-shadow",
+  "-Xlint:stars-align",
+  "-Xlint:type-parameter-shadow",
+  "-Xlint:unsound-match",
+  "-Yno-adapted-args",
+  "-Ywarn-dead-code",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-value-discard",
+  "-Ywarn-inaccessible",
+  "-Ywarn-unused:implicits",
+  "-Ywarn-unused:privates",
+  "-Ywarn-unused:locals",
+  "-Ywarn-unused:patvars"
+)
+
+val consoleHostileOptions = List(
+  "-Ywarn-unused:imports", // warns about every unused import on every command.
+  "-Xfatal-warnings"       // makes those warnings fatal.
+)
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 
+scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+  case Some((2, 12)) =>
+    // The default scalacOptions includes console-hostile options.  These options are overridden specifically below
+    // for the `console` target.
+    baseOptions ++ warningOptions ++ consoleHostileOptions
+  case Some((2, 11)) =>
+    // Scala 2.11 takes a simplified set of options
+    baseOptions
+  case wut => throw new NotImplementedError(s"Found unsupported Scala version $wut. wdl4s does not support versions of Scala other than 2.11 or 2.12.")
+})
+
 // http://stackoverflow.com/questions/31488335/scaladoc-2-11-6-fails-on-throws-tag-with-unable-to-find-any-member-to-link#31497874
-scalacOptions in (Compile, doc) ++= Seq("-no-link-warnings")
+scalacOptions in(Compile, doc) := (baseOptions ++ List("-no-link-warnings"))
+// No console-hostile options, otherwise console is effectively unusable.
+// https://github.com/sbt/sbt/issues/1815
+scalacOptions in(Compile, console) := (baseOptions ++ warningOptions)
 
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oDSI", "-h", "target/test-reports")

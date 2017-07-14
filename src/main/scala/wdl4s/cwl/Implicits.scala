@@ -50,7 +50,6 @@ object Implicits {
   def select[T](t: Target)(implicit selector: shapeless.ops.coproduct.Selector[Target,T]):ValidatedNel[String, T] =
              t.select[T].toValidNel(s"Expecting a EnvVarRequirement but got $t instead.")
 
-
   implicit val requirementArrayMapParser: Decoder[Array[Requirement]] = {
 
     def req[T](a:ErrorOr[T])(implicit inj: shapeless.ops.coproduct.Inject[wdl4s.cwl.Requirement, T]) = a.map(Coproduct[Requirement](_))
@@ -59,8 +58,9 @@ object Implicits {
     Decoder[Map[String, Target]].
       emap {
         _.toList.traverse[ErrorOr,Requirement] {
-            //case ("EnvVarRequirement", target) => s[EVR, W.`"EnvVarRequirement"`.T, EnvVarRequirement](target).map(_("EnvVarRequirement")))
-            case ("EnvVarRequirement", target) => TargetFunction[EnvVarRequirement].apply(target)
+            case ("EnvVarRequirement", target) => s[EVR, W.`"EnvVarRequirement"`.T, EnvVarRequirement](target,"EnvVarRequirement")
+            //TODO: clean these up to use this approach
+            //case ("EnvVarRequirement", target) => TargetFunction[EnvVarRequirement].apply(target)
             case ("InlineJavascriptRequirement", target) => req(select[IJR](target).map(_("InlineJavascriptRequirement")))
             case ("SchemaDefRequirement", target) => req(select[SDR](target).map(_("SchemaDefRequirement")))
             case ("DockerRequirement", target) => req(select[DR](target).map(_("DockerRequirement")))
