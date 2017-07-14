@@ -13,10 +13,6 @@ trait TypeAliases {
 
   type WorkflowStepInputSource = String :+: Array[String] :+: CNil
 
-  /**
-    * These are supposed to be valid ECMAScript Expressions.
-    * See http://www.commonwl.org/v1.0/Workflow.html#Expressions
-    */
   type Requirement =
     InlineJavascriptRequirement :+:
       SchemaDefRequirement :+:
@@ -96,5 +92,33 @@ trait TypeAliases {
     Map[String, WorkflowStep] :+:
       Array[WorkflowStep] :+:
       CNil
+
+  type EVR = W.`"EnvVarRequirement"`.T => EnvVarRequirement
+  type IJR = W.`"InlineJavascriptRequirement"`.T => InlineJavascriptRequirement
+  type SR = W.`"SoftwareRequirement"`.T => SoftwareRequirement
+  type SWFR = W.`"SubworkflowFeatureRequirement"`.T => SubworkflowFeatureRequirement
+  type SDR = W.`"SchemaDefRequirement"`.T => SchemaDefRequirement
+  type DR = W.`"DockerRequirement"`.T => DockerRequirement
+  type IWDR = W.`"InitialWorkDirRequirement"`.T => InitialWorkDirRequirement
+  type SCR = W.`"ShellCommandRequirement"`.T => ShellCommandRequirement
+  type RR = W.`"ResourceRequirement"`.T => ResourceRequirement
+  type SFR = W.`"ScatterFeatureRequirement"`.T => ScatterFeatureRequirement
+  type MIFR = W.`"MultipleInputFeatureRequirement"`.T => MultipleInputFeatureRequirement
+  type SIER = W.`"StepInputExpressionRequirement"`.T => StepInputExpressionRequirement
+
+  type Target =
+    EVR :+:
+    IJR :+:
+    SR :+:
+    SWFR :+:
+    SDR :+:
+    DR :+:
+    IWDR :+:
+    SCR :+:
+    RR :+:
+    SFR :+:
+    MIFR :+:
+    SIER :+:
+    CNil
 
 }
