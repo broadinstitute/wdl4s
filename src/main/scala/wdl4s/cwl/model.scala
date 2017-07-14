@@ -1,16 +1,14 @@
 package wdl4s.cwl
 
 import eu.timepit.refined._
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.string._
-import shapeless.{:+:, CNil}
+import shapeless.{:+:, CNil, Witness}
 
 case class WorkflowStepInput(src: String)
 
 case class InputParameter(
                            id: Option[String], //not really optional but can be specified upstream
-                           label: Option[String],
-                           secondaryFiles: 
+                           label: Option[String] = None,
+                           secondaryFiles:
                              Option[
                                ECMAScriptExpression :+:
                                String :+:
@@ -18,27 +16,27 @@ case class InputParameter(
                                  ECMAScriptExpression :+:
                                  String :+:
                                  CNil] :+:
-                               CNil],
-                           format: 
+                               CNil] = None,
+                           format:
                              Option[
                                ECMAScriptExpression :+:
                                String :+:
                                Array[String] :+:
-                               CNil],
-                           streamable: Option[Boolean],
-                           doc: Option[String :+: Array[String] :+: CNil],
-                           inputBinding: Option[CommandLineBinding],
-                           default: Option[String], //can be of type "Any" which... sucks.
-                           `type`: Option[MyriadInputType]) {
+                               CNil] = None,
+                           streamable: Option[Boolean] = None,
+                           doc: Option[String :+: Array[String] :+: CNil] = None,
+                           inputBinding: Option[CommandLineBinding] = None,
+                           default: Option[String] = None, //can be of type "Any" which... sucks.
+                           `type`: Option[MyriadInputType] = None) {
 
   type `type` = MyriadInputType
   type Id = String
 }
 
 case class InputRecordSchema(
-  `type`: String Refined MatchesRegex[W.`"record"`.T],
+  `type`: W.`"record"`.T,
   fields: Option[Array[InputRecordField]],
-  label: Option[String]) 
+  label: Option[String])
 
 case class InputRecordField(
   name: String,
@@ -49,13 +47,13 @@ case class InputRecordField(
 
 case class InputEnumSchema(
   symbols: Array[String],
-  `type`: String Refined MatchesRegex[W.`"enum"`.T],
+  `type`: W.`"enum"`.T,
   label: Option[String],
   inputBinding: Option[CommandLineBinding])
 
 case class InputArraySchema(
   items: MyriadInputType,
-  `type`: String Refined MatchesRegex[W.`"array"`.T],
+  `type`: W.`"array"`.T,
   label: Option[String],
   inputBinding: Option[CommandLineBinding])
 
@@ -70,12 +68,20 @@ case class CommandLineBinding(
 
 case class WorkflowOutputParameter(
                                     id: Option[String], //Really not optional but can be declared upstream
-                                    label: Option[String],
-                                    secondaryFiles: Option[ECMAScriptExpression :+: String :+: Array[ECMAScriptExpression :+: String :+: CNil] :+: CNil],
-                                    format: Option[ECMAScriptExpression :+: String :+: Array[String] :+: CNil],
-                                    streamable: Option[Boolean],
-                                    doc: Option[String :+: Array[String] :+: CNil],
-                                    `type`: Option[MyriadOutputType]) {
+                                    label: Option[String] = None,
+                                    secondaryFiles:
+                                      Option[
+                                        ECMAScriptExpression :+:
+                                        String :+:
+                                        Array[
+                                          ECMAScriptExpression :+:
+                                          String :+:
+                                          CNil] :+:
+                                        CNil] = None,
+                                    format: Option[ECMAScriptExpression :+: String :+: Array[String] :+: CNil] = None,
+                                    streamable: Option[Boolean] = None,
+                                    doc: Option[String :+: Array[String] :+: CNil] = None,
+                                    `type`: Option[MyriadOutputType] = None) {
 
   type `type` = MyriadOutputType
   type Id = String
@@ -84,7 +90,7 @@ case class WorkflowOutputParameter(
 case class InputBinding(position: Int, prefix: String)
 
 case class OutputRecordSchema(
-  `type`: String Refined MatchesRegex[W.`"record"`.T],
+  `type`: W.`"record"`.T,
   fields: Option[Array[OutputRecordField]],
   label: Option[String]
   )
@@ -97,7 +103,7 @@ case class OutputRecordField(
 
 case class OutputEnumSchema(
   symbols: Array[String],
-  `type`: String Refined MatchesRegex[W.`"enum"`.T],
+  `type`: W.`"enum"`.T,
   label: Option[String],
   outputBinding: Option[CommandOutputBinding])
 
@@ -109,22 +115,23 @@ case class CommandOutputBinding(
 
 case class OutputArraySchema(
   items: MyriadOutputType,
-  `type`: String Refined MatchesRegex[W.`"array"`.T],
+  `type`: W.`"array"`.T,
   label: Option[String],
   outputBinding: Option[CommandOutputBinding])
 
 
 case class InlineJavascriptRequirement(
-  `class`: String Refined MatchesRegex[W.`"InlineJavascriptRequirement"`.T],
+  `class`: W.`"InlineJavascriptRequirement"`.T,
   expressionLib: Option[Array[String]])
 
 case class SchemaDefRequirement(
-  `class`: String Refined MatchesRegex[W.`"SchemaDefRequirement"`.T],
-  types: Array[InputRecordSchema :+: InputEnumSchema :+: InputArraySchema :+: CNil])
+  `class`: W.`"SchemaDefRequirement"`.T,
+  types: Array[InputRecordSchema :+: InputEnumSchema :+: InputArraySchema :+: CNil]
+  )
 
 //There is a large potential for regex refinements on these string types
 case class DockerRequirement(
-  `class`: String Refined MatchesRegex[W.`"DockerRequirement"`.T],
+  `class`: W.`"DockerRequirement"`.T,
   dockerPull: Option[String], //TODO Refine to match a docker image regex?
   dockerLoad: Option[String],
   dockerFile: Option[String],
@@ -134,8 +141,8 @@ case class DockerRequirement(
   )
 
 case class SoftwareRequirement(
-  `class`: String Refined MatchesRegex[W.`"SoftwareRequirement"`.T],
-  packages: 
+  `class`: W.`"SoftwareRequirement"`.T,
+  packages:
     Array[SoftwarePackage] :+:
     Map[SoftwarePackage#Package, SoftwarePackage#Specs] :+:
     Map[SoftwarePackage#Package, SoftwarePackage] :+:
@@ -152,8 +159,8 @@ case class SoftwarePackage(
 }
 
 case class InitialWorkDirRequirement(
-  `class`: String Refined MatchesRegex[W.`"InitialWorkDirRequirement"`.T],
-  listing: 
+  `class`: W.`"InitialWorkDirRequirement"`.T,
+  listing:
     Array[
       File :+:
       Directory :+:
@@ -166,7 +173,7 @@ case class InitialWorkDirRequirement(
     String :+:
     CNil)
 
-/** 
+/**
  *  Short for "Directory Entry"
  *  @see <a href="http://www.commonwl.org/v1.0/CommandLineTool.html#Dirent">Dirent Specification</a>
  */
@@ -175,9 +182,16 @@ case class Dirent(
                    entryName: Option[ECMAScriptExpression :+: String :+: CNil],
                    writable: Option[Boolean])
 
+
+/**
+  *
+  * @param `class` not really optional but may be declared as a map i.e.
+  *                EnvVarRequirement:
+  * @param envDef
+  */
 case class EnvVarRequirement(
-  `class`: String Refined MatchesRegex[W.`"EnvVarRequirement"`.T],
-  envDef: 
+  `class`: Witness.`"EnvVarRequirement"`.T,
+  envDef:
     Array[EnvironmentDef] :+:
     Map[EnvironmentDef#EnvName, EnvironmentDef#EnvValue] :+:
     Map[EnvironmentDef#EnvName, EnvironmentDef] :+:
@@ -188,10 +202,10 @@ case class EnvironmentDef(envName: String, envValue: ECMAScriptExpression :+: St
   type EnvValue = String
 }
 
-case class ShellCommandRequirement(`class`: String Refined MatchesRegex[W.`"ShellCommandRequirement"`.T])
+case class ShellCommandRequirement(`class`: W.`"ShellCommandRequirement"`.T)
 
 case class ResourceRequirement(
-                                `class`: String Refined MatchesRegex[W.`"ResourceRequirement"`.T],
+                                `class`: W.`"ResourceRequirement"`.T,
                                 coresMin: Long :+: ECMAScriptExpression :+: String :+: CNil,
                                 coresMax: Int :+: ECMAScriptExpression :+: String :+: CNil,
                                 ramMin: Long :+: ECMAScriptExpression :+: String :+: CNil,
@@ -202,13 +216,13 @@ case class ResourceRequirement(
                                 outdirMax: Long :+: ECMAScriptExpression :+: String :+: CNil)
 
 case class SubworkflowFeatureRequirement(
-  `class`: String Refined MatchesRegex[W.`"SubworkflowFeatureRequirement"`.T])
+  `class`: W.`"SubworkflowFeatureRequirement"`.T)
 
 case class ScatterFeatureRequirement(
-  `class`: String Refined MatchesRegex[W.`"ScatterFeatureRequirement"`.T])
+  `class`: W.`"ScatterFeatureRequirement"`.T)
 
 case class MultipleInputFeatureRequirement(
-  `class`: String Refined MatchesRegex[W.`"MultipleInputFeatureRequirement"`.T])
+  `class`: W.`"MultipleInputFeatureRequirement"`.T)
 
 case class StepInputExpressionRequirement(
-  `class`: String Refined MatchesRegex[W.`"StepInputExpressionRequirement"`.T])
+  `class`: W.`"StepInputExpressionRequirement"`.T)

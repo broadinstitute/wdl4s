@@ -67,8 +67,10 @@ libraryDependencies ++= {
 
 libraryDependencies ++= Seq(
   "generic",
+  "generic-extras",
   "shapes",
-  "refined"
+  "refined",
+  "literal"
 ).map(m => "io.circe" %% s"circe-$m" % circeVersion)
 
 
