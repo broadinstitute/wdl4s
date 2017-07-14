@@ -7,18 +7,12 @@ import io.circe.yaml.{parser => YamlParser}
 import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
-import shapeless.{:+:, CNil, Coproduct}
 import cats.syntax.either._
-import eu.timepit.refined.api.{Refined, Validate}
+import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string._
 import eu.timepit.refined._
 import io.circe.refined._
 import io.circe.literal._
-import cats.data.ValidatedNel
-import cats.data.Validated._
-import cats.syntax.traverse._
-import cats.instances.list._
-import cats.syntax.option._
 
 /**
  * This package is intended to parse all CWL files.

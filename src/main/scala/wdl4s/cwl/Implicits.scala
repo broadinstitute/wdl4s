@@ -3,14 +3,11 @@ package wdl4s.cwl
 import io.circe.Decoder
 import io.circe._
 import io.circe.generic.auto._
-import io.circe.yaml.{parser => YamlParser}
 
-import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
-import shapeless.{:+:, CNil, Coproduct}
+import shapeless.Coproduct
 import cats.syntax.either._
-import eu.timepit.refined.api.{Refined, Validate}
 import eu.timepit.refined.string._
 import eu.timepit.refined._
 import io.circe.refined._
@@ -20,7 +17,6 @@ import cats.data.Validated._
 import cats.syntax.traverse._
 import cats.instances.list._
 import cats.syntax.option._
-import mouse.all._
 import lenthall.validation.ErrorOr.ErrorOr
 
 object Implicits {
@@ -72,7 +68,7 @@ object Implicits {
             case ("ScatterFeatureRequirement", target) => req(select[SFR](target).map(_("ScatterFeatureRequirement")))
             case ("MultipleInputFeatureRequirement", target) => req(select[MIFR](target).map(_("MultipleInputFeatureRequirement")))
             case ("StepInputExpressionRequirement", target) => req(select[SIER](target).map(_("StepInputExpressionRequirement")))
-            case (key,__) => invalidNel(s"key $key was not amongst possible values " +
+            case (key,_) => invalidNel(s"key $key was not amongst possible values " +
               "InlineJavascriptRequirement, SchemaDefRequirement, DockerRequirement, SoftwareRequirement, InitialWorkDirRequirement, EnvVarRequirement, ShellCommandRequirement, ResourceRequirement, SubworkflowFeatureRequirement, ScatterFeatureRequirement, MultipleInputFeatureRequirement, StepInputExpressionRequirement")
           }.toEither.leftMap(_.toList.mkString(", ")).map(_.toArray)
       }

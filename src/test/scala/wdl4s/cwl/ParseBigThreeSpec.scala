@@ -1,27 +1,8 @@
 package wdl4s.cwl
 
 
-import io.circe.syntax._
-import io.circe._
-import io.circe.generic.extras.auto._
-import io.circe.shapes._
-import io.circe.generic.auto._
 import org.scalatest._
-import io.circe.Json
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined._
-import org.scalatest._
-import io.circe.yaml.parser
 
-import io.circe.parser._
-import io.circe.shapes._
-import io.circe.generic.auto._
-
-import io.circe._
-
-import eu.timepit.refined.string._
-
-import io.circe.refined._
 
 class ParseBigThreeSpec extends FlatSpec with Matchers {
   val namespace = "cwl"
@@ -75,8 +56,7 @@ steps:
 
   it should "produce coproducts easily" in {
     import shapeless.syntax.inject._
-    import shapeless.ops.coproduct.Inject
-    val m = new Workflow(
+    new Workflow(
       None,
       `class` = "Workflow",
       inputs = Array.empty[InputParameter].inject[WorkflowInput],

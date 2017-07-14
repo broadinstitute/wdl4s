@@ -1,11 +1,8 @@
 package wdl4s.cwl
 
-import eu.timepit.refined.api.Refined
 import shapeless.{:+:, CNil}
 import wdl4s.cwl.CwlType.CwlType
-import eu.timepit.refined.string._
 import eu.timepit.refined._
-import io.circe.refined._
 
 trait TypeAliases {
 

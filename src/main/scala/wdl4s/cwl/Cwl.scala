@@ -2,11 +2,8 @@ package wdl4s.cwl
 
 import shapeless.{:+:, CNil, Witness}
 import eu.timepit.refined._
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.string._
 import CwlVersion._
-import CwlType._
-import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, Inputs, StdChannel}
+import wdl4s.cwl.CommandLineTool.Inputs
 
 
 sealed trait Cwl {

@@ -1,10 +1,12 @@
 package wdl4s.cwl
 
 import org.scalatest.FlatSpec
+/*
 import shapeless.Coproduct
 import shapeless.syntax.inject._
 import shapeless.ops.coproduct.Inject
 import mouse.all._
+*/
 
 class ThreeStepSpec extends FlatSpec {
 
@@ -12,6 +14,7 @@ class ThreeStepSpec extends FlatSpec {
 
     //val ps = new CommandLineTool()
 
+    /*
     val patternInput =
       InputParameter(
         Some("pattern"),
@@ -28,7 +31,6 @@ class ThreeStepSpec extends FlatSpec {
         id = Some("wc.count"),
         `type` = Some(Coproduct[MyriadOutputType](CwlType.Int)))
 
-    /*
     //val _outputs = Coproduct[WorkflowInput](Array(outputCgrep, outputWc))
 
     val psWfStep  = WorkflowStep(

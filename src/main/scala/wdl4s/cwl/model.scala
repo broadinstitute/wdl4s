@@ -1,8 +1,6 @@
 package wdl4s.cwl
 
 import eu.timepit.refined._
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.string._
 import shapeless.{:+:, CNil, Witness}
 
 case class WorkflowStepInput(src: String)
