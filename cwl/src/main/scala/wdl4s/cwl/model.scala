@@ -2,8 +2,14 @@ package wdl4s.cwl
 
 import eu.timepit.refined._
 import shapeless.{:+:, CNil, Witness}
+import wdl4s.cwl.LinkMergeMethod.LinkMergeMethod
 
-case class WorkflowStepInput(src: String)
+case class WorkflowStepInput(
+  id: String,
+  source: Option[String :+: Array[String] :+: CNil] = None,
+  linkMerge: Option[LinkMergeMethod] = None,
+  default: Option[CwlAny] = None,
+  valueFrom: Option[ECMAScriptExpression :+: String :+: CNil] = None)
 
 case class InputParameter(
                            id: Option[String], //not really optional but can be specified upstream

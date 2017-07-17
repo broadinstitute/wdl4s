@@ -6,6 +6,20 @@ import eu.timepit.refined._
 
 trait TypeAliases {
 
+  //TODO: This can parse anything :(  Need to figure out how to allow that via custom parsing
+  type CwlAny = String
+
+  type WorkflowStepInputs =
+    Array[WorkflowStepInput] :+:
+      Map[WorkflowStepInputId, WorkflowStepInputSource] :+:
+      Map[WorkflowStepInputId, WorkflowStepInput] :+:
+      CNil
+
+  type WorkflowStepOutputs =
+    Array[String] :+:
+      Array[WorkflowStepOutput] :+:
+      CNil
+
   type WorkflowStepInputId = String
 
   type WorkflowStepInputSource = String :+: Array[String] :+: CNil

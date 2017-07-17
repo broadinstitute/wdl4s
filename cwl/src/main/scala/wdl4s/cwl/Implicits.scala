@@ -24,6 +24,7 @@ object Implicits {
   implicit val cwlTypeDecoder = Decoder.enumDecoder(CwlType)
   implicit val cwlVersionDecoder = Decoder.enumDecoder(CwlVersion)
   implicit val scatterMethodDecoder = Decoder.enumDecoder(ScatterMethod)
+  implicit val linkMergeMethodDecoder = Decoder.enumDecoder(LinkMergeMethod)
 
   implicit val envvarD = Decoder[EVR]
   implicit val ijr = Decoder[IJR]
