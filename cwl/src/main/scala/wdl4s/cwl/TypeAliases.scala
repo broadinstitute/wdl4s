@@ -84,7 +84,7 @@ trait TypeAliases {
 
   type WorkflowOutput =
     Map[WorkflowOutputParameter#Id, WorkflowOutputParameter] :+:
-      Map[WorkflowOutputParameter#Id, WorkflowOutputParameter#`type`] :+:
+      Map[WorkflowOutputParameter#Id, MyriadOutputType] :+:
       Array[WorkflowOutputParameter] :+:
       CNil
 
