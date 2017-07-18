@@ -2,6 +2,8 @@ package wdl4s.cwl
 
 import eu.timepit.refined._
 import shapeless.{:+:, CNil, Witness}
+import wdl4s.cwl.CommandLineTool.StringOrExpression
+import wdl4s.cwl.CommandOutputBinding.Glob
 import wdl4s.cwl.LinkMergeMethod.LinkMergeMethod
 
 case class WorkflowStepInput(
@@ -64,13 +66,13 @@ case class InputArraySchema(
   inputBinding: Option[CommandLineBinding])
 
 case class CommandLineBinding(
-                               loadContents: Option[Boolean],
-                               position: Option[Int],
-                               prefix: Option[String],
-                               separate: Option[String],
-                               itemSeparator: Option[String],
-                               valueFrom: Option[ECMAScriptExpression :+: String :+: CNil],
-                               shellQuote: Option[Boolean])
+                               loadContents: Option[Boolean] = None,
+                               position: Option[Int] = None,
+                               prefix: Option[String] = None,
+                               separate: Option[String] = None,
+                               itemSeparator: Option[String] = None,
+                               valueFrom: Option[StringOrExpression] = None,
+                               shellQuote: Option[Boolean] = None)
 
 case class WorkflowOutputParameter(
                                     id: Option[String], //Really not optional but can be declared upstream
@@ -115,9 +117,13 @@ case class OutputEnumSchema(
 
 /** @see <a href="http://www.commonwl.org/v1.0/Workflow.html#CommandOutputBinding">CommandOutputBinding</a> */
 case class CommandOutputBinding(
-                                 glob: Option[ECMAScriptExpression :+: String :+: Array[String] :+: CNil],
-                                 loadContents: Option[Boolean],
-                                 outputEval: Option[ECMAScriptExpression :+: String :+: CNil])
+                                 glob: Option[Glob] = None,
+                                 loadContents: Option[Boolean] = None,
+                                 outputEval: Option[ECMAScriptExpression :+: String :+: CNil] = None)
+object CommandOutputBinding {
+  type Glob = ECMAScriptExpression :+: String :+: Array[String] :+: CNil
+
+}
 
 case class OutputArraySchema(
   items: MyriadOutputType,

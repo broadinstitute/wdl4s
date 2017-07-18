@@ -1,12 +1,11 @@
 package wdl4s.cwl
 
 import org.scalatest.FlatSpec
-import shapeless.Coproduct
-import shapeless.syntax.inject._
-import shapeless.ops.coproduct.Inject
-import mouse.all._
-import wdl4s.cwl.CommandLineTool.BaseCommand
-import wdl4s.cwl.WorkflowStep.WorkflowStepRun
+import shapeless._
+import syntax.singleton._
+import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, Inputs, StringOrExpression}
+import wdl4s.cwl.CommandOutputBinding.Glob
+import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 
 class ThreeStepSpec extends FlatSpec {
 
@@ -15,90 +14,103 @@ class ThreeStepSpec extends FlatSpec {
     /**
      * PS
      */
+    val psOutputBinding = CommandOutputBinding(glob = Some(Coproduct[Glob](("ps-stdOut.txt"))))
+
+    val psOutputParameter =
+      CommandOutputParameter(
+        id = "stdOut",
+        `type` = Option(Coproduct(CwlType.File)),
+        outputBinding = Some(psOutputBinding))
+
     val psClt = CommandLineTool(
-      `class` = "CommandLineTool",
-      baseCommand = Some(Coproduct[BaseCommand]("ps"))
-      stdOut = Some("ps-stdOut.txt"))
+      `class` = "CommandLineTool".narrow,
+      outputs = Coproduct[CommandLineTool.Outputs](Array(psOutputParameter)),
+      baseCommand = Some(Coproduct[BaseCommand]("ps")),
+      stdout = Some(Coproduct[StringOrExpression]("ps-stdOut.txt")),
+    )
 
-    val psOutputBinding = CommandOutputBinding(glob = Some(Coproduct("ps-stdOut.txt"))
-
-    val psOutputParameter = CommandOutputParameter(id = "stdOut", `type` = CwlType.File, outputBinding = Some(psCLTOutputBinding))
 
     val psWfStep  = WorkflowStep(
       id = Some("ps"),
-      inputs = Coproduct[CommandLineTool.Inputs](Array.empty),
-      outputs = Coproduct[CommandLineTool.Outputs](Array(psOutputParameter)),
-      run = Coproduct[WorkflowStepRun](psClt))
+      run = Coproduct[Run](psClt),
+      out = Coproduct(Array("stdOut"))
+    )
 
 
     /**
-     * Cgrep step
+     * Cgrep
      */
-    val patternInput = CommandInputParameter(id = Some("pattern"), `type` = Some(CwlType.String))
+    val patternInput = CommandInputParameter(id = Some("pattern"), `type` = Some(Coproduct(CwlType.String)))
 
-    val fileInput = CommandInputParameter(id = Some("file"), `type` = Some(CwlType.File))
+    val fileInput = CommandInputParameter(id = Some("file"), `type` = Some(Coproduct(CwlType.File)))
 
-    val grepOutputBinding = CommandOutputBinding(
-      glob = Some(Coproduct("grepout.txt")),
-      loadContents = Some(true),
-      outputEval = Some(Coproduct("$(parseInt(self[0].contents))"))
+    def clb: String => CommandLineTool.Argument=
+      s => Coproduct[Argument](CommandLineBinding(valueFrom = Some(Coproduct[StringOrExpression](s)), shellQuote  = Some(false)))
 
-    val grepCommandLineBinding = CommandLineBinding(valueFrom = Some("grep"), shellQuote  = Some(false))
-    val patternCommandLineBinding = CommandLineBinding(valueFrom = Some("$(inputs.pattern)"), shellQuote  = Some(false))
-    val inFileCommandLineBinding = CommandLineBinding(valueFrom = Some("$(inputs.file)"), shellQuote  = Some(false))
-    val wcL = CommandLineBinding(valueFrom = Some("| wc -l"), shellQuote  = Some(false))
+    val cgrepArgs = Array(
+      clb("grep '"),
+      clb("$(inputs.pattern)"),
+      clb("' "),
+      clb("$(inputs.file)"),
+      clb("| wc -l")
+    )
 
 
-    val countGrepOutput = WorkflowStepOutput(id = Some("count"))
+    val cgrepOutputBinding = CommandOutputBinding(glob = Some(Coproduct[Glob]("cgrep-stdOut.txt")))
 
-    val cgrepOutputBinding = CommandOutputBinding(glob = Some(Coproduct("cgrep-stdOut.txt"))
-
-    val cgreppsOutputParameter = CommandOutputParameter(id = "stdOut", `type` = CwlType.File, outputBinding = Some(psCLTOutputBinding))
+    val cgrepOutputParameter = CommandOutputParameter(id = "stdOut", `type` = Some(Coproduct(CwlType.File)), outputBinding = Some(cgrepOutputBinding))
 
     val cgrepClt = CommandLineTool(
-      `class` = "CommandLineTool",
       inputs = Coproduct[CommandLineTool.Inputs](Array(patternInput, fileInput)),
-      arguments = Some(Coproduct(Array(grepCommandLineBinding, patternCommandLineBinding, inFileCommandLineBinding, wcL))),
-      stdOut = Some("cgrep-stdOut.txt"))
+      outputs = Coproduct(Array(cgrepOutputParameter)),
+      `class` = "CommandLineTool".narrow,
+      arguments = Some(cgrepArgs),
+      stdout = Some(Coproduct[StringOrExpression]("cgrep-stdOut.txt")))
 
     val patternCgrepWorkFlowStepInput = WorkflowStepInput(id = "pattern")
 
-    val fileCgrepWorkflowStepInput = WorkflowStepInput(id = "file", source = Some("ps/stdOut"))
+    val fileCgrepWorkflowStepInput = WorkflowStepInput(id = "file", source = Some(Coproduct("ps/stdOut")))
 
     val grepWfStep  = WorkflowStep(
       id = Some("cgrep"),
-      inputs = Coproduct[CommandLineTool.Inputs](Array(patternCgrepWorkFlowStepInput, fileCgrepWorkflowStepInput)),
-      outputs = Coproduct[CommandLineTool.Outputs](Array(countGrepOutput)),
-      run = Coproduct[WorkflowStepRun](cgrepClt))
+      in = Coproduct(Array(patternCgrepWorkFlowStepInput, fileCgrepWorkflowStepInput)),
+      out = Coproduct[Outputs](Array(WorkflowStepOutput("count"))),
+      run = Coproduct[Run](cgrepClt))
 
 
     /**
      * WC
      */
-    val wcFileWorkflowStepInput = CommandInputParameter(id = Some("in_file"), `type` = Some(Cwl.File))
+    val wcFileWorkflowStepInput = CommandInputParameter(id = Some("in_file"), `type` = Some(Coproduct(CwlType.File)))
 
-    val cwCatCltBinding = CommandLineBinding(valueFrom = Some(Coproduct("cat")), shellQuote = Some(false))
+    val wcArgs =
+      Array(
+        clb("cat"),
+        clb("${inputs.file"),
+        clb("| wc -l"),
+        clb("stdOut.txt"))
 
-    val cwCatFileCltBinding = CommandLineBinding(valueFrom = Some(Coproduct("${inputs.file")), shellQuote = Some(false))
+    val wcCltOutput = CommandOutputParameter(
+      id = "stdOut",
+      `type` = Some(Coproduct(CwlType.File)),
+      outputBinding = Some(CommandOutputBinding(glob = Some(Coproduct[Glob]("wc-stdOut.txt")))))
 
-    val cwPipeCltBinding = CommandLineBinding(valueFrom = Some(Coproduct("| wc -l")), shellQuote = Some(false))
-
-    val wcOutputBinding = CommandOutputBinding(glob = some("stdOut.txt"))
-
-    val wcClt = CommandLineTool(
-      `class` = "CommandLineTool",
-      stdOut = Some("wc-stdOut.txt")
-      inputs = Coproduct(Array(wcFileWorkflowStepInput)),
-      arguments = Some(Coproduct(Array(cwCatFileCltBinding, cwCatFileCltBinding, cwPipeCltBinding))
+    val wcClt =
+      CommandLineTool(
+        `class` = "CommandLineTool".narrow,
+        stdout = Some(Coproduct[StringOrExpression]("wc-stdOut.txt")),
+        inputs = Coproduct(Array(wcFileWorkflowStepInput)),
+        outputs = Coproduct(Array(wcCltOutput)),
+        arguments = Some(wcArgs))
 
 
-    val wcWorkflowInput = WorkflowStepInput(id = "in_file", source = Some("ps/stdOut"))
+    val wcWorkflowInput = WorkflowStepInput(id = "in_file", source = Some(Coproduct("ps/stdOut")))
 
     val wcWorkflowStep = WorkflowStep(
       id = Some("wc"),
-      inputs = Coproduct(Array(wcWorkflowInput))
-      outputs = Coproduct[CommandLineTool.Outputs](Array(wcWorkflowStepOutput)),
-      run = Coproduct(wcClt)
+      in = Coproduct[WorkflowStep.Inputs](Array(wcWorkflowInput)),
+      out = Coproduct[WorkflowStep.Outputs](Array(WorkflowStepOutput("count"))),
+      run = Coproduct[WorkflowStep.Run](wcClt))
 
 
     /**
@@ -108,17 +120,19 @@ class ThreeStepSpec extends FlatSpec {
 
     val outputWc = WorkflowOutputParameter(id = Some("wc.count"), `type` = Some(Coproduct[MyriadOutputType](CwlType.Int)))
 
-    val _outputs = Coproduct[WorkflowInput](Array(outputCgrep, outputWc))
+    val _outputs = Coproduct[WorkflowOutput](Array(outputCgrep, outputWc))
 
-    val workflowPatternInput: InputParameter = ???
+    val workflowPatternInput = InputParameter(id = Some("pattern"), `type` = Some(Coproduct[MyriadInputType](CwlType.String)))
 
     val _inputs = Coproduct[WorkflowInput](Array(workflowPatternInput))
 
-    val m = new Workflow(
-      None,
-      `class` = "Workflow",
-      inputs = _inputs,
-      outputs = _outputs,
-      steps = Coproduct[WorkflowSteps](Array(psWfStep))
+    val threeStepWorkflow =
+      new Workflow(
+        None,
+        `class` = "Workflow".narrow,
+        inputs = _inputs,
+        outputs = _outputs,
+        steps = Coproduct[WorkflowSteps](Array(psWfStep)))
+
   }
 }

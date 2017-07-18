@@ -1,9 +1,10 @@
 package wdl4s.cwl
 
-import shapeless.{:+:, CNil, Witness}
+import shapeless.{:+:, CNil, Coproduct, Witness}
+import shapeless.syntax.singleton._
 import eu.timepit.refined._
 import CwlVersion._
-import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, Inputs}
+import wdl4s.cwl.CommandLineTool.{apply => _, _}
 
 
 sealed trait Cwl {
@@ -13,7 +14,7 @@ sealed trait Cwl {
 
 case class Workflow(
   cwlVersion: Option[CwlVersion] = None,
-  `class`: Witness.`"Workflow"`.T,
+  `class`: Witness.`"Workflow"`.T = "Workflow".narrow,
   inputs: WorkflowInput,
   outputs: WorkflowOutput,
   steps: WorkflowSteps) extends Cwl
@@ -39,13 +40,9 @@ case class Workflow(
   * @param permanentFailCodes
   */
 case class CommandLineTool(
-                            inputs: Inputs,
-                            outputs:
-                              Array[CommandOutputParameter] :+:
-                              Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
-                              Map[CommandOutputParameter#Id, CommandOutputParameter] :+:
-                              CNil,
-                            `class`: W.`"CommandLineTool"`.T,
+                            inputs: Inputs = Coproduct[Inputs](Array.empty[CommandInputParameter]),
+                            outputs: Outputs,
+                            `class`: W.`"CommandLineTool"`.T = "CommandLineTool".narrow,
                             id: Option[String] = None,
                             requirements: Option[Array[Requirement]] = None,
                             hints: Option[Array[String]] = None, //TODO: Any?
@@ -54,14 +51,15 @@ case class CommandLineTool(
                             cwlVersion: Option[CwlVersion] = None,
                             baseCommand: Option[BaseCommand] = None,
                             arguments: Option[Array[Argument]] = None,
-                            stdin: Option[ECMAScriptExpression :+: String :+: CNil] = None,
-                            stderr: Option[ECMAScriptExpression :+: String :+: CNil] = None,
-                            stdout: Option[ECMAScriptExpression :+: String :+: CNil] = None,
+                            stdin: Option[StringOrExpression] = None,
+                            stderr: Option[StringOrExpression] = None,
+                            stdout: Option[StringOrExpression] = None,
                             successCodes: Option[Array[Int]] = None,
                             temporaryFailCodes: Option[Array[Int]] = None,
                             permanentFailCodes: Option[Array[Int]] = None) extends Cwl
 
 object CommandLineTool {
+  type StringOrExpression = ECMAScriptExpression :+: String :+: CNil
   type Inputs =
     Array[CommandInputParameter] :+: Map[CommandInputParameter#Id, CommandInputParameter#`type`] :+:
       Map[CommandInputParameter#Id, CommandInputParameter] :+: CNil
