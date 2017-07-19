@@ -98,7 +98,7 @@ class ThreeStepSpec extends FlatSpec with Matchers {
   val wcArgs =
     Array(
       clb("cat"),
-      clb("${inputs.file}"),
+      clb("$(inputs.file)"),
       clb("|"),
       clb("wc"),
       clb("-l")
