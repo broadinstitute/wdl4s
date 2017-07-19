@@ -96,6 +96,7 @@ case class WorkflowOutputParameter(
                                     `type`: Option[MyriadOutputType] = None) {
 
   type OutputSource = String :+: Array[String] :+: CNil
+  type `type` = MyriadOutputType
   type Id = String
 }
 
