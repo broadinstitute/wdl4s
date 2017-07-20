@@ -3,7 +3,6 @@ package wdl4s.cwl
 import shapeless.{:+:, CNil, Witness}
 import eu.timepit.refined._
 import CwlVersion._
-import CwlType._
 import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, Inputs, StdChannel}
 
 sealed trait Cwl {
@@ -41,7 +40,7 @@ case class Workflow(
 case class CommandLineTool(
                             inputs: Inputs,
                             outputs:
-                            Array[CommandOutputParameter] :+:
+                              Array[CommandOutputParameter] :+:
                               Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
                               Map[CommandOutputParameter#Id, CommandOutputParameter] :+:
                               CNil,

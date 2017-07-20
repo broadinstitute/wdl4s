@@ -1,12 +1,7 @@
 package wdl4s.cwl
 
-import io.circe.generic.auto._
+import io.circe.Printer
 import org.scalatest.{FlatSpec, Matchers}
-import io.circe.shapes._ // required, but IntelliJ thinks it is unused
-import io.circe.syntax._
-import io.circe.refined._ // required, but IntelliJ thinks it is unused
-import io.circe.literal._ // required, but IntelliJ thinks it is unused
-import wdl4s.cwl.CwlEncoders._
 import shapeless.Coproduct
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
@@ -48,8 +43,12 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         successCodes = None,
         temporaryFailCodes = None,
         permanentFailCodes = None)
-    val toolJson = tool.asJson
-    toolJson.toString.length > 100 shouldBe true
+    val toolJson = encodeCwlCommandLineTool(tool)
+    val printer = new Printer(preserveOrder = true, dropNullKeys = true, indent = "  ")
+    val toolJsonString = printer.pretty(toolJson)
+    val expectedToolJsonString =
+      """{"inputs":{"message":{"inputBinding":{"position":1}}},"outputs":[],"class":"CommandLineTool","cwlVersion":"v1.0"}"""
+    toolJsonString shouldBe expectedToolJsonString
   }
 
 }
