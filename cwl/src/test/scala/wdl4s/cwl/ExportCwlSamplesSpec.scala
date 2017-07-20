@@ -1,8 +1,10 @@
 package wdl4s.cwl
 
+import io.circe._
+import io.circe.Encoder
 import io.circe.generic.auto._
 import org.scalatest.{FlatSpec, Matchers}
-import io.circe.shapes._ // required, even though IntelliJ thinks it is unused
+import io.circe.shapes._
 import io.circe.syntax._
 import io.circe.refined._
 import io.circe.literal._
@@ -57,7 +59,6 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
     println(versionJsonString)
     val toolJson = tool.asJson
     toolJson.toString.length > 10 shouldBe true
-    toolJson.as[CommandLineTool].isRight shouldBe true
     tool.toString.length > 10 shouldBe true
   }
 

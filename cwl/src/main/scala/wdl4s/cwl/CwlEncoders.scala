@@ -15,11 +15,7 @@ object CwlEncoders {
   implicit val cwlVersionEncoder: Encoder[CwlVersion] =
     (cwlVersion: CwlVersion) => Json.fromString(cwlVersion.toString)
   implicit val ecmaScriptExpressionEncoder: Encoder[ECMAScriptExpression] =
-    (a: ECMAScriptExpression) => Json.fromString(a.toString)
+    (expression: ECMAScriptExpression) => Json.fromString(expression.toString)
   implicit val cwlTypeEncoder: Encoder[CwlType] =
     (cwlType: CwlType) => Json.fromString(cwlType.toString)
-  implicit def refinedEncoder[V,P](implicit valueEncoder: Encoder[V]): Encoder[Refined[V, P]] =
-    (refined: Refined[V, P]) => refined.value.asJson
-  implicit val witnessEncoder : Encoder[Witness] =
-    (witness: Witness) => witness.value.toString.asJson
 }
