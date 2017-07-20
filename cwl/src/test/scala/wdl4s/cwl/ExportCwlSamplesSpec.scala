@@ -1,20 +1,14 @@
 package wdl4s.cwl
 
-import io.circe._
-import io.circe.Encoder
 import io.circe.generic.auto._
 import org.scalatest.{FlatSpec, Matchers}
-import io.circe.shapes._
+import io.circe.shapes._ // required, but IntelliJ thinks it is unused
 import io.circe.syntax._
-import io.circe.refined._
-import io.circe.literal._
+import io.circe.refined._ // required, but IntelliJ thinks it is unused
+import io.circe.literal._ // required, but IntelliJ thinks it is unused
 import wdl4s.cwl.CwlEncoders._
 import shapeless.Coproduct
 
-/**
-  * wdl4s
-  * Created by oruebenacker on 03.07.17.
-  */
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
   it should "export 1st tool" in {
@@ -54,12 +48,8 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         successCodes = None,
         temporaryFailCodes = None,
         permanentFailCodes = None)
-    val versionJson = CwlVersion.Version1.asJson
-    val versionJsonString = versionJson.toString
-    println(versionJsonString)
     val toolJson = tool.asJson
-    toolJson.toString.length > 10 shouldBe true
-    tool.toString.length > 10 shouldBe true
+    toolJson.toString.length > 100 shouldBe true
   }
 
 }
