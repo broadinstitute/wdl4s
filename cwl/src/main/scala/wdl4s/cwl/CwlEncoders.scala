@@ -3,6 +3,7 @@ package wdl4s.cwl
 import eu.timepit.refined.api.Refined
 import io.circe.syntax.EncoderOps
 import io.circe.{Encoder, Json}
+import shapeless.Witness
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.CwlVersion.CwlVersion
 
@@ -19,4 +20,6 @@ object CwlEncoders {
     (cwlType: CwlType) => Json.fromString(cwlType.toString)
   implicit def refinedEncoder[V,P](implicit valueEncoder: Encoder[V]): Encoder[Refined[V, P]] =
     (refined: Refined[V, P]) => refined.value.asJson
+  implicit val witnessEncoder : Encoder[Witness] =
+    (witness: Witness) => witness.value.toString.asJson
 }

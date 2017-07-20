@@ -57,7 +57,7 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
     println(versionJsonString)
     val toolJson = tool.asJson
     toolJson.toString.length > 10 shouldBe true
-//    toolJson.as[CommandLineTool].isRight shouldBe true
+    toolJson.as[CommandLineTool].isRight shouldBe true
     tool.toString.length > 10 shouldBe true
   }
 
