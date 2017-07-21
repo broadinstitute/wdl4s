@@ -2,11 +2,12 @@ package wdl4s.cwl
 
 import io.circe.Printer
 import org.scalatest.{FlatSpec, Matchers}
-import shapeless.Coproduct
+import shapeless.{Coproduct, Witness}
+import wdl4s.cwl.CwlVersion.CwlVersion
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
-  it should "export 1st tool" in {
+  it should "encode sample CWL command line tool" in {
     val tool =
       CommandLineTool(
         inputs = Coproduct[CommandLineTool.Inputs](Map("message" -> CommandInputParameter(
@@ -49,6 +50,16 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
     val expectedToolJsonString =
       """{"inputs":{"message":{"inputBinding":{"position":1}}},"outputs":[],"class":"CommandLineTool","cwlVersion":"v1.0"}"""
     toolJsonString shouldBe expectedToolJsonString
+  }
+
+  it should "encode sample CWL workflow" in {
+    val workflow = Workflow(
+      cwlVersion = Option(CwlVersion.Version1),
+      `class` = "Workflow",
+      inputs = ??? : WorkflowInput,
+      outputs = ??? : WorkflowOutput,
+      steps = ??? : WorkflowSteps)
+   workflow.toString.length > 3 shouldBe true
   }
 
 }
