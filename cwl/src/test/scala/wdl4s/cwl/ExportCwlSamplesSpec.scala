@@ -16,9 +16,9 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
           format = None,
           streamable = None,
           doc = None,
-          inputBinding = Some(CommandLineBinding(
+          inputBinding = Option(CommandLineBinding(
             loadContents = None,
-            position = Some(1),
+            position = Option(1),
             prefix = None,
             separate = None,
             itemSeparator = None,
@@ -34,7 +34,7 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         hints = None,
         label = None,
         doc = None,
-        cwlVersion = Some(CwlVersion.Version1),
+        cwlVersion = Option(CwlVersion.Version1),
         baseCommand = None,
         arguments = None,
         stdin = None,
