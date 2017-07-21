@@ -22,7 +22,7 @@ case class Workflow(
 /**
   *
   * @param inputs
-  * @param outputs
+  * @param outputs There is no logical default for outputs as a job without outputs is not considered useful.
   * @param `class` This _should_ always be "CommandLineTool," however the spec does not -er- specify this.
   * @param id
   * @param requirements

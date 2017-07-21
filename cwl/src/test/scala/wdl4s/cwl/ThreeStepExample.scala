@@ -51,7 +51,7 @@ object ThreeStepExample extends App {
   def clb: String => CommandLineTool.Argument=
     s => Coproduct[Argument](CommandLineBinding(valueFrom = Option(Coproduct[StringOrExpression](s)), shellQuote  = Option(false)))
 
-  val cgrepArgs = Option("grep $(inputs.pattern) $(inputs.file) | wc -l".split(' ').toList.map(clb).toArray)
+  val cgrepArgs = Option(("grep $(inputs.pattern). $(inputs.file) | wc -l" split ' ' map clb).toArray)
 
 
   val cgrepOutputBinding = CommandOutputBinding(glob = Option(Coproduct[Glob]("cgrep-stdOut.txt")))
@@ -78,14 +78,11 @@ object ThreeStepExample extends App {
     run = Coproduct[Run](cgrepClt))
 
 
-  /**
-    * WC
-    */
   val wcFileCommandInput = CommandInputParameter(
     id = Option("file"),
     `type` = Option(Coproduct(CwlType.File)))
 
-  val wcArgs = Option("cat $(inputs.file) | wc -l".split(' ').toList.map(clb).toArray)
+  val wcArgs = Option(("cat $(inputs.file) | wc -l" split ' ' map clb).toArray)
 
   val wcCltOutput = CommandOutputParameter(
     id = "wc-stdOut",
