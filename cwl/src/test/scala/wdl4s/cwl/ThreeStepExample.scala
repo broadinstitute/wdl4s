@@ -85,14 +85,7 @@ object ThreeStepExample extends App {
     id = Option("file"),
     `type` = Option(Coproduct(CwlType.File)))
 
-  val wcArgs =
-    Array(
-      clb("cat"),
-      clb("$(inputs.file)"),
-      clb("|"),
-      clb("wc"),
-      clb("-l")
-      )
+  val wcArgs = Option("cat $(inputs.file) | wc -l".split(' ').toList.map(clb).toArray)
 
   val wcCltOutput = CommandOutputParameter(
     id = "wc-stdOut",
@@ -105,7 +98,7 @@ object ThreeStepExample extends App {
       stdout = Option(Coproduct[StringOrExpression]("wc-stdOut.txt")),
       inputs = Coproduct(Array(wcFileCommandInput)),
       outputs = Coproduct(Array(wcCltOutput)),
-      arguments = Option(wcArgs),
+      arguments = wcArgs,
       requirements = inlineJScriptRequirements
     )
 
