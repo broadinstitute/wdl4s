@@ -4,7 +4,7 @@ import io.circe.Printer
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless.{Coproduct, Witness}
 import wdl4s.cwl.CwlVersion.CwlVersion
-import wdl4s.cwl.WorkflowStep.Run
+import wdl4s.cwl.WorkflowStep.{Inputs, Run}
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
@@ -76,15 +76,24 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         Map(
           "untar" -> WorkflowStep(
             id = None,
-            run = Coproduct[Run]("tar-param.cwl"),
-            in = ???,
-            out = ???
+            run = Coproduct[WorkflowStep.Run]("tar-param.cwl"),
+            in = Coproduct[WorkflowStep.Inputs](
+              Map(
+                "tarfile" -> WorkflowStepInput("inp"),
+                "extractfile" -> WorkflowStepInput("ex")
+              )
+            ),
+            out = Coproduct[WorkflowStep.Outputs](Array("example_out"))
           ),
           "compile" -> WorkflowStep(
             id = None,
-            run = Coproduct[Run]("arguments.cwl"),
-            in = ???,
-            out = ???
+            run = Coproduct[WorkflowStep.Run]("arguments.cwl"),
+            in = Coproduct[WorkflowStep.Inputs](
+              Map(
+                "src" -> WorkflowStepInput("untar/example_out")
+              )
+            ),
+            out = Coproduct[WorkflowStep.Outputs](Array("classfile"))
           )
         )
       ))
