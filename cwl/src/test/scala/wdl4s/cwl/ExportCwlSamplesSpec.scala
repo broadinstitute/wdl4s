@@ -71,7 +71,12 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
           )
         )
       ),
-      steps = Coproduct[WorkflowSteps](???))
+      steps = Coproduct[WorkflowSteps](
+        Map(
+          "untar" -> (??? : WorkflowStep),
+          "compile" -> (??? : WorkflowStep)
+        )
+      ))
     workflow.toString.length > 3 shouldBe true
   }
 
