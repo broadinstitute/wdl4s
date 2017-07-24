@@ -4,6 +4,7 @@ import io.circe.Printer
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless.{Coproduct, Witness}
 import wdl4s.cwl.CwlVersion.CwlVersion
+import wdl4s.cwl.WorkflowStep.Run
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
@@ -73,8 +74,18 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
       ),
       steps = Coproduct[WorkflowSteps](
         Map(
-          "untar" -> (??? : WorkflowStep),
-          "compile" -> (??? : WorkflowStep)
+          "untar" -> WorkflowStep(
+            id = None,
+            run = Coproduct[Run]("tar-param.cwl"),
+            in = ???,
+            out = ???
+          ),
+          "compile" -> WorkflowStep(
+            id = None,
+            run = Coproduct[Run]("arguments.cwl"),
+            in = ???,
+            out = ???
+          )
         )
       ))
     workflow.toString.length > 3 shouldBe true
