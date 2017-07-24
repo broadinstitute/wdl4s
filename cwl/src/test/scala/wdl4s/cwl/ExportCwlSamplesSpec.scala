@@ -3,12 +3,19 @@ package wdl4s.cwl
 import io.circe.Printer
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless.{Coproduct, Witness}
+import wdl4s.cwl.CommandLineTool.BaseCommand
 import wdl4s.cwl.CwlVersion.CwlVersion
 import wdl4s.cwl.WorkflowStep.{Inputs, Run}
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
   val prettyPrinter = Printer.spaces2.copy(dropNullKeys = true)
+
+  def assertCorrectJson(cwl: Cwl, expectedJsonString: String): Unit = {
+    val cwlJson = encodeCwl(cwl)
+    val cwlJsonString = prettyPrinter.pretty(cwlJson)
+    cwlJsonString shouldBe expectedJsonString
+  }
 
   it should "encode sample CWL command line tool" in {
     val tool =
@@ -39,7 +46,7 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         label = None,
         doc = None,
         cwlVersion = Option(CwlVersion.Version1),
-        baseCommand = None,
+        baseCommand = Option(Coproduct[BaseCommand]("echo")),
         arguments = None,
         stdin = None,
         stderr = None,
@@ -47,9 +54,6 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         successCodes = None,
         temporaryFailCodes = None,
         permanentFailCodes = None)
-    val toolJson = encodeCwl(tool)
-    val toolJsonString = prettyPrinter.pretty(toolJson)
-    println(toolJsonString)
     val expectedToolJsonString =
       """{
         |  "inputs" : {
@@ -64,7 +68,7 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         |  "class" : "CommandLineTool",
         |  "cwlVersion" : "v1.0"
         |}""".stripMargin
-    toolJsonString shouldBe expectedToolJsonString
+    assertCorrectJson(tool, expectedToolJsonString)
   }
 
   it should "encode sample CWL workflow" in {
@@ -93,8 +97,8 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
             run = Coproduct[WorkflowStep.Run]("tar-param.cwl"),
             in = Coproduct[WorkflowStep.Inputs](
               Map(
-                "tarfile" -> WorkflowStepInput("inp"),
-                "extractfile" -> WorkflowStepInput("ex")
+                "tarfile" -> Coproduct[WorkflowStepInputSource]("inp"),
+                "extractfile" -> Coproduct[WorkflowStepInputSource]("ex")
               )
             ),
             out = Coproduct[WorkflowStep.Outputs](Array("example_out"))
@@ -104,17 +108,74 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
             run = Coproduct[WorkflowStep.Run]("arguments.cwl"),
             in = Coproduct[WorkflowStep.Inputs](
               Map(
-                "src" -> WorkflowStepInput("untar/example_out")
+                "src" -> Coproduct[WorkflowStepInputSource]("untar/example_out")
               )
             ),
             out = Coproduct[WorkflowStep.Outputs](Array("classfile"))
           )
         )
       ))
-    val workflowJson = encodeCwl(workflow)
-    val workflowJsonString = prettyPrinter.pretty(workflowJson)
-    println(workflowJsonString)
-    workflow.toString.length > 3 shouldBe true
+    val expectedWorkflowJsonString =
+      """{
+        |  "cwlVersion" : "v1.0",
+        |  "class" : "Workflow",
+        |  "inputs" : {
+        |    "inp" : "File",
+        |    "ex" : "string"
+        |  },
+        |  "outputs" : {
+        |    "classout" : {
+        |      "outputSource" : "compile/classfile",
+        |      "type" : "File"
+        |    }
+        |  },
+        |  "steps" : {
+        |    "untar" : {
+        |      "in" : {
+        |        "tarfile" : "inp",
+        |        "extractfile" : "ex"
+        |      },
+        |      "out" : [
+        |        "example_out"
+        |      ],
+        |      "run" : "tar-param.cwl"
+        |    },
+        |    "compile" : {
+        |      "in" : {
+        |        "src" : "untar/example_out"
+        |      },
+        |      "out" : [
+        |        "classfile"
+        |      ],
+        |      "run" : "arguments.cwl"
+        |    }
+        |  }
+        |}""".stripMargin
+    assertCorrectJson(workflow, expectedWorkflowJsonString)
+  }
+
+  it should "encode sample CWL env" in {
+    val tool = CommandLineTool(
+      cwlVersion = Option(CwlVersion.Version1),
+      `class` = "CommandLineTool",
+      baseCommand = Option(Coproduct[BaseCommand]("env")),
+      requirements = ???,
+      inputs = ???,
+      outputs = ???
+    )
+    val envCwl = """
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: env
+requirements:
+  EnvVarRequirement:
+    envDef:
+      HELLO: $(inputs.message)
+inputs:
+  message: string
+outputs: []
+"""
+
   }
 
 }
