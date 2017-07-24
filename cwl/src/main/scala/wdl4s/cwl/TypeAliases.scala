@@ -6,7 +6,6 @@ import eu.timepit.refined._
 
 trait TypeAliases {
 
-  //TODO: This can parse anything :(  Need to figure out how to allow that (likely via custom parsing)
   type CwlAny = String
 
   type WorkflowStepInputId = String

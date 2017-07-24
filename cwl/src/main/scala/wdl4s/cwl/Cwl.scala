@@ -41,7 +41,7 @@ case class Workflow(
   */
 case class CommandLineTool(
                             inputs: Inputs = Coproduct[Inputs](Array.empty[CommandInputParameter]),
-                            outputs: Outputs,
+                            outputs: Outputs = Coproduct[Outputs](Array.empty[CommandOutputParameter]),
                             `class`: W.`"CommandLineTool"`.T = "CommandLineTool".narrow,
                             id: Option[String] = None,
                             requirements: Option[Array[Requirement]] = None,
@@ -60,12 +60,20 @@ case class CommandLineTool(
 
 object CommandLineTool {
   type StringOrExpression = ECMAScriptExpression :+: String :+: CNil
+
   type Inputs =
-    Array[CommandInputParameter] :+: Map[CommandInputParameter#Id, CommandInputParameter#`type`] :+:
-      Map[CommandInputParameter#Id, CommandInputParameter] :+: CNil
+    Array[CommandInputParameter] :+:
+    Map[CommandInputParameter#Id, CommandInputParameter#`type`] :+:
+    Map[CommandInputParameter#Id, CommandInputParameter] :+:
+    CNil
+
   type Outputs =
-    Array[CommandOutputParameter] :+: Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
-      Map[CommandOutputParameter#Id, CommandOutputParameter] :+: CNil
+    Array[CommandOutputParameter] :+:
+    Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
+    Map[CommandOutputParameter#Id, CommandOutputParameter] :+:
+    CNil
+
   type BaseCommand = String :+: Array[String] :+: CNil
+
   type Argument = ECMAScriptExpression :+: CommandLineBinding :+: String :+: CNil
 }

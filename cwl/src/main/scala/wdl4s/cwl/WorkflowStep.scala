@@ -4,6 +4,22 @@ import shapeless.{:+:, CNil, Coproduct}
 import ScatterMethod._
 import wdl4s.cwl.WorkflowStep.{Inputs, Outputs, Run}
 
+/**
+  * An individual job to run.
+  *
+  * @see <a href="http://www.commonwl.org/v1.0/Workflow.html#WorkflowStep">CWL Spec | Workflow Step</a>
+  *
+  * @param id
+  * @param in
+  * @param out
+  * @param run Purposefully not defaulted as it's required and it is unreasonable to not have something to run.
+  * @param requirements
+  * @param hints
+  * @param label
+  * @param doc
+  * @param scatter
+  * @param scatterMethod
+  */
 case class WorkflowStep(
                          id: Option[String], //not actually optional but can be declared as a key for this whole object for convenience
                          in: Inputs = Coproduct[Inputs](Array.empty[WorkflowStepInput]),

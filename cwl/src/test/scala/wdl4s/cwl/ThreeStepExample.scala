@@ -8,7 +8,6 @@ import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 import io.circe.syntax._
 import io.circe.yaml._
 import io.circe.yaml.syntax._
-import org.scalatest._
 
 /*
  This example calls `ps` , then counts the number of processes that match a pattern input.
@@ -21,7 +20,7 @@ object ThreeStepExample extends App {
     Coproduct[Requirement](ShellCommandRequirement()),
       Coproduct[Requirement](InlineJavascriptRequirement())))
 
-  val psOutputBinding = CommandOutputBinding(glob = Option(Coproduct[Glob](("ps-stdOut.txt"))))
+  val psOutputBinding = CommandOutputBinding(glob = Option(Coproduct[Glob]("ps-stdOut.txt")))
 
   val psOutputParameter =
     CommandOutputParameter(
@@ -33,16 +32,12 @@ object ThreeStepExample extends App {
     `class` = "CommandLineTool".narrow,
     outputs = Coproduct[CommandLineTool.Outputs](Array(psOutputParameter)),
     baseCommand = Option(Coproduct[BaseCommand]("ps")),
-    stdout = Option(Coproduct[StringOrExpression]("ps-stdOut.txt")),
-  )
-
+    stdout = Option(Coproduct[StringOrExpression]("ps-stdOut.txt")))
 
   val psWfStep  = WorkflowStep(
     id = Option("ps"),
     run = Coproduct[Run](psClt),
-    out = Coproduct(Array("ps-stdOut"))
-  )
-
+    out = Coproduct(Array("ps-stdOut")))
 
   val patternInput = CommandInputParameter(id = Option("pattern"), `type` = Option(Coproduct(CwlType.String)))
 
@@ -51,8 +46,7 @@ object ThreeStepExample extends App {
   def clb: String => CommandLineTool.Argument=
     s => Coproduct[Argument](CommandLineBinding(valueFrom = Option(Coproduct[StringOrExpression](s)), shellQuote  = Option(false)))
 
-  val cgrepArgs = Option("grep $(inputs.pattern) $(inputs.file) | wc -l".split(' ').toList.map(clb).toArray)
-
+  val cgrepArgs = Option("grep $(inputs.pattern). $(inputs.file) | wc -l" split ' ' map clb)
 
   val cgrepOutputBinding = CommandOutputBinding(glob = Option(Coproduct[Glob]("cgrep-stdOut.txt")))
 
@@ -64,8 +58,7 @@ object ThreeStepExample extends App {
     `class` = "CommandLineTool".narrow,
     arguments = cgrepArgs,
     stdout = Option(Coproduct[StringOrExpression]("cgrep-stdOut.txt")),
-    requirements = inlineJScriptRequirements
-  )
+    requirements = inlineJScriptRequirements)
 
   val patternCgrepWorkFlowStepInput = WorkflowStepInput(id = "pattern", source = Option(Coproduct("#pattern")))
 
@@ -77,15 +70,11 @@ object ThreeStepExample extends App {
     out = Coproduct[Outputs](Array(WorkflowStepOutput("cgrep-stdOut"))),
     run = Coproduct[Run](cgrepClt))
 
-
-  /**
-    * WC
-    */
   val wcFileCommandInput = CommandInputParameter(
     id = Option("file"),
     `type` = Option(Coproduct(CwlType.File)))
 
-  val wcArgs = Option("cat $(inputs.file) | wc -l".split(' ').toList.map(clb).toArray)
+  val wcArgs = Option("cat $(inputs.file) | wc -l" split ' ' map clb)
 
   val wcCltOutput = CommandOutputParameter(
     id = "wc-stdOut",
@@ -99,9 +88,7 @@ object ThreeStepExample extends App {
       inputs = Coproduct(Array(wcFileCommandInput)),
       outputs = Coproduct(Array(wcCltOutput)),
       arguments = wcArgs,
-      requirements = inlineJScriptRequirements
-    )
-
+      requirements = inlineJScriptRequirements)
 
   val wcWorkflowInput = WorkflowStepInput(
     id = "file",
@@ -113,23 +100,17 @@ object ThreeStepExample extends App {
     out = Coproduct[WorkflowStep.Outputs](Array(WorkflowStepOutput("wc-stdOut"))),
     run = Coproduct[WorkflowStep.Run](wcClt))
 
-
-  /**
-    * Workflow
-    */
   val outputCgrep =
     WorkflowOutputParameter(
       id = Option("cgrep-stdOut"),
       `type` = Option(Coproduct[MyriadOutputType](CwlType.File)),
-      outputSource = Option(Coproduct("#cgrep/cgrep-stdOut"))
-    )
+      outputSource = Option(Coproduct("#cgrep/cgrep-stdOut")))
 
   val outputWc =
     WorkflowOutputParameter(
       id = Option("wc-stdOut"),
       `type` = Option(Coproduct[MyriadOutputType](CwlType.File)),
-      outputSource = Option(Coproduct("#wc/wc-stdOut"))
-    )
+      outputSource = Option(Coproduct("#wc/wc-stdOut")))
 
   val _outputs = Coproduct[WorkflowOutput](Array(outputCgrep, outputWc))
 
