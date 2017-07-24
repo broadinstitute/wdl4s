@@ -91,4 +91,19 @@ package object cwl extends TypeAliases {
     import wdl4s.cwl.Implicits.enumerationEncoder
     commandLineTool.asJson
   }
+
+  def encodeCwlWorkflow: Workflow => Json = { workflow =>
+    import io.circe.syntax._
+    import wdl4s.cwl.Implicits.enumerationEncoder
+    workflow.asJson
+  }
+
+  def encodeCwl: Cwl => Json = { cwl =>
+    import io.circe.syntax._
+    import wdl4s.cwl.Implicits.enumerationEncoder
+    cwl match {
+      case commandLineTool: CommandLineTool => commandLineTool.asJson
+      case workflow: Workflow => workflow.asJson
+    }
+  }
 }

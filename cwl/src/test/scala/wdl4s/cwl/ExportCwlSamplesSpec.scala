@@ -8,6 +8,8 @@ import wdl4s.cwl.WorkflowStep.{Inputs, Run}
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
+  val prettyPrinter = Printer.spaces2.copy(dropNullKeys = true)
+
   it should "encode sample CWL command line tool" in {
     val tool =
       CommandLineTool(
@@ -45,11 +47,23 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         successCodes = None,
         temporaryFailCodes = None,
         permanentFailCodes = None)
-    val toolJson = encodeCwlCommandLineTool(tool)
-    val printer = new Printer(preserveOrder = true, dropNullKeys = true, indent = "  ")
-    val toolJsonString = printer.pretty(toolJson)
+    val toolJson = encodeCwl(tool)
+    val toolJsonString = prettyPrinter.pretty(toolJson)
+    println(toolJsonString)
     val expectedToolJsonString =
-      """{"inputs":{"message":{"inputBinding":{"position":1}}},"outputs":[],"class":"CommandLineTool","cwlVersion":"v1.0"}"""
+      """{
+        |  "inputs" : {
+        |    "message" : {
+        |      "inputBinding" : {
+        |        "position" : 1
+        |      }
+        |    }
+        |  },
+        |  "outputs" : [
+        |  ],
+        |  "class" : "CommandLineTool",
+        |  "cwlVersion" : "v1.0"
+        |}""".stripMargin
     toolJsonString shouldBe expectedToolJsonString
   }
 
@@ -97,6 +111,9 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
           )
         )
       ))
+    val workflowJson = encodeCwl(workflow)
+    val workflowJsonString = prettyPrinter.pretty(workflowJson)
+    println(workflowJsonString)
     workflow.toString.length > 3 shouldBe true
   }
 
