@@ -1,0 +1,165 @@
+package wdl4s.cwl
+
+import cats.data.Validated.{Invalid, Valid}
+import org.scalatest.{FlatSpec, Matchers}
+import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
+import wdl4s.wom.callable.{TaskDefinition, WorkflowDefinition}
+import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphOutputNode}
+
+class CwlWorkflowWomSpec extends FlatSpec with Matchers {
+  "A Cwl object for 1st-tool" should "convert to WOM" in {
+    val firstTool =
+      """
+        |cwlVersion: v1.0
+        |class: CommandLineTool
+        |baseCommand: echo
+        |inputs:
+        |  message:
+        |    type: string
+        |    inputBinding:
+        |      position: 1
+        |outputs: []
+      """.stripMargin
+
+    decodeCwl(firstTool) map {
+      case clt:CommandLineTool =>
+        clt.womExecutable match{
+          case Valid(wom) =>
+            wom.entryPoint match{
+              case workflow: TaskDefinition =>
+                workflow.graph.map(_.nodes.collect{ case gin: GraphInputNode => gin.name } should be(Set("message")))
+              case  _ => throw new RuntimeException("not a workflow")
+            }
+        }
+      case other => throw new RuntimeException(s"boom!  Got $other")
+    }
+
+
+  }
+
+  /*
+  "A WdlNamespace for 3step" should "provide conversion to WOM" in {
+    val threeStep =
+      """
+        |cwlVersion: v1.0
+        |class: Workflow
+        |inputs:
+        |- id: pattern
+        |  type: string
+        |outputs:
+        |- id: cgrep-stdOut
+        |  outputSource: '#cgrep/cgrep-stdOut'
+        |  type: File
+        |- id: wc-stdOut
+        |  outputSource: '#wc/wc-stdOut'
+        |  type: File
+        |steps:
+        |- id: ps
+        |  in: []
+        |  out:
+        |  - ps-stdOut
+        |  run:
+        |    inputs: []
+        |    outputs:
+        |    - id: ps-stdOut
+        |      outputBinding:
+        |        glob: ps-stdOut.txt
+        |      type: File
+        |    class: CommandLineTool
+        |    baseCommand: ps
+        |    stdout: ps-stdOut.txt
+        |- id: cgrep
+        |  in:
+        |  - id: pattern
+        |    source: '#pattern'
+        |  - id: file
+        |    source: ps/ps-stdOut
+        |  out:
+        |  - id: cgrep-stdOut
+        |  run:
+        |    inputs:
+        |    - id: pattern
+        |      type: string
+        |    - id: file
+        |      type: File
+        |    outputs:
+        |    - id: cgrep-stdOut
+        |      outputBinding:
+        |        glob: cgrep-stdOut.txt
+        |      type: File
+        |    class: CommandLineTool
+        |    requirements:
+        |    - class: ShellCommandRequirement
+        |    - class: InlineJavascriptRequirement
+        |    arguments:
+        |    - valueFrom: grep
+        |      shellQuote: false
+        |    - valueFrom: $(inputs.pattern).
+        |      shellQuote: false
+        |    - valueFrom: $(inputs.file)
+        |      shellQuote: false
+        |    - valueFrom: '|'
+        |      shellQuote: false
+        |    - valueFrom: wc
+        |      shellQuote: false
+        |    - valueFrom: -l
+        |      shellQuote: false
+        |    stdout: cgrep-stdOut.txt
+        |- id: wc
+        |  in:
+        |  - id: file
+        |    source: ps/ps-stdOut
+        |  out:
+        |  - id: wc-stdOut
+        |  run:
+        |    inputs:
+        |    - id: file
+        |      type: File
+        |    outputs:
+        |    - id: wc-stdOut
+        |      outputBinding:
+        |        glob: wc-stdOut.txt
+        |      type: File
+        |    class: CommandLineTool
+        |    requirements:
+        |    - class: ShellCommandRequirement
+        |    - class: InlineJavascriptRequirement
+        |    arguments:
+        |    - valueFrom: cat
+        |      shellQuote: false
+        |    - valueFrom: $(inputs.file)
+        |      shellQuote: false
+        |    - valueFrom: '|'
+        |      shellQuote: false
+        |    - valueFrom: wc
+        |      shellQuote: false
+        |    - valueFrom: -l
+        |      shellQuote: false
+        |    stdout: wc-stdOut.txt
+      """.stripMargin
+
+    val namespace = WdlNamespace.loadUsingSource(threeStep, None, None).get.asInstanceOf[WdlNamespaceWithWorkflow]
+    val workflow = decodeCwl(threeStep)
+    val wom3Step = namespace.womExecutable
+    
+    val workflowGraph = wom3Step.graph match {
+      case Valid(g) => g
+      case Invalid(errors) => fail(s"Unable to build wom version of 3step from WDL: ${errors.toList.mkString("\n", "\n", "\n")}")
+    }
+    
+    workflowGraph.nodes collect { case gin: GraphInputNode => gin.name } should be(Set("cgrep.pattern"))
+    workflowGraph.nodes collect { case gon: GraphOutputNode => gon.name } should be(Set("wc.count", "cgrep.count", "ps.procs"))
+    workflowGraph.nodes collect { case cn: CallNode => cn.name } should be(Set("wc", "cgrep", "ps"))
+    
+    val ps = workflowGraph.nodes.collectFirst({ case ps: CallNode if ps.name == "ps" => ps }).get
+    val cgrep = workflowGraph.nodes.collectFirst({ case cgrep: CallNode if cgrep.name == "cgrep" => cgrep }).get
+    val cgrepPatternInput = workflowGraph.nodes.collectFirst({ case cgrepInput: GraphInputNode if cgrepInput.name == "cgrep.pattern" => cgrepInput }).get
+    val wc = workflowGraph.nodes.collectFirst({ case wc: CallNode if wc.name == "wc" => wc }).get
+    
+    ps.upstream shouldBe empty
+    cgrep.upstream shouldBe Set(ps, cgrepPatternInput)
+    wc.upstream shouldBe Set(ps)
+  }
+  */
+
+}

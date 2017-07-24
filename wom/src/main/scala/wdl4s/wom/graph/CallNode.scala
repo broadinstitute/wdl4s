@@ -66,6 +66,7 @@ object CallNode {
 
     val graphNodeSetter = new GraphNode.GraphNodeSetter()
     val inputPortLinker = GraphNode.linkInputPort(callable.name + ".", inputMapping, graphNodeSetter.get) _
+    println(s"callable inputs: ${callable.inputs}")
     val linkedInputPortsAndGraphInputNodes = callable.inputs map inputPortLinker
 
     val linkedInputPorts = linkedInputPortsAndGraphInputNodes.map(_.newInputPort)
