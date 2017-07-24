@@ -56,10 +56,23 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
     val workflow = Workflow(
       cwlVersion = Option(CwlVersion.Version1),
       `class` = "Workflow",
-      inputs = ??? : WorkflowInput,
-      outputs = ??? : WorkflowOutput,
-      steps = ??? : WorkflowSteps)
-   workflow.toString.length > 3 shouldBe true
+      inputs = Coproduct[WorkflowInput](
+        Map(
+          "inp" -> Coproduct[MyriadInputType](CwlType.File),
+          "ex" -> Coproduct[MyriadInputType](CwlType.String)
+        )
+      ),
+      outputs = Coproduct[WorkflowOutput](
+        Map(
+          "classout" -> WorkflowOutputParameter(
+            id = None,
+            `type` = Some(Coproduct[MyriadOutputType](CwlType.File)),
+            outputSource = Some(Coproduct[WorkflowOutputParameter#OutputSource]("compile/classfile"))
+          )
+        )
+      ),
+      steps = Coproduct[WorkflowSteps](???))
+    workflow.toString.length > 3 shouldBe true
   }
 
 }
