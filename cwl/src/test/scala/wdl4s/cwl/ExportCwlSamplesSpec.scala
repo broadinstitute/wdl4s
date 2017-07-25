@@ -158,11 +158,18 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
     val tool = CommandLineTool(
       cwlVersion = Option(CwlVersion.Version1),
       baseCommand = Option(Coproduct[BaseCommand]("env")),
-      requirements = ??? : Option[Array[Requirement]],
+      requirements = Option(Array(Coproduct[Requirement](EnvVarRequirement(
+        `class` = "EnvVarRequirement",
+        envDef = Coproduct[EnvVarRequirement.EnvDef](Map("HELLO" -> "$(inputs.message)"))
+      )))) : Option[Array[Requirement]],
       inputs = ??? : CommandLineTool.Inputs,
       outputs = ??? : CommandLineTool.Outputs
     )
-    val envCwl = """
+    val expectedToolJsonString =
+      """{
+        |
+        |}""".stripMargin
+      val yaml = """
 cwlVersion: v1.0
 class: CommandLineTool
 baseCommand: env
@@ -174,7 +181,7 @@ inputs:
   message: string
 outputs: []
 """
-
+    assertCorrectJson(tool, expectedToolJsonString)
   }
 
 }

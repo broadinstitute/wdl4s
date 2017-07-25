@@ -5,6 +5,7 @@ import shapeless.{:+:, CNil, Witness}
 import shapeless.syntax.singleton._
 import wdl4s.cwl.CommandLineTool.StringOrExpression
 import wdl4s.cwl.CommandOutputBinding.Glob
+import wdl4s.cwl.EnvVarRequirement.EnvDef
 import wdl4s.cwl.LinkMergeMethod.LinkMergeMethod
 
 case class WorkflowStepInput(
@@ -207,12 +208,15 @@ case class Dirent(
   * @param envDef
   */
 case class EnvVarRequirement(
-  `class`: Witness.`"EnvVarRequirement"`.T,
-  envDef:
-    Array[EnvironmentDef] :+:
-    Map[EnvironmentDef#EnvName, EnvironmentDef#EnvValue] :+:
-    Map[EnvironmentDef#EnvName, EnvironmentDef] :+:
-    CNil)
+                              `class`: Witness.`"EnvVarRequirement"`.T,
+                              envDef: EnvDef
+                            )
+
+object EnvVarRequirement {
+  type EnvDef =
+    Array[EnvironmentDef] :+: Map[EnvironmentDef#EnvName, EnvironmentDef#EnvValue] :+:
+      Map[EnvironmentDef#EnvName, EnvironmentDef] :+: CNil
+}
 
 case class EnvironmentDef(envName: String, envValue: ECMAScriptExpression :+: String :+: CNil) {
   type EnvName = String
