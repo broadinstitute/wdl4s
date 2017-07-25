@@ -47,7 +47,7 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
     val printer = new Printer(preserveOrder = true, dropNullKeys = true, indent = "  ")
     val toolJsonString = printer.pretty(toolJson)
     val expectedToolJsonString =
-      """{"inputs":{"message":{"inputBinding":{"position":1}}},"outputs":[],"class":"CommandLineTool","cwlVersion":"v1.0"}"""
+      """{"inputs":{"message":{"id":"","inputBinding":{"position":1}}},"outputs":[],"class":"CommandLineTool","cwlVersion":"v1.0"}"""
     toolJsonString shouldBe expectedToolJsonString
   }
 

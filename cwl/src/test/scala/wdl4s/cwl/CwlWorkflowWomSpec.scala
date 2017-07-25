@@ -24,8 +24,8 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
         |outputs: []
       """.stripMargin
 
-    decodeCwl(firstTool) map {
-      case clt:CommandLineTool =>
+    decodeCwl(firstTool) match {
+      case Right(clt:CommandLineTool) =>
         clt.womExecutable match{
           case Valid(wom) =>
             wom.entryPoint match{
@@ -45,8 +45,44 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
               case  _ => fail("not a workflow")
             }
         }
-      case other => fail(s"boom!  Got $other")
+      case Left(error) => fail(s"did not parse!  $error")
     }
+  }
+
+  "Cwl for 1st workflow" should "convert to WOM" in {
+    val firstWorkflow =
+      """
+        |cwlVersion: v1.0
+        |class: Workflow
+        |inputs:
+        |  inp: File
+        |  ex: string
+        |
+        |outputs:
+        |  classout:
+        |    type: File
+        |    outputSource: compile/classfile
+        |
+        |steps:
+        |  untar:
+        |    run: tar-param.cwl
+        |    in:
+        |      tarfile: inp
+        |      extractfile: ex
+        |    out: [example_out]
+        |
+        |  compile:
+        |    run: arguments.cwl
+        |    in:
+        |      src: untar/example_out
+        |    out: [classfile]
+      """.stripMargin
+
+    decodeCwl(firstWorkflow) match {
+      case Right(workflow) =>
+      case Left(error) => fail(s"did not parse!  $error")
+    }
+
   }
 
   /*

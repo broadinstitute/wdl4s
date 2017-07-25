@@ -8,12 +8,15 @@ class ParseBigThreeSpec extends FlatSpec with Matchers {
   val namespace = "cwl"
 
   it should "parse 1st tool" in {
+    //This id:message is just boilerplate because our object requires an id
+    // and we don't support the map[] declaration yet
   val firstTool = """
 cwlVersion: v1.0
 class: CommandLineTool
 baseCommand: echo
 inputs:
   message:
+    id: message
     type: string
     inputBinding:
       position: 1
