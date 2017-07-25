@@ -90,6 +90,8 @@ trait TypeAliases {
       Array[WorkflowStep] :+:
       CNil
 
+  type CIP = String => CommandInputParameter
+
   type EVR = W.`"EnvVarRequirement"`.T => EnvVarRequirement
   type IJR = W.`"InlineJavascriptRequirement"`.T => InlineJavascriptRequirement
   type SR = W.`"SoftwareRequirement"`.T => SoftwareRequirement

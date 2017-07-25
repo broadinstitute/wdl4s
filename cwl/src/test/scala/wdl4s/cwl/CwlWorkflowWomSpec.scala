@@ -2,9 +2,11 @@ package wdl4s.cwl
 
 import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{FlatSpec, Matchers}
+import wdl4s.wdl.types.WdlStringType
 import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
+import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{TaskDefinition, WorkflowDefinition}
-import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphOutputNode}
+import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphOutputNode, RequiredGraphInputNode}
 
 class CwlWorkflowWomSpec extends FlatSpec with Matchers {
   "A Cwl object for 1st-tool" should "convert to WOM" in {
@@ -15,6 +17,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
         |baseCommand: echo
         |inputs:
         |  message:
+        |    id: message
         |    type: string
         |    inputBinding:
         |      position: 1
@@ -27,14 +30,23 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
           case Valid(wom) =>
             wom.entryPoint match{
               case workflow: TaskDefinition =>
-                workflow.graph.map(_.nodes.collect{ case gin: GraphInputNode => gin.name } should be(Set("message")))
-              case  _ => throw new RuntimeException("not a workflow")
+
+                workflow.inputs shouldBe Set(RequiredInputDefinition("message", WdlStringType))
+
+                workflow.graph.map{
+                  graph =>
+                    graph.nodes.collect{ case gin: GraphInputNode => gin.name } should be(Set("echo.message"))
+                    graph.nodes collect { case cn: CallNode => cn.name } should be(Set("echo"))
+
+                    graph.nodes.collectFirst{ case echo: CallNode if echo.name == "echo" => echo }.get.
+                      upstream shouldBe Set(RequiredGraphInputNode("echo.message", WdlStringType))
+                }
+
+              case  _ => fail("not a workflow")
             }
         }
-      case other => throw new RuntimeException(s"boom!  Got $other")
+      case other => fail(s"boom!  Got $other")
     }
-
-
   }
 
   /*
@@ -141,21 +153,21 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
     val namespace = WdlNamespace.loadUsingSource(threeStep, None, None).get.asInstanceOf[WdlNamespaceWithWorkflow]
     val workflow = decodeCwl(threeStep)
     val wom3Step = namespace.womExecutable
-    
+
     val workflowGraph = wom3Step.graph match {
       case Valid(g) => g
       case Invalid(errors) => fail(s"Unable to build wom version of 3step from WDL: ${errors.toList.mkString("\n", "\n", "\n")}")
     }
-    
+
     workflowGraph.nodes collect { case gin: GraphInputNode => gin.name } should be(Set("cgrep.pattern"))
     workflowGraph.nodes collect { case gon: GraphOutputNode => gon.name } should be(Set("wc.count", "cgrep.count", "ps.procs"))
     workflowGraph.nodes collect { case cn: CallNode => cn.name } should be(Set("wc", "cgrep", "ps"))
-    
+
     val ps = workflowGraph.nodes.collectFirst({ case ps: CallNode if ps.name == "ps" => ps }).get
     val cgrep = workflowGraph.nodes.collectFirst({ case cgrep: CallNode if cgrep.name == "cgrep" => cgrep }).get
     val cgrepPatternInput = workflowGraph.nodes.collectFirst({ case cgrepInput: GraphInputNode if cgrepInput.name == "cgrep.pattern" => cgrepInput }).get
     val wc = workflowGraph.nodes.collectFirst({ case wc: CallNode if wc.name == "wc" => wc }).get
-    
+
     ps.upstream shouldBe empty
     cgrep.upstream shouldBe Set(ps, cgrepPatternInput)
     wc.upstream shouldBe Set(ps)

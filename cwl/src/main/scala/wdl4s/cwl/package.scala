@@ -69,6 +69,7 @@ package object cwl extends TypeAliases {
       parse(_).
       map(_.noSpaces).
       flatMap{json =>
+          println(decode[CommandLineTool](json))
           decode[CommandLineTool](json) orElse
           decode[Workflow](json)
       }

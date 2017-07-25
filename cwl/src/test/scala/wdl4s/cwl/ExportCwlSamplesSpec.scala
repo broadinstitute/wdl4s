@@ -10,7 +10,7 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
     val tool =
       CommandLineTool(
         inputs = Coproduct[CommandLineTool.Inputs](Map("message" -> CommandInputParameter(
-          id = None,
+          id = "",
           label = None,
           secondaryFiles = None,
           format = None,

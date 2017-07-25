@@ -9,6 +9,7 @@ import CwlType._
 import shapeless.syntax.singleton._
 import eu.timepit.refined._
 import CwlVersion._
+import cats.Show
 import cats.data.Validated.Valid
 import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.cwl.CommandLineTool.{apply => _, _}
@@ -144,9 +145,32 @@ case class CommandLineTool(
     implicit def many = at[Array[String]] {_.toSeq.map(StringCommandPart.apply)}
   }
 
+  object BaseCommandToString extends Poly1 {
+    implicit def one = at[String] {identity}
+
+    implicit def many = at[Array[String]] {_.mkString(" && ")}
+  }
+
+  object ArgumentToId extends Poly1 {
+    implicit def ecmaScript = at[ECMAScriptExpression] {_.value}
+
+    implicit def commandLineBinding = at[CommandLineBinding] {_ => ""}
+
+    implicit def string = at[String] {identity}
+  }
+
+  /**
+    * This is used in place of the id when id is None.
+    *
+    * @return
+    */
+  def taskDefinitionId: String =
+    baseCommand.map(_.fold(BaseCommandToString)).getOrElse(
+      arguments.map(_.map(_.fold(ArgumentToId)).mkString(" ")).get)
+
   def taskDefinition: TaskDefinition = {
 
-    val id = this.id.getOrElse("Made this ID up")
+    val id = this.id.getOrElse(taskDefinitionId)
 
     val commandTemplate: Seq[CommandPart] = baseCommand.get.fold(BaseCommandPoly)
 
@@ -184,8 +208,6 @@ case class CommandLineTool(
 
   def womNode: Set[GraphNode] = {
     val cwi = CallNode.callWithInputs(id.getOrElse("this is a made up call node name"), taskDefinition, Map.empty)
-
-    println(cwi.inputs)
 
     Set.empty[GraphNode] ++ cwi.inputs + cwi.call
   }

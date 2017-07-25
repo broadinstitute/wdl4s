@@ -7,7 +7,7 @@ import shapeless.{:+:, CNil}
 import wdl4s.cwl.CwlType._
 
 case class CommandInputParameter(
-                                  id: Option[String],
+                                  id: String,
                                   label: Option[String],
                                   secondaryFiles: Option[Array[ECMAScriptExpression :+: String :+: CNil]],
                                   format: Option[ECMAScriptExpression :+: Array[String] :+: String :+: CNil], //only valid when type: File
