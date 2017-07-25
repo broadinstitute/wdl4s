@@ -3,7 +3,7 @@ package wdl4s.cwl
 import io.circe.Printer
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless.{Coproduct, Witness}
-import wdl4s.cwl.CommandLineTool.BaseCommand
+import wdl4s.cwl.CommandLineTool.{BaseCommand, Outputs}
 import wdl4s.cwl.CwlVersion.CwlVersion
 import wdl4s.cwl.WorkflowStep.{Inputs, Run}
 
@@ -39,7 +39,6 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
           `type` = None
         ))),
         outputs = Coproduct[CommandLineTool.Outputs](Array.empty[CommandOutputParameter]),
-        `class` = "CommandLineTool",
         id = None,
         requirements = None,
         hints = None,
@@ -66,7 +65,8 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         |  "outputs" : [
         |  ],
         |  "class" : "CommandLineTool",
-        |  "cwlVersion" : "v1.0"
+        |  "cwlVersion" : "v1.0",
+        |  "baseCommand" : "echo"
         |}""".stripMargin
     assertCorrectJson(tool, expectedToolJsonString)
   }
@@ -74,7 +74,7 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
   it should "encode sample CWL workflow" in {
     val workflow = Workflow(
       cwlVersion = Option(CwlVersion.Version1),
-      `class` = "Workflow",
+//      `class` = "Workflow",
       inputs = Coproduct[WorkflowInput](
         Map(
           "inp" -> Coproduct[MyriadInputType](CwlType.File),
@@ -157,11 +157,10 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
   it should "encode sample CWL env" in {
     val tool = CommandLineTool(
       cwlVersion = Option(CwlVersion.Version1),
-      `class` = "CommandLineTool",
       baseCommand = Option(Coproduct[BaseCommand]("env")),
-      requirements = ???,
-      inputs = ???,
-      outputs = ???
+      requirements = ??? : Option[Array[Requirement]],
+      inputs = ??? : CommandLineTool.Inputs,
+      outputs = ??? : CommandLineTool.Outputs
     )
     val envCwl = """
 cwlVersion: v1.0

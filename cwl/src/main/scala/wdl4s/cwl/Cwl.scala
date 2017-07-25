@@ -14,10 +14,14 @@ sealed trait Cwl {
 
 case class Workflow(
   cwlVersion: Option[CwlVersion] = None,
-  `class`: Witness.`"Workflow"`.T = "Workflow".narrow,
+  `class` : Workflow.`class`.type = Workflow.`class`,
   inputs: WorkflowInput,
   outputs: WorkflowOutput,
   steps: WorkflowSteps) extends Cwl
+
+object Workflow {
+  val `class` : Witness.`"Workflow"`.T = "Workflow".narrow
+}
 
 /**
   *
@@ -42,7 +46,7 @@ case class Workflow(
 case class CommandLineTool(
                             inputs: Inputs = Coproduct[Inputs](Array.empty[CommandInputParameter]),
                             outputs: Outputs = Coproduct[Outputs](Array.empty[CommandOutputParameter]),
-                            `class`: W.`"CommandLineTool"`.T = "CommandLineTool".narrow,
+                            `class`: CommandLineTool.`class`.type = CommandLineTool.`class`,
                             id: Option[String] = None,
                             requirements: Option[Array[Requirement]] = None,
                             hints: Option[Array[String]] = None, //TODO: Any?
@@ -59,6 +63,8 @@ case class CommandLineTool(
                             permanentFailCodes: Option[Array[Int]] = None) extends Cwl
 
 object CommandLineTool {
+  val `class` : Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow
+
   type StringOrExpression = ECMAScriptExpression :+: String :+: CNil
 
   type Inputs =
