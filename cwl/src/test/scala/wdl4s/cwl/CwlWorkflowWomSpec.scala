@@ -79,7 +79,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
       """.stripMargin
 
     decodeCwl(firstWorkflow) match {
-      case Right(workflow) =>
+      case Right(workflow:Workflow) => workflow.womExecutable
       case Left(error) => fail(s"did not parse!  $error")
     }
 

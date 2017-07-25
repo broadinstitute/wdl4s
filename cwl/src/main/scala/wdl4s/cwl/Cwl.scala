@@ -3,6 +3,9 @@ package wdl4s.cwl
 import shapeless.{:+:, CNil, Witness}
 import eu.timepit.refined._
 import CwlVersion._
+import cats.syntax.foldable._
+import cats.instances.list._
+import cats.instances.set._
 import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, Inputs, StdChannel}
 import shapeless.{:+:, CNil, Coproduct, Poly1, Witness}
 import CwlType._
@@ -36,14 +39,23 @@ case class Workflow(
   outputs: WorkflowOutput,
   steps: WorkflowSteps) extends Cwl {
 
-  def womExecutable: Executable = Executable(womDefinition)
+  def womExecutable: ErrorOr[Executable] = womDefinition.map(Executable.apply)
 
-  def womGraph: Graph = ???
-  /*
-    steps.foldLeft(Set.empty[GraphNode]){
-    case (graphNodes, step) => graphNodes ++ step.womGraphInputNodes ++ step.womNode
+  object WorkflowStepsToGraphNodes extends Poly1 {
+    implicit def ws = at[Array[WorkflowStep]] {
+      _.toList.foldMap { _.graphNodes }
+    }
+
+    //placeholder as we plan to get rid of these
+    implicit def map = at[Map[String,WorkflowStep]] {_ => Set.empty[GraphNode]}
   }
 
+
+  def womGraph: ErrorOr[Graph] =
+    Graph.validateAndConstruct(steps.fold(WorkflowStepsToGraphNodes))
+
+
+  /*
    def buildWomGraph(wdlWorkflow: WdlWorkflow): Graph = {
     val graphNodes = wdlWorkflow.calls.foldLeft(Set.empty[GraphNode])({
       case (currentNodes, call) => currentNodes ++ call.womGraphInputNodes + call.womCallNode
@@ -56,18 +68,20 @@ case class Workflow(
   }
 
   */
-  def womDefinition: WorkflowDefinition = {
+  def womDefinition: ErrorOr[WorkflowDefinition] = {
     val name:String = ???
     val meta: Map[String, String] = ???
     val paramMeta: Map[String, String] = ???
     val declarations: List[(String, Expression)] = ???
 
-    WorkflowDefinition(
-      name,
-      womGraph,
-      meta,
-      paramMeta,
-      declarations
+    womGraph.map(graph =>
+      WorkflowDefinition(
+        name,
+        graph,
+        meta,
+        paramMeta,
+        declarations
+      )
     )
   }
 
@@ -125,18 +139,6 @@ case class CommandLineTool(
       */
 
 
-
-  def cwlTypeToWdlType : CwlType => WdlType = {
-    case Null => ???
-    case Boolean => WdlBooleanType
-    case Int => WdlIntegerType
-    case Long => WdlIntegerType
-    case Float => WdlFloatType
-    case Double => WdlFloatType
-    case String => WdlStringType
-    case CwlType.File => ???
-    case CwlType.Directory => ???
-  }
 
 
   object BaseCommandPoly extends Poly1 {
@@ -206,7 +208,7 @@ case class CommandLineTool(
     )
   }
 
-  def womNode: Set[GraphNode] = {
+  def graphNodes: Set[GraphNode] = {
     val cwi = CallNode.callWithInputs(id.getOrElse("this is a made up call node name"), taskDefinition, Map.empty)
 
     Set.empty[GraphNode] ++ cwi.inputs + cwi.call

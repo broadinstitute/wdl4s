@@ -12,6 +12,9 @@ import eu.timepit.refined.string._
 import eu.timepit.refined._
 import io.circe.refined._
 import io.circe.literal._
+import wdl4s.cwl.CwlType.CwlType
+import wdl4s.cwl.CwlType._
+import wdl4s.wdl.types._
 
 /**
  * This package is intended to parse all CWL files.
@@ -52,6 +55,19 @@ import io.circe.literal._
  * @see <a href="https://github.com/milessabin/shapeless">Shapeless</a>
  */
 package object cwl extends TypeAliases {
+
+  def cwlTypeToWdlType : CwlType => WdlType = {
+    case Null => ???
+    case Boolean => WdlBooleanType
+    case Int => WdlIntegerType
+    case Long => WdlIntegerType
+    case Float => WdlFloatType
+    case Double => WdlFloatType
+    case String => WdlStringType
+    case CwlType.File => ???
+    case CwlType.Directory => ???
+  }
+
 
   /**
     * These are supposed to be valid ECMAScript Expressions.

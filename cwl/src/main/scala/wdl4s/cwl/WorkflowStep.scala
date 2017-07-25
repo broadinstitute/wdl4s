@@ -1,32 +1,24 @@
 package wdl4s.cwl
 
-import shapeless.{:+:, CNil}
+import shapeless.{:+:, CNil, Poly1}
+import cats.syntax.foldable._
+import cats.instances.list._
 import ScatterMethod._
+import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.WorkflowStep.{Inputs, Outputs, Run}
-import wdl4s.wdl.RuntimeAttributes
+import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
 import wdl4s.wdl.command.CommandPart
-import wdl4s.wom.callable.Callable.InputDefinition
+import wdl4s.wdl.types.WdlType
+import wdl4s.wom.callable.Callable.{InputDefinition, OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition}
-import wdl4s.wom.expression.Expression
-import wdl4s.wom.graph.GraphNode
+import wdl4s.wom.expression.{Expression, PlaceholderExpression}
+import wdl4s.wom.graph.{CallNode, GraphNode}
 
 case class WorkflowStep(
-  id: Option[String], //not actually optional but can be declared as a key for this whole object for convenience
-  in: 
-    Array[WorkflowStepInput] :+:
-    Map[WorkflowStepInputId, WorkflowStepInputSource] :+:
-    Map[WorkflowStepInputId, WorkflowStepInput] :+:
-    CNil,
-  out: 
-    Array[String] :+:
-    Array[WorkflowStepOutput] :+:
-    CNil,
-  run: 
-    String :+:
-    CommandLineTool :+:
-    ExpressionTool :+:
-    Workflow :+:
-    CNil,
+  id: String, //not actually optional but can be declared as a key for this whole object for convenience
+  in: Inputs,
+  out: Outputs,
+  run: Run,
   requirements: Option[Array[Requirement]],
   hints: Option[Array[String]], //TODO: should be 'Any' type
   label: Option[String],
@@ -38,7 +30,76 @@ case class WorkflowStep(
 
   def womCallNode: GraphNode = ???
 
-  def graphNodes = womGraphInputNodes + womCallNode
+  def taskDefinitionInputs(workflowInputs: WorkflowInput, otherStepsOutputs: Array[WorkflowStepOutput]):  Set[_ <: Callable.InputDefinition] = ???
+
+  object CommandLineToolOutputTypes extends Poly1 {
+    implicit def mapTo = at[Map[CommandOutputParameter#Id, CommandOutputParameter]](_.map {
+      case (id, commandOutputParameter) => id -> commandOutputParameter.`type`.select[CwlType].map(cwlTypeToWdlType).get
+    })
+
+    implicit def array = at[Array[CommandOutputParameter]] {_ => Map.empty[String, WdlType]}
+
+    implicit def typeMap = at[Map[CommandOutputParameter#Id, CommandOutputParameter#`type`]] {_ => Map.empty[String, WdlType]}
+  }
+
+  object RunToOutputDefinition extends Poly1 {
+    implicit def commandLineTool = at[CommandLineTool] {_.outputs.fold(CommandLineToolOutputTypes)}
+  }
+
+  def taskDefinitionOutputs(): Set[Callable.OutputDefinition] = {
+    val typeMap = run.fold(RunToOutputDefinition)
+
+    out.
+      select[Array[WorkflowStepOutput]].
+      map(_.toList.foldMap(output => OutputDefinition(output.id, typeMap(output), PlaceholderExpression(typeMap(output))))).
+      toSet
+  }
+
+  //def graphNodes = womGraphInputNodes + womCallNode
+
+  def taskDefinition: TaskDefinition = {
+
+    val id = this.id
+
+    val commandTemplate: Seq[CommandPart] = baseCommand.get.fold(BaseCommandPoly)
+
+    val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression])
+
+    val meta: Map[String, String] = Map.empty
+    val parameterMeta: Map[String, String] = Map.empty
+
+    val outputs: Set[Callable.OutputDefinition] = this.out.select[Array[CommandOutputParameter]].toArray.flatten.map {
+      output =>
+        val tpe = output.`type`.select[CwlType].map(cwlTypeToWdlType).get
+        OutputDefinition(output.id, tpe, PlaceholderExpression(tpe))
+    }.toSet
+
+    val inputs: Set[_ <: Callable.InputDefinition] =
+      this.in.select[Map[WorkflowStepInputId, WorkflowStepInputSource]].map(_.map{
+        case (id, source) =>
+          //val tpe = cip.`type`.get.select[CwlType].map(cwlTypeToWdlType).get
+          RequiredInputDefinition(id, tpe)
+      }).get.toSet
+
+    val declarations: List[(String, Expression)] = List.empty
+
+    TaskDefinition(
+      id, //this should be non-optional as a type
+      commandTemplate,
+      runtimeAttributes,
+      meta,
+      parameterMeta,
+      outputs,
+      inputs,
+      declarations
+    )
+  }
+
+  def graphNodes: Set[GraphNode] = {
+    val cwi = CallNode.callWithInputs(id.getOrElse("this is a made up call node name"), taskDefinition, Map.empty)
+
+    Set.empty[GraphNode] ++ cwi.inputs + cwi.call
+  }
 
   /*
   private def buildWomNodeAndInputs(wdlCall: WdlCall): CallWithInputs = {
