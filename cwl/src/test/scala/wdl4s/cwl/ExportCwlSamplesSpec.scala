@@ -162,12 +162,29 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
         `class` = "EnvVarRequirement",
         envDef = Coproduct[EnvVarRequirement.EnvDef](Map("HELLO" -> "$(inputs.message)"))
       )))) : Option[Array[Requirement]],
-      inputs = ??? : CommandLineTool.Inputs,
-      outputs = ??? : CommandLineTool.Outputs
+      inputs = Coproduct[CommandLineTool.Inputs](Map(
+        "message" -> Coproduct[MyriadCommandInputType](CwlType.String)
+      )),
+      outputs = Coproduct[CommandLineTool.Outputs](Array[CommandOutputParameter]()) : CommandLineTool.Outputs
     )
     val expectedToolJsonString =
       """{
-        |
+        |  "inputs" : {
+        |    "message" : "string"
+        |  },
+        |  "outputs" : [
+        |  ],
+        |  "class" : "CommandLineTool",
+        |  "requirements" : [
+        |    {
+        |      "class" : "EnvVarRequirement",
+        |      "envDef" : {
+        |        "HELLO" : "$(inputs.message)"
+        |      }
+        |    }
+        |  ],
+        |  "cwlVersion" : "v1.0",
+        |  "baseCommand" : "env"
         |}""".stripMargin
       val yaml = """
 cwlVersion: v1.0
