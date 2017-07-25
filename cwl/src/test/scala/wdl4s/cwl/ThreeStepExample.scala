@@ -8,6 +8,7 @@ import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 import io.circe.syntax._
 import io.circe.yaml._
 import io.circe.yaml.syntax._
+import CwlCodecs._
 
 /*
  This example calls `ps` , then counts the number of processes that match a pattern input.
@@ -126,7 +127,7 @@ object ThreeStepExample extends App {
       outputs = _outputs,
       steps = Coproduct[WorkflowSteps](Array(psWfStep, grepWfStep, wcWorkflowStep)))
 
-  val yaml = encodeWorkflow(threeStepWorkflow)
+  val yaml = encodeCwlWorkflow(threeStepWorkflow)
 
   println(yaml)
 }
