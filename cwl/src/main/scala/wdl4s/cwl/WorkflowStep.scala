@@ -44,6 +44,9 @@ case class WorkflowStep(
 
   object RunToOutputDefinition extends Poly1 {
     implicit def commandLineTool = at[CommandLineTool] {_.outputs.fold(CommandLineToolOutputTypes)}
+    implicit def string = at[String] { _ => Map.empty[String, WdlType]}
+    implicit def expressionTool = at[ExpressionTool] { _ => Map.empty[String, WdlType]}
+    implicit def workflow = at[Workflow] { _ => Map.empty[String, WdlType]}
   }
 
   def taskDefinitionOutputs(): Set[Callable.OutputDefinition] = {
@@ -51,7 +54,7 @@ case class WorkflowStep(
 
     out.
       select[Array[WorkflowStepOutput]].
-      map(_.toList.foldMap(output => OutputDefinition(output.id, typeMap(output), PlaceholderExpression(typeMap(output))))).
+      map(_.toList.map(output => OutputDefinition(output.id, typeMap(output.id), PlaceholderExpression(typeMap(output.id))))).
       toSet
   }
 
@@ -68,6 +71,7 @@ case class WorkflowStep(
     val meta: Map[String, String] = Map.empty
     val parameterMeta: Map[String, String] = Map.empty
 
+    /*
     val outputs: Set[Callable.OutputDefinition] = this.out.select[Array[CommandOutputParameter]].toArray.flatten.map {
       output =>
         val tpe = output.`type`.select[CwlType].map(cwlTypeToWdlType).get
@@ -80,6 +84,7 @@ case class WorkflowStep(
           //val tpe = cip.`type`.get.select[CwlType].map(cwlTypeToWdlType).get
           RequiredInputDefinition(id, tpe)
       }).get.toSet
+      */
 
     val declarations: List[(String, Expression)] = List.empty
 
