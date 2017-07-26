@@ -77,7 +77,7 @@ case class CommandLineBinding(
                                shellQuote: Option[Boolean] = None)
 
 case class WorkflowOutputParameter(
-                                    id: Option[String], //Really not optional but can be declared upstream
+                                    id: Option[String] = None, //Really not optional but can be declared upstream
                                     label: Option[String] = None,
                                     secondaryFiles:
                                       Option[
@@ -208,11 +208,12 @@ case class Dirent(
   * @param envDef
   */
 case class EnvVarRequirement(
-                              `class`: Witness.`"EnvVarRequirement"`.T,
+                              `class`: EnvVarRequirement.`class`.type = EnvVarRequirement.`class`,
                               envDef: EnvDef
                             )
 
 object EnvVarRequirement {
+  val `class` : Witness.`"EnvVarRequirement"`.T = "EnvVarRequirement".narrow
   type EnvDef =
     Array[EnvironmentDef] :+: Map[EnvironmentDef#EnvName, EnvironmentDef#EnvValue] :+:
       Map[EnvironmentDef#EnvName, EnvironmentDef] :+: CNil

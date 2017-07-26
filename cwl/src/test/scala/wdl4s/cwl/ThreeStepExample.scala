@@ -121,8 +121,6 @@ object ThreeStepExample extends App {
 
   val threeStepWorkflow =
     new Workflow(
-      Option(CwlVersion.Version1),
-      `class` = "Workflow".narrow,
       inputs = _inputs,
       outputs = _outputs,
       steps = Coproduct[WorkflowSteps](Array(psWfStep, grepWfStep, wcWorkflowStep)))
