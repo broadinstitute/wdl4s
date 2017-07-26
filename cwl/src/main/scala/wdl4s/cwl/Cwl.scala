@@ -13,7 +13,7 @@ sealed trait Cwl {
 }
 
 case class Workflow(
-  cwlVersion: Option[CwlVersion] = Option(CwlVersion.default),
+  cwlVersion: Option[CwlVersion] = Option(CwlVersion.Version1),
   `class` : Workflow.`class`.type = Workflow.`class`,
   inputs: WorkflowInput,
   outputs: WorkflowOutput,
@@ -52,7 +52,7 @@ case class CommandLineTool(
                             hints: Option[Array[String]] = None, //TODO: Any?
                             label: Option[String] = None,
                             doc: Option[String] = None,
-                            cwlVersion: Option[CwlVersion] = Option(CwlVersion.default),
+                            cwlVersion: Option[CwlVersion] = Option(CwlVersion.Version1),
                             baseCommand: Option[BaseCommand] = None,
                             arguments: Option[Array[Argument]] = None,
                             stdin: Option[StringOrExpression] = None,
