@@ -16,10 +16,6 @@ import eu.timepit.refined._
 import io.circe.refined._
 import io.circe.literal._
 
-/**
-  * wdl4s
-  * Created by oruebenacker on 25.07.17.
-  */
 object CwlCodecs {
 
   def decodeCwl: Yaml => Either[Error, Cwl] = {
