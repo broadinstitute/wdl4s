@@ -13,10 +13,29 @@ import wdl4s.wom.callable.Callable.{InputDefinition, OutputDefinition, RequiredI
 import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.expression.{Expression, PlaceholderExpression}
 import wdl4s.wom.graph.{CallNode, GraphNode}
+import shapeless.{:+:, CNil, Coproduct}
+import ScatterMethod._
+import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 
+/**
+  * An individual job to run.
+  *
+  * @see <a href="http://www.commonwl.org/v1.0/Workflow.html#WorkflowStep">CWL Spec | Workflow Step</a>
+  *
+  * @param id
+  * @param in
+  * @param out
+  * @param run Purposefully not defaulted as it's required and it is unreasonable to not have something to run.
+  * @param requirements
+  * @param hints
+  * @param label
+  * @param doc
+  * @param scatter
+  * @param scatterMethod
+  */
 case class WorkflowStep(
   id: String, //not actually optional but can be declared as a key for this whole object for convenience
-  in: Inputs,
+  in: Array[WorkflowStepInput] = Array.empty,
   out: Outputs,
   run: Run,
   requirements: Option[Array[Requirement]],
@@ -30,16 +49,10 @@ case class WorkflowStep(
 
   def womCallNode: GraphNode = ???
 
-  def taskDefinitionInputs(workflowInputs: WorkflowInput, otherStepsOutputs: Array[WorkflowStepOutput]):  Set[_ <: Callable.InputDefinition] = ???
+  def taskDefinitionInputs(workflowInputs: Array[InputParameter], otherStepsOutputs: Array[WorkflowStepOutput]):  Set[_ <: Callable.InputDefinition] = ???
 
   object CommandLineToolOutputTypes extends Poly1 {
-    implicit def mapTo = at[Map[CommandOutputParameter#Id, CommandOutputParameter]](_.map {
-      case (id, commandOutputParameter) => id -> commandOutputParameter.`type`.select[CwlType].map(cwlTypeToWdlType).get
-    })
-
     implicit def array = at[Array[CommandOutputParameter]] {_ => Map.empty[String, WdlType]}
-
-    implicit def typeMap = at[Map[CommandOutputParameter#Id, CommandOutputParameter#`type`]] {_ => Map.empty[String, WdlType]}
   }
 
   object RunToOutputDefinition extends Poly1 {
@@ -52,8 +65,8 @@ case class WorkflowStep(
   def taskDefinitionOutputs(): Set[Callable.OutputDefinition] = {
     val typeMap = run.fold(RunToOutputDefinition)
 
-    out.
-      select[Array[WorkflowStepOutput]].
+
+      out.select[Array[WorkflowStepOutput]].
       map(_.toList.map(output => OutputDefinition(output.id, typeMap(output.id), PlaceholderExpression(typeMap(output.id))))).
       toSet
   }
@@ -161,7 +174,7 @@ case class WorkflowStep(
 
 /**
   * @see <a href="http://www.commonwl.org/v1.0/Workflow.html#WorkflowStepOutput">WorkflowstepOutput</a>
-  *      
+  *
   * @param id
   */
 case class WorkflowStepOutput(id: String)
@@ -193,4 +206,3 @@ object WorkflowStep {
       CNil
 
 }
-

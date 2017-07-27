@@ -2,11 +2,20 @@ package wdl4s.cwl
 
 import eu.timepit.refined._
 import shapeless.{:+:, CNil, Witness}
+import shapeless.syntax.singleton._
+import wdl4s.cwl.CommandLineTool.StringOrExpression
+import wdl4s.cwl.CommandOutputBinding.Glob
+import wdl4s.cwl.LinkMergeMethod.LinkMergeMethod
 
-case class WorkflowStepInput(src: String)
+case class WorkflowStepInput(
+  id: String,
+  source: Option[String :+: Array[String] :+: CNil] = None,
+  linkMerge: Option[LinkMergeMethod] = None,
+  default: Option[CwlAny] = None,
+  valueFrom: Option[ECMAScriptExpression :+: String :+: CNil] = None)
 
 case class InputParameter(
-                           id: Option[String], //not really optional but can be specified upstream
+                           id: String,
                            label: Option[String] = None,
                            secondaryFiles:
                              Option[
@@ -58,16 +67,16 @@ case class InputArraySchema(
   inputBinding: Option[CommandLineBinding])
 
 case class CommandLineBinding(
-                               loadContents: Option[Boolean],
-                               position: Option[Int],
-                               prefix: Option[String],
-                               separate: Option[String],
-                               itemSeparator: Option[String],
-                               valueFrom: Option[ECMAScriptExpression :+: String :+: CNil],
-                               shellQuote: Option[Boolean])
+                               loadContents: Option[Boolean] = None,
+                               position: Option[Int] = None,
+                               prefix: Option[String] = None,
+                               separate: Option[String] = None,
+                               itemSeparator: Option[String] = None,
+                               valueFrom: Option[StringOrExpression] = None,
+                               shellQuote: Option[Boolean] = None)
 
 case class WorkflowOutputParameter(
-                                    id: Option[String], //Really not optional but can be declared upstream
+                                    id: String,
                                     label: Option[String] = None,
                                     secondaryFiles:
                                       Option[
@@ -81,8 +90,12 @@ case class WorkflowOutputParameter(
                                     format: Option[ECMAScriptExpression :+: String :+: Array[String] :+: CNil] = None,
                                     streamable: Option[Boolean] = None,
                                     doc: Option[String :+: Array[String] :+: CNil] = None,
+                                    outputBinding: Option[CommandOutputBinding] = None,
+                                    outputSource: Option[WorkflowOutputParameter#OutputSource] = None,
+                                    linkMerge: Option[LinkMergeMethod] = None,
                                     `type`: Option[MyriadOutputType] = None) {
 
+  type OutputSource = String :+: Array[String] :+: CNil
   type `type` = MyriadOutputType
   type Id = String
 }
@@ -109,9 +122,13 @@ case class OutputEnumSchema(
 
 /** @see <a href="http://www.commonwl.org/v1.0/Workflow.html#CommandOutputBinding">CommandOutputBinding</a> */
 case class CommandOutputBinding(
-                                 glob: Option[ECMAScriptExpression :+: String :+: Array[String] :+: CNil],
-                                 loadContents: Option[Boolean],
-                                 outputEval: Option[ECMAScriptExpression :+: String :+: CNil])
+                                 glob: Option[Glob] = None,
+                                 loadContents: Option[Boolean] = None,
+                                 outputEval: Option[ECMAScriptExpression :+: String :+: CNil] = None)
+object CommandOutputBinding {
+  type Glob = ECMAScriptExpression :+: String :+: Array[String] :+: CNil
+
+}
 
 case class OutputArraySchema(
   items: MyriadOutputType,
@@ -121,8 +138,8 @@ case class OutputArraySchema(
 
 
 case class InlineJavascriptRequirement(
-  `class`: W.`"InlineJavascriptRequirement"`.T,
-  expressionLib: Option[Array[String]])
+  `class`: W.`"InlineJavascriptRequirement"`.T = "InlineJavascriptRequirement".narrow,
+  expressionLib: Option[Array[String]] = None)
 
 case class SchemaDefRequirement(
   `class`: W.`"SchemaDefRequirement"`.T,
@@ -142,11 +159,7 @@ case class DockerRequirement(
 
 case class SoftwareRequirement(
   `class`: W.`"SoftwareRequirement"`.T,
-  packages:
-    Array[SoftwarePackage] :+:
-    Map[SoftwarePackage#Package, SoftwarePackage#Specs] :+:
-    Map[SoftwarePackage#Package, SoftwarePackage] :+:
-    CNil
+  packages: Array[SoftwarePackage] = Array.empty
   )
 
 case class SoftwarePackage(
@@ -183,26 +196,22 @@ case class Dirent(
                    writable: Option[Boolean])
 
 
-/**
-  *
-  * @param `class` not really optional but may be declared as a map i.e.
-  *                EnvVarRequirement:
-  * @param envDef
-  */
 case class EnvVarRequirement(
-  `class`: Witness.`"EnvVarRequirement"`.T,
-  envDef:
-    Array[EnvironmentDef] :+:
-    Map[EnvironmentDef#EnvName, EnvironmentDef#EnvValue] :+:
-    Map[EnvironmentDef#EnvName, EnvironmentDef] :+:
-    CNil)
+                              `class`: EnvVarRequirement.`class`.type = EnvVarRequirement.`class`,
+                              envDef: Array[EnvironmentDef]
+                            )
 
-case class EnvironmentDef(envName: String, envValue: ECMAScriptExpression :+: String :+: CNil) {
+object EnvVarRequirement {
+  val `class` : Witness.`"EnvVarRequirement"`.T = "EnvVarRequirement".narrow
+}
+
+case class EnvironmentDef(envName: String, envValue: StringOrExpression) {
   type EnvName = String
   type EnvValue = String
 }
 
-case class ShellCommandRequirement(`class`: W.`"ShellCommandRequirement"`.T)
+
+case class ShellCommandRequirement(`class`: W.`"ShellCommandRequirement"`.T = "ShellCommandRequirement".narrow)
 
 case class ResourceRequirement(
                                 `class`: W.`"ResourceRequirement"`.T,

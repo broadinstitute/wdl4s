@@ -1,17 +1,8 @@
 package wdl4s
 
-import io.circe._
-import io.circe.generic.auto._
-import io.circe.yaml.{parser => YamlParser}
-import io.circe.parser._
-import io.circe.shapes._
-import io.circe.generic.auto._
-import cats.syntax.either._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string._
 import eu.timepit.refined._
-import io.circe.refined._
-import io.circe.literal._
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.CwlType._
 import wdl4s.wdl.types._
@@ -70,29 +61,12 @@ package object cwl extends TypeAliases {
 
 
   /**
+    *
     * These are supposed to be valid ECMAScript Expressions.
     * See http://www.commonwl.org/v1.0/Workflow.html#Expressions
     */
-  type ECMAScriptExpression = String Refined MatchesRegex[W.`"$({.*}|{.*})"`.T]
+  type ECMAScriptExpression = String Refined MatchesRegex[W.`"$([^)]*)"`.T]
 
   type Yaml = String
 
-
-  def decodeCwl: Yaml => Either[Error, Cwl] = {
-    import wdl4s.cwl.Implicits._
-
-    YamlParser.
-      parse(_).
-      map(_.noSpaces).
-      flatMap{json =>
-          decode[CommandLineTool](json) orElse
-          decode[Workflow](json)
-      }
-  }
-
-  def encodeCwlCommandLineTool: CommandLineTool => Json = { commandLineTool =>
-    import io.circe.syntax._
-    import wdl4s.cwl.Implicits.enumerationEncoder
-    commandLineTool.asJson
-  }
 }

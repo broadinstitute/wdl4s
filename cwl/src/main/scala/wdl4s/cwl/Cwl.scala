@@ -1,12 +1,12 @@
 package wdl4s.cwl
 
-import shapeless.{:+:, CNil, Witness}
+import shapeless.{:+:, CNil, Coproduct, Witness}
+import shapeless.syntax.singleton._
 import eu.timepit.refined._
 import CwlVersion._
 import cats.syntax.foldable._
 import cats.instances.list._
 import cats.instances.set._
-import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, Inputs, StdChannel}
 import shapeless.{:+:, CNil, Coproduct, Poly1, Witness}
 import CwlType._
 import shapeless.syntax.singleton._
@@ -15,7 +15,6 @@ import CwlVersion._
 import cats.Show
 import cats.data.Validated.Valid
 import lenthall.validation.ErrorOr.ErrorOr
-import wdl4s.cwl.CommandLineTool.{apply => _, _}
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
 import wdl4s.wdl.command.{CommandPart, StringCommandPart}
@@ -33,21 +32,23 @@ sealed trait Cwl {
 }
 
 case class Workflow(
-  cwlVersion: Option[CwlVersion] = None,
-  `class`: Witness.`"Workflow"`.T,
-  inputs: WorkflowInput,
-  outputs: WorkflowOutput,
-  steps: WorkflowSteps) extends Cwl {
+                     cwlVersion: Option[CwlVersion] = Option(CwlVersion.Version1),
+                     `class` : Workflow.`class`.type = Workflow.`class`,
+                     inputs: Array[InputParameter] = Array.empty,
+                     outputs: Array[WorkflowOutputParameter] = Array.empty,
+                     steps: Array[WorkflowStep]) extends Cwl {
 
   def womExecutable: ErrorOr[Executable] = womDefinition.map(Executable.apply)
 
   object WorkflowStepsToGraphNodes extends Poly1 {
     implicit def ws = at[Array[WorkflowStep]] {
-      _.toList.foldMap { _.graphNodes }
+      _.toList.foldMap {
+        _.graphNodes
+      }
     }
 
     //placeholder as we plan to get rid of these
-    implicit def map = at[Map[String,WorkflowStep]] {_ => Set.empty[GraphNode]}
+    implicit def map = at[Map[String, WorkflowStep]] { _ => Set.empty[GraphNode] }
   }
 
 
@@ -69,7 +70,7 @@ case class Workflow(
 
   */
   def womDefinition: ErrorOr[WorkflowDefinition] = {
-    val name:String = ???
+    val name: String = ???
     val meta: Map[String, String] = ???
     val paramMeta: Map[String, String] = ???
     val declarations: List[(String, Expression)] = ???
@@ -84,7 +85,11 @@ case class Workflow(
       )
     )
   }
+}
 
+
+object Workflow {
+  val `class` : Witness.`"Workflow"`.T = "Workflow".narrow
 }
 
 /**
@@ -108,17 +113,17 @@ case class Workflow(
   * @param permanentFailCodes
   */
 case class CommandLineTool(
-                            inputs: Inputs = Coproduct[Inputs](Map.empty[String,CommandInputParameter]),
-                            outputs: Outputs = Coproduct[Outputs](Array.empty[CommandOutputParameter]),
-                            `class`: W.`"CommandLineTool"`.T = "CommandLineTool".narrow,
+                            inputs: Array[CommandInputParameter] = Array.empty,
+                            outputs: Array[CommandOutputParameter] = Array.empty,
+                            `class`: CommandLineTool.`class`.type = CommandLineTool.`class`,
                             id: Option[String] = None,
                             requirements: Option[Array[Requirement]] = None,
                             hints: Option[Array[String]] = None, //TODO: Any?
                             label: Option[String] = None,
                             doc: Option[String] = None,
-                            cwlVersion: Option[CwlVersion] = None,
+                            cwlVersion: Option[CwlVersion] = Option(CwlVersion.Version1),
                             baseCommand: Option[BaseCommand] = None,
-                            arguments: Option[Array[Argument]] = None,
+                            arguments: Option[Array[CommandLineTool.Argument]] = None,
                             stdin: Option[StringOrExpression] = None,
                             stderr: Option[StringOrExpression] = None,
                             stdout: Option[StringOrExpression] = None,
@@ -216,14 +221,11 @@ case class CommandLineTool(
 }
 
 object CommandLineTool {
-  type Inputs =
-    CommandInputParameter :+: Map[CommandInputParameter#Id, CommandInputParameter#`type`] :+:
-      Map[CommandInputParameter#Id, CommandInputParameter] :+: CNil
-  type Outputs =
-    Array[CommandOutputParameter] :+: Map[CommandOutputParameter#Id, CommandOutputParameter#`type`] :+:
-      Map[CommandOutputParameter#Id, CommandOutputParameter] :+: CNil
-  type BaseCommand = String :+: Array[String] :+: CNil
-  type Argument = ECMAScriptExpression :+: CommandLineBinding :+: String :+: CNil
-  type StdChannel = ECMAScriptExpression :+: String :+: CNil
+  val `class` : Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow
+
   type StringOrExpression = ECMAScriptExpression :+: String :+: CNil
+
+  type BaseCommand = String :+: Array[String] :+: CNil
+
+  type Argument = ECMAScriptExpression :+: CommandLineBinding :+: String :+: CNil
 }

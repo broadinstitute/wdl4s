@@ -6,6 +6,8 @@ import eu.timepit.refined._
 
 trait TypeAliases {
 
+  type CwlAny = String
+
   type WorkflowStepInputId = String
 
   type WorkflowStepInputSource = String :+: Array[String] :+: CNil
@@ -72,52 +74,4 @@ trait TypeAliases {
           CNil
         ] :+:
       CNil
-
-  type WorkflowInput =
-    Map[InputParameter#Id, InputParameter] :+:
-      Map[InputParameter#Id, InputParameter#`type`] :+:
-      Array[InputParameter] :+:
-      CNil
-
-  type WorkflowOutput =
-    Map[WorkflowOutputParameter#Id, WorkflowOutputParameter] :+:
-      Map[WorkflowOutputParameter#Id, WorkflowOutputParameter#`type`] :+:
-      Array[WorkflowOutputParameter] :+:
-      CNil
-
-  type WorkflowSteps =
-    Map[String, WorkflowStep] :+:
-      Array[WorkflowStep] :+:
-      CNil
-
-  type CIP = String => CommandInputParameter
-
-  type EVR = W.`"EnvVarRequirement"`.T => EnvVarRequirement
-  type IJR = W.`"InlineJavascriptRequirement"`.T => InlineJavascriptRequirement
-  type SR = W.`"SoftwareRequirement"`.T => SoftwareRequirement
-  type SWFR = W.`"SubworkflowFeatureRequirement"`.T => SubworkflowFeatureRequirement
-  type SDR = W.`"SchemaDefRequirement"`.T => SchemaDefRequirement
-  type DR = W.`"DockerRequirement"`.T => DockerRequirement
-  type IWDR = W.`"InitialWorkDirRequirement"`.T => InitialWorkDirRequirement
-  type SCR = W.`"ShellCommandRequirement"`.T => ShellCommandRequirement
-  type RR = W.`"ResourceRequirement"`.T => ResourceRequirement
-  type SFR = W.`"ScatterFeatureRequirement"`.T => ScatterFeatureRequirement
-  type MIFR = W.`"MultipleInputFeatureRequirement"`.T => MultipleInputFeatureRequirement
-  type SIER = W.`"StepInputExpressionRequirement"`.T => StepInputExpressionRequirement
-
-  type Target =
-    EVR :+:
-    IJR :+:
-    SR :+:
-    SWFR :+:
-    SDR :+:
-    DR :+:
-    IWDR :+:
-    SCR :+:
-    RR :+:
-    SFR :+:
-    MIFR :+:
-    SIER :+:
-    CNil
-
 }
