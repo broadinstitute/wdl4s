@@ -3,6 +3,7 @@ package wdl4s.cwl
 import shapeless.{:+:, CNil, Poly1}
 import cats.syntax.foldable._
 import cats.instances.list._
+import cats.instances.map._
 import ScatterMethod._
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.WorkflowStep.{Inputs, Outputs, Run}
@@ -51,24 +52,31 @@ case class WorkflowStep(
 
   def taskDefinitionInputs(workflowInputs: Array[InputParameter], otherStepsOutputs: Array[WorkflowStepOutput]):  Set[_ <: Callable.InputDefinition] = ???
 
-  object CommandLineToolOutputTypes extends Poly1 {
-    implicit def array = at[Array[CommandOutputParameter]] {_ => Map.empty[String, WdlType]}
-  }
 
   object RunToOutputDefinition extends Poly1 {
-    implicit def commandLineTool = at[CommandLineTool] {_.outputs.fold(CommandLineToolOutputTypes)}
+    implicit def commandLineTool = at[CommandLineTool] { clt =>
+      clt.outputs.toList.foldLeft(Map.empty[String,WdlType]){
+         (acc, out) =>
+               acc ++
+                 out.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).map(
+                   out.id -> _
+                 ).toList.toMap
+            }
+    }
     implicit def string = at[String] { _ => Map.empty[String, WdlType]}
     implicit def expressionTool = at[ExpressionTool] { _ => Map.empty[String, WdlType]}
     implicit def workflow = at[Workflow] { _ => Map.empty[String, WdlType]}
   }
 
   def taskDefinitionOutputs(): Set[Callable.OutputDefinition] = {
-    val typeMap = run.fold(RunToOutputDefinition)
+    val typeMap: Map[String, WdlType] = run.fold(RunToOutputDefinition)
 
 
       out.select[Array[WorkflowStepOutput]].
       map(_.toList.map(output => OutputDefinition(output.id, typeMap(output.id), PlaceholderExpression(typeMap(output.id))))).
       toSet
+
+    ???
   }
 
   //def graphNodes = womGraphInputNodes + womCallNode

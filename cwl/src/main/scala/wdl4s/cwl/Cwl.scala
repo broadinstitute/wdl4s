@@ -15,6 +15,7 @@ import CwlVersion._
 import cats.Show
 import cats.data.Validated.Valid
 import lenthall.validation.ErrorOr.ErrorOr
+import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
 import wdl4s.wdl.command.{CommandPart, StringCommandPart}
@@ -40,20 +41,10 @@ case class Workflow(
 
   def womExecutable: ErrorOr[Executable] = womDefinition.map(Executable.apply)
 
-  object WorkflowStepsToGraphNodes extends Poly1 {
-    implicit def ws = at[Array[WorkflowStep]] {
-      _.toList.foldMap {
-        _.graphNodes
-      }
-    }
-
-    //placeholder as we plan to get rid of these
-    implicit def map = at[Map[String, WorkflowStep]] { _ => Set.empty[GraphNode] }
-  }
 
 
-  def womGraph: ErrorOr[Graph] =
-    Graph.validateAndConstruct(steps.fold(WorkflowStepsToGraphNodes))
+  def womGraph: ErrorOr[Graph] = ???
+    ///Graph.validateAndConstruct(steps.map()).flatten)
 
 
   /*
@@ -186,18 +177,17 @@ case class CommandLineTool(
     val meta: Map[String, String] = Map.empty
     val parameterMeta: Map[String, String] = Map.empty
 
-    val outputs: Set[Callable.OutputDefinition] = this.outputs.select[Array[CommandOutputParameter]].toArray.flatten.map {
+    val outputs: Set[Callable.OutputDefinition] = this.outputs.map {
       output =>
-        val tpe = output.`type`.select[CwlType].map(cwlTypeToWdlType).get
+        val tpe = output.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get //<-- here be `get` dragons
         OutputDefinition(output.id, tpe, PlaceholderExpression(tpe))
     }.toSet
 
     val inputs: Set[_ <: Callable.InputDefinition] =
-      this.inputs.select[Map[String, CommandInputParameter]].map(_.map{
-        case (id, cip) =>
-          val tpe = cip.`type`.get.select[CwlType].map(cwlTypeToWdlType).get
-          RequiredInputDefinition(id, tpe)
-      }).get.toSet
+      this.inputs.map{ cip =>
+          val tpe = cip.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get
+          RequiredInputDefinition(cip.id, tpe)
+      }.toSet
 
     val declarations: List[(String, Expression)] = List.empty
 
