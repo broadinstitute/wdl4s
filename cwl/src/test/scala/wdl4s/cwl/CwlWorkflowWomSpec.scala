@@ -12,19 +12,18 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
   "A Cwl object for 1st-tool" should "convert to WOM" in {
     val firstTool =
       """
-        |cwlVersion: v1.0
-        |class: CommandLineTool
-        |baseCommand: echo
-        |inputs:
-        |  message:
-        |    id: message
-        |    type: string
-        |    inputBinding:
-        |      position: 1
-        |outputs: []
-      """.stripMargin
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: echo
+inputs:
+- type: string
+  inputBinding:
+    position: 1
+  id: message
+outputs: []
+""".stripMargin
 
-    decodeCwl(firstTool) match {
+    CwlCodecs.decodeCwl(firstTool) match {
       case Right(clt:CommandLineTool) =>
         clt.womExecutable match{
           case Valid(wom) =>
@@ -52,33 +51,37 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
   "Cwl for 1st workflow" should "convert to WOM" in {
     val firstWorkflow =
       """
-        |cwlVersion: v1.0
-        |class: Workflow
-        |inputs:
-        |  inp: File
-        |  ex: string
-        |
-        |outputs:
-        |  classout:
-        |    type: File
-        |    outputSource: compile/classfile
-        |
-        |steps:
-        |  untar:
-        |    run: tar-param.cwl
-        |    in:
-        |      tarfile: inp
-        |      extractfile: ex
-        |    out: [example_out]
-        |
-        |  compile:
-        |    run: arguments.cwl
-        |    in:
-        |      src: untar/example_out
-        |    out: [classfile]
-      """.stripMargin
+cwlVersion: v1.0
+class: Workflow
+inputs:
+- type: string
+  id: ex
+- type: File
+  id: inp
+outputs:
+- type: File
+  outputSource: compile/classfile
+  id: classout
+steps:
+- run: arguments.cwl
+  in:
+  - source: untar/example_out
+    id: compile/src
+  out:
+  - compile/classfile
+  id: compile
+- run: tar-param.cwl
+  in:
+  - source: ex
+    id: extractfile
+  - source: inp
+    id: tarfile
+  out:
+  - example_out
+  id: untar
+""".stripMargin
 
-    decodeCwl(firstWorkflow) match {
+    CwlCodecs.decodeCwl(firstWorkflow) match {
       case Right(workflow:Workflow) => workflow.womExecutable
       case Left(error) => fail(s"did not parse!  $error")
     }

@@ -1,6 +1,7 @@
 package wdl4s.cwl
 
 import io.circe.yaml.Printer
+import shapeless.syntax.singleton._
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless.{Coproduct, Witness}
 import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
@@ -14,6 +15,7 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
   it should "encode sample CWL command line tool" in {
     val tool =
       CommandLineTool(
+        `class` = "CommandLineTool".narrow,
         inputs =  Array(CommandInputParameter(
           id = "message",
           inputBinding = Option(CommandLineBinding(
@@ -107,6 +109,7 @@ steps:
 
   it should "encode sample CWL env" in {
     val tool = CommandLineTool(
+      `class` = "CommandLineTool".narrow,
       baseCommand = Option(Coproduct[BaseCommand]("env")),
       requirements = Option(Array(Coproduct[Requirement](EnvVarRequirement(
         envDef = Array(EnvironmentDef("HELLO", Coproduct[StringOrExpression]("$(inputs.message)")))

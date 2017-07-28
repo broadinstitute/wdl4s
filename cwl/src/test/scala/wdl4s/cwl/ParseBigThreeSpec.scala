@@ -16,18 +16,10 @@ cwlVersion: v1.0
 class: CommandLineTool
 baseCommand: echo
 inputs:
-<<<<<<< HEAD
-  message:
-    id: message
-    type: string
-    inputBinding:
-      position: 1
-=======
 - type: string
   inputBinding:
     position: 1
   id: message
->>>>>>> develop
 outputs: []
 """
 

@@ -12,7 +12,6 @@ import CwlType._
 import shapeless.syntax.singleton._
 import eu.timepit.refined._
 import CwlVersion._
-import cats.Show
 import cats.data.Validated.Valid
 import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
@@ -106,10 +105,10 @@ object Workflow {
 case class CommandLineTool(
                             inputs: Array[CommandInputParameter] = Array.empty,
                             outputs: Array[CommandOutputParameter] = Array.empty,
-                            `class`: CommandLineTool.`class`.type = CommandLineTool.`class`,
+                            `class`: Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow,
                             id: Option[String] = None,
                             requirements: Option[Array[Requirement]] = None,
-                            hints: Option[Array[String]] = None, //TODO: Any?
+                            hints: Option[Array[CwlAny]] = None,
                             label: Option[String] = None,
                             doc: Option[String] = None,
                             cwlVersion: Option[CwlVersion] = Option(CwlVersion.Version1),
@@ -137,11 +136,6 @@ case class CommandLineTool(
 
 
 
-  object BaseCommandPoly extends Poly1 {
-    implicit def one = at[String] {s => Seq(StringCommandPart(s))}
-
-    implicit def many = at[Array[String]] {_.toSeq.map(StringCommandPart.apply)}
-  }
 
   object BaseCommandToString extends Poly1 {
     implicit def one = at[String] {identity}
@@ -170,7 +164,7 @@ case class CommandLineTool(
 
     val id = this.id.getOrElse(taskDefinitionId)
 
-    val commandTemplate: Seq[CommandPart] = baseCommand.get.fold(BaseCommandPoly)
+    val commandTemplate: Seq[CommandPart] = baseCommand.get.fold(BaseCommandToCommandParts)
 
     val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression])
 
@@ -192,7 +186,7 @@ case class CommandLineTool(
     val declarations: List[(String, Expression)] = List.empty
 
     TaskDefinition(
-      id, //this should be non-optional as a type
+      id,
       commandTemplate,
       runtimeAttributes,
       meta,

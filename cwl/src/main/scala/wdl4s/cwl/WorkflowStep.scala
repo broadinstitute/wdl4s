@@ -39,12 +39,12 @@ case class WorkflowStep(
   in: Array[WorkflowStepInput] = Array.empty,
   out: Outputs,
   run: Run,
-  requirements: Option[Array[Requirement]],
-  hints: Option[Array[String]], //TODO: should be 'Any' type
-  label: Option[String],
-  doc: Option[String],
-  scatter: Option[String :+: Array[String] :+: CNil],
-  scatterMethod: Option[ScatterMethod]) {
+  requirements: Option[Array[Requirement]] = None,
+  hints: Option[Array[CwlAny]] = None,
+  label: Option[String] = None,
+  doc: Option[String] = None,
+  scatter: Option[String :+: Array[String] :+: CNil] = None,
+  scatterMethod: Option[ScatterMethod] = None) {
 
   def womGraphInputNodes: Set[GraphNode] = ???
 
@@ -85,27 +85,12 @@ case class WorkflowStep(
 
     val id = this.id
 
-    val commandTemplate: Seq[CommandPart] = baseCommand.get.fold(BaseCommandPoly)
+    val commandTemplate: Seq[CommandPart] = run.select[CommandLineTool].map(_.baseCommand.get.fold(BaseCommandToCommandParts)).toSeq.flatten
 
     val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression])
 
     val meta: Map[String, String] = Map.empty
     val parameterMeta: Map[String, String] = Map.empty
-
-    /*
-    val outputs: Set[Callable.OutputDefinition] = this.out.select[Array[CommandOutputParameter]].toArray.flatten.map {
-      output =>
-        val tpe = output.`type`.select[CwlType].map(cwlTypeToWdlType).get
-        OutputDefinition(output.id, tpe, PlaceholderExpression(tpe))
-    }.toSet
-
-    val inputs: Set[_ <: Callable.InputDefinition] =
-      this.in.select[Map[WorkflowStepInputId, WorkflowStepInputSource]].map(_.map{
-        case (id, source) =>
-          //val tpe = cip.`type`.get.select[CwlType].map(cwlTypeToWdlType).get
-          RequiredInputDefinition(id, tpe)
-      }).get.toSet
-      */
 
     val declarations: List[(String, Expression)] = List.empty
 
@@ -115,14 +100,14 @@ case class WorkflowStep(
       runtimeAttributes,
       meta,
       parameterMeta,
-      outputs,
-      inputs,
+      taskDefinitionOutputs(),
+      taskDefinitionInputs(null, null),
       declarations
     )
   }
 
   def graphNodes: Set[GraphNode] = {
-    val cwi = CallNode.callWithInputs(id.getOrElse("this is a made up call node name"), taskDefinition, Map.empty)
+    val cwi = CallNode.callWithInputs(id, taskDefinition, Map.empty)
 
     Set.empty[GraphNode] ++ cwi.inputs + cwi.call
   }
@@ -153,7 +138,7 @@ case class WorkflowStep(
     val declarations: List[(String, Expression)] = ???
 
     TaskDefinition(
-      id.get, //this should be non-optional as a type
+      id, //this should be non-optional as a type
       commandTemplate,
       runtimeAttributes,
       meta,
