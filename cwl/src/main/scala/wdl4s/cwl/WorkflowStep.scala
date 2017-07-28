@@ -68,15 +68,26 @@ case class WorkflowStep(
     implicit def workflow = at[Workflow] { _ => Map.empty[String, WdlType]}
   }
 
+
+  object OutputsToTypeMap extends Poly1 {
+
+    implicit def a = at[Array[WorkflowStepOutput]] { o =>
+      (typeMap: Map[String, WdlType]) =>
+      o.map(output => OutputDefinition(output.id, typeMap(output.id), PlaceholderExpression(typeMap(output.id)))).toSet
+    }
+
+    implicit def b = at[Array[String]] { o =>
+      (typeMap: Map[String, WdlType]) =>
+        o.map(id => OutputDefinition(id, typeMap(id), PlaceholderExpression(typeMap(id)))).
+          toSet
+    }
+
+  }
   def taskDefinitionOutputs(): Set[Callable.OutputDefinition] = {
     val typeMap: Map[String, WdlType] = run.fold(RunToOutputDefinition)
 
 
-      out.select[Array[WorkflowStepOutput]].
-      map(_.toList.map(output => OutputDefinition(output.id, typeMap(output.id), PlaceholderExpression(typeMap(output.id))))).
-      toSet
-
-    ???
+    out.fold(OutputsToTypeMap).apply(typeMap)
   }
 
   //def graphNodes = womGraphInputNodes + womCallNode
