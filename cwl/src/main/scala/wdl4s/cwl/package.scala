@@ -48,14 +48,14 @@ import wdl4s.wdl.types._
 package object cwl extends TypeAliases {
 
   def cwlTypeToWdlType : CwlType => WdlType = {
-    case Null => ???
+    case Null => WdlNothingType
     case Boolean => WdlBooleanType
     case Int => WdlIntegerType
     case Long => WdlIntegerType
     case Float => WdlFloatType
     case Double => WdlFloatType
     case String => WdlStringType
-    case CwlType.File => ???
+    case CwlType.File => WdlFileType
     case CwlType.Directory => ???
   }
 
@@ -68,5 +68,7 @@ package object cwl extends TypeAliases {
   type ECMAScriptExpression = String Refined MatchesRegex[W.`"$([^)]*)"`.T]
 
   type Yaml = String
+
+  type TypeMap = Map[String, WdlType]
 
 }

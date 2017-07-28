@@ -125,7 +125,7 @@ object ThreeStepExample extends App {
       outputs = _outputs,
       steps = Array(psWfStep, grepWfStep, wcWorkflowStep))
 
-  val yaml = encodeCwlWorkflow(threeStepWorkflow)
+  val yaml = cwlToYaml(threeStepWorkflow)
 
   println(yaml)
 }

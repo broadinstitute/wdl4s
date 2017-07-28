@@ -1,13 +1,14 @@
 package wdl4s.cwl
 
 import shapeless.{:+:, CNil, Poly1}
+import mouse.all._
 import cats.syntax.foldable._
 import cats.instances.list._
 import cats.instances.map._
 import ScatterMethod._
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.WorkflowStep.{Inputs, Outputs, Run}
-import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
+import wdl4s.wdl.{FullyQualifiedName, RuntimeAttributes, WdlExpression}
 import wdl4s.wdl.command.CommandPart
 import wdl4s.wdl.types.WdlType
 import wdl4s.wom.callable.Callable.{InputDefinition, OutputDefinition, RequiredInputDefinition}
@@ -50,49 +51,52 @@ case class WorkflowStep(
 
   def womCallNode: GraphNode = ???
 
-  def taskDefinitionInputs(workflowInputs: Array[InputParameter], otherStepsOutputs: Array[WorkflowStepOutput]):  Set[_ <: Callable.InputDefinition] = ???
+  def taskDefinitionInputs(typeMap: TypeMap):  Set[_ <: Callable.InputDefinition] =
+    in.map{wsi =>
+      val tpe = typeMap(wsi.source.flatMap(_.select[String]).get)
+      RequiredInputDefinition(wsi.id, tpe)
+    }.toSet
 
-
-  object RunToOutputDefinition extends Poly1 {
-    implicit def commandLineTool = at[CommandLineTool] { clt =>
-      clt.outputs.toList.foldLeft(Map.empty[String,WdlType]){
-         (acc, out) =>
-               acc ++
-                 out.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).map(
-                   out.id -> _
-                 ).toList.toMap
-            }
-    }
-    implicit def string = at[String] { _ => Map.empty[String, WdlType]}
-    implicit def expressionTool = at[ExpressionTool] { _ => Map.empty[String, WdlType]}
-    implicit def workflow = at[Workflow] { _ => Map.empty[String, WdlType]}
-  }
 
 
   object OutputsToTypeMap extends Poly1 {
 
+    def fullIdToOutputDefintition(fullyQualifiedName: String, typeMap: TypeMap) = {
+
+      //we want to only look at the id, not the filename
+      val _id = fullyQualifiedName.substring(fullyQualifiedName.lastIndexOf("/") + 1,fullyQualifiedName.length())
+
+      OutputDefinition(_id, typeMap(_id), PlaceholderExpression(typeMap(_id)))
+    }
+
     implicit def a = at[Array[WorkflowStepOutput]] { o =>
-      (typeMap: Map[String, WdlType]) =>
-      o.map(output => OutputDefinition(output.id, typeMap(output.id), PlaceholderExpression(typeMap(output.id)))).toSet
+      (typeMap: TypeMap) =>
+        o.map(output => fullIdToOutputDefintition(output.id, typeMap)).toSet
     }
 
     implicit def b = at[Array[String]] { o =>
-      (typeMap: Map[String, WdlType]) =>
-        o.map(id => OutputDefinition(id, typeMap(id), PlaceholderExpression(typeMap(id)))).
-          toSet
+      (typeMap: TypeMap) =>
+        o.map(fullIdToOutputDefintition(_, typeMap)).toSet
     }
 
   }
-  def taskDefinitionOutputs(): Set[Callable.OutputDefinition] = {
-    val typeMap: Map[String, WdlType] = run.fold(RunToOutputDefinition)
 
+  def taskDefinitionOutputs(cwlMap: Map[String, Cwl]): Set[Callable.OutputDefinition] = {
 
-    out.fold(OutputsToTypeMap).apply(typeMap)
+    println(s"id is $id")
+
+    val runnableFQNTypeMap: TypeMap = run.fold(RunToTypeMap).apply(cwlMap)
+
+    val runnableIdToTypeMap = runnableFQNTypeMap.map {
+      case (id, tpe) => id.substring(id.lastIndexOf("#") + 1,id.length()) -> tpe
+    }.map {
+      case (runnableId, tpe) => (runnableId + id.substring(id.lastIndexOf("#") + 1,id.lastIndexOf("/"))) -> tpe
+    }
+
+    out.fold(OutputsToTypeMap).apply(runnableIdToTypeMap)
   }
 
-  //def graphNodes = womGraphInputNodes + womCallNode
-
-  def taskDefinition: TaskDefinition = {
+  def taskDefinition(typeMap: TypeMap, cwlMap: Map[String, Cwl]): TaskDefinition = {
 
     val id = this.id
 
@@ -111,14 +115,14 @@ case class WorkflowStep(
       runtimeAttributes,
       meta,
       parameterMeta,
-      taskDefinitionOutputs(),
-      taskDefinitionInputs(null, null),
+      taskDefinitionOutputs(cwlMap),
+      taskDefinitionInputs(typeMap),
       declarations
     )
   }
 
-  def graphNodes: Set[GraphNode] = {
-    val cwi = CallNode.callWithInputs(id, taskDefinition, Map.empty)
+  def graphNodes(typeMap: TypeMap, cwlMap: Map[String, Cwl]): Set[GraphNode] = {
+    val cwi = CallNode.callWithInputs(id, taskDefinition(typeMap, cwlMap), Map.empty)
 
     Set.empty[GraphNode] ++ cwi.inputs + cwi.call
   }

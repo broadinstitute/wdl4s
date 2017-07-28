@@ -1,6 +1,8 @@
 package wdl4s.cwl
 
 import cats.data.Validated.{Invalid, Valid}
+import cats.syntax.traverse._
+import cats.instances.list._
 import org.scalatest.{FlatSpec, Matchers}
 import wdl4s.wdl.types.WdlStringType
 import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
@@ -49,40 +51,51 @@ outputs: []
   }
 
   "Cwl for 1st workflow" should "convert to WOM" in {
-    val firstWorkflow =
-      """
-cwlVersion: v1.0
-class: Workflow
+    def firstWorkflow(pwd: String) =
+      s"""
+cwlVersion: "v1.0"
+class: "Workflow"
 inputs:
-- type: string
-  id: ex
-- type: File
-  id: inp
+  - type: "string"
+    id: "file://$pwd/r.cwl#ex"
+  - type: "File"
+    id: "file://$pwd/r.cwl#inp"
 outputs:
-- type: File
-  outputSource: compile/classfile
-  id: classout
+  - type: "File"
+    outputSource: "file://$pwd/r.cwl#compile/classfile"
+    id: "file://$pwd/r.cwl#classout"
 steps:
-- run: arguments.cwl
-  in:
-  - source: untar/example_out
-    id: compile/src
-  out:
-  - compile/classfile
-  id: compile
-- run: tar-param.cwl
-  in:
-  - source: ex
-    id: extractfile
-  - source: inp
-    id: tarfile
-  out:
-  - example_out
-  id: untar
+  - run: "arguments.cwl"
+    in:
+      -
+        source: "file://$pwd/r.cwl#untar/example_out"
+        id: "file://$pwd/r.cwl#compile/src"
+    out:
+      - "file://$pwd/r.cwl#compile/classfile"
+    id: "file:///home/dan/wdl4s/r.cwl#compile"
+  - run: "tar-param.cwl"
+    in:
+      -
+        source: "file:///home/dan/wdl4s/r.cwl#ex"
+        id: "file:///home/dan/wdl4s/r.cwl#untar/extractfile"
+      -
+        source: "file:///home/dan/wdl4s/r.cwl#inp"
+        id: "file:///home/dan/wdl4s/r.cwl#untar/tarfile"
+    out:
+      - "file:///home/dan/wdl4s/r.cwl#untar/example_out"
+    id: "file:///home/dan/wdl4s/r.cwl#untar"
+id: "file:///home/dan/wdl4s/r.cwl"
+name: "file:///home/dan/wdl4s/r.cwl"
+
 """.stripMargin
 
-    CwlCodecs.decodeCwl(firstWorkflow) match {
-      case Right(workflow:Workflow) => workflow.womExecutable
+    import CwlCodecs._
+
+    val pwd: String = (scala.sys.process.Process("pwd") !!).stripMargin
+    println(s"pwd was $pwd")
+
+    decodeCwlX(firstWorkflow(pwd)) match {
+      case Right((workflow:Workflow, map:Map[String, Cwl])) => workflow.womExecutable(map)
       case Left(error) => fail(s"did not parse!  $error")
     }
 

@@ -15,8 +15,33 @@ import eu.timepit.refined.string._
 import eu.timepit.refined._
 import io.circe.refined._
 import io.circe.literal._
+import cats.syntax.traverse._
+import cats.instances.list._
+import cats.instances.either._
 
 object CwlCodecs {
+
+  type EitherA[A] = Either[Error, A]
+
+  def decodeCwlX: Yaml => Either[Error, (Cwl, Map[String, Cwl])] = {
+      decodeCwl(_).flatMap{
+        case clt: CommandLineTool => Right((clt,Map.empty))
+        case wf: Workflow =>
+
+          val fileNames: List[String] = wf.steps.toList.flatMap(_.run.select[String].toList)
+
+          println(s"found filenames $fileNames")
+
+          val r: EitherA[List[(String, Cwl)]] = fileNames.traverse[EitherA, (String, Cwl)]{
+            fileName=>
+              val yaml = scala.io.Source.fromFile(fileName).getLines.mkString("\n")
+              println(s"trying to read filename $fileName: \n $yaml")
+              decodeCwl(yaml).map(fileName -> _)
+          }
+
+          r.map(_.toMap).map(wf -> _)
+      }
+  }
 
   def decodeCwl: Yaml => Either[Error, Cwl] = {
     import wdl4s.cwl.Implicits._
@@ -25,7 +50,9 @@ object CwlCodecs {
       parse(_).
       map(_.noSpaces).
       flatMap{json =>
-        decode[CommandLineTool](json) orElse
+        val clt = decode[CommandLineTool](json)
+        println(s"clt result was $clt")
+        clt orElse
           decode[Workflow](json)
       }
   }

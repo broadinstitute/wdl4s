@@ -38,34 +38,24 @@ case class Workflow(
                      outputs: Array[WorkflowOutputParameter] = Array.empty,
                      steps: Array[WorkflowStep]) extends Cwl {
 
-  def womExecutable: ErrorOr[Executable] = womDefinition.map(Executable.apply)
+  def womExecutable(cwlMap: Map[String, Cwl]): ErrorOr[Executable] = womDefinition(cwlMap).map(Executable.apply)
 
-
-
-  def womGraph: ErrorOr[Graph] = ???
-    ///Graph.validateAndConstruct(steps.map()).flatten)
-
-
-  /*
-   def buildWomGraph(wdlWorkflow: WdlWorkflow): Graph = {
-    val graphNodes = wdlWorkflow.calls.foldLeft(Set.empty[GraphNode])({
-      case (currentNodes, call) => currentNodes ++ call.womGraphInputNodes + call.womCallNode
-    })
-
-    Graph.validateAndConstruct(graphNodes) match {
-      case Valid(wg) => wg.withDefaultOutputs
-      case Invalid(errors) => throw ValidationException("Unable to validate graph", errors.map(new Exception(_)).toList)
-    }
+  def outputsTypeMap(cwlMap: Map[String, Cwl]): TypeMap = steps.foldLeft(Map.empty[String, WdlType]){
+    (acc, s) => acc ++ s.run.fold(RunToTypeMap).apply(cwlMap)
   }
 
-  */
-  def womDefinition: ErrorOr[WorkflowDefinition] = {
-    val name: String = ???
-    val meta: Map[String, String] = ???
-    val paramMeta: Map[String, String] = ???
-    val declarations: List[(String, Expression)] = ???
 
-    womGraph.map(graph =>
+  def womGraph(cwlMap: Map[String, Cwl]): ErrorOr[Graph] = {
+    Graph.validateAndConstruct(steps.toList.foldMap(_.graphNodes(outputsTypeMap(cwlMap), cwlMap)))
+  }
+
+  def womDefinition(cwlMap: Map[String, Cwl]): ErrorOr[WorkflowDefinition] = {
+    val name: String = "workflow Id"
+    val meta: Map[String, String] = Map.empty
+    val paramMeta: Map[String, String] = Map.empty
+    val declarations: List[(String, Expression)] = List.empty
+
+    womGraph(cwlMap).map(graph =>
       WorkflowDefinition(
         name,
         graph,
@@ -108,7 +98,8 @@ case class CommandLineTool(
                             `class`: Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow,
                             id: Option[String] = None,
                             requirements: Option[Array[Requirement]] = None,
-                            hints: Option[Array[CwlAny]] = None,
+                            //hints: Option[Array[CwlAny]] = None,
+                            hints: Option[Array[Map[String, String]]] = None,
                             label: Option[String] = None,
                             doc: Option[String] = None,
                             cwlVersion: Option[CwlVersion] = Option(CwlVersion.Version1),
