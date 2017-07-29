@@ -46,7 +46,10 @@ case class Workflow(
 
 
   def womGraph(cwlMap: Map[String, Cwl]): ErrorOr[Graph] = {
-    Graph.validateAndConstruct(steps.toList.foldMap(_.graphNodes(outputsTypeMap(cwlMap), cwlMap)))
+    val map: TypeMap = outputsTypeMap(cwlMap) ++ inputs.toList.flatMap{i =>
+      i.`type`.flatMap(_.select[CwlType].map(cwlTypeToWdlType).map(i.id -> _)).toList
+      }.toMap
+    Graph.validateAndConstruct(steps.toList.foldMap(_.graphNodes(map, cwlMap)))
   }
 
   def womDefinition(cwlMap: Map[String, Cwl]): ErrorOr[WorkflowDefinition] = {

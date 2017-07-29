@@ -5,6 +5,9 @@ import wdl4s.cwl.CwlType.CwlType
 import wdl4s.wdl.types.WdlType
 
 object RunToTypeMap extends Poly1 {
+  def mungeId(fullyQualifiedId: String): String =
+    fullyQualifiedId.substring(fullyQualifiedId.lastIndexOf("#") + 1,fullyQualifiedId.length())
+
   def handleCommandLine(clt: CommandLineTool):Map[String, WdlType] = {
     clt.outputs.toList.foldLeft(Map.empty[String,WdlType]) {
       (acc, out) =>

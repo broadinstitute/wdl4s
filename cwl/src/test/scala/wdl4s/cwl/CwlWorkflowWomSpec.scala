@@ -11,6 +11,23 @@ import wdl4s.wom.callable.{TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphOutputNode, RequiredGraphInputNode}
 
 class CwlWorkflowWomSpec extends FlatSpec with Matchers {
+  "munging the workflow output id" should "remove the filename" in {
+    val id = "file:///home/dan/common-workflow-language/v1.0/examples/1st-workflow.cwl#untar/example_out"
+
+    val out = WorkflowOutputsToOutputDefinition.mungeId(id)
+
+    out shouldBe "example_out"
+  }
+
+  "munging the runnable id" should "remove the filename" in {
+    val id = "file:///home/dan/common-workflow-language/v1.0/examples/tar-param.cwl#example_out"
+
+    val out = RunToTypeMap.mungeId(id)
+
+    out shouldBe "example_out"
+  }
+
+
   "A Cwl object for 1st-tool" should "convert to WOM" in {
     val firstTool =
       """
@@ -51,27 +68,27 @@ outputs: []
   }
 
   "Cwl for 1st workflow" should "convert to WOM" in {
-    def firstWorkflow(pwd: String) =
+    val firstWorkflow =
       s"""
 cwlVersion: "v1.0"
 class: "Workflow"
 inputs:
   - type: "string"
-    id: "file://$pwd/r.cwl#ex"
+    id: "file:///home/dan/wdl4s/r.cwl#ex"
   - type: "File"
-    id: "file://$pwd/r.cwl#inp"
+    id: "file:///home/dan/wdl4s/r.cwl#inp"
 outputs:
   - type: "File"
-    outputSource: "file://$pwd/r.cwl#compile/classfile"
-    id: "file://$pwd/r.cwl#classout"
+    outputSource: "file:///home/dan/wdl4s/r.cwl#compile/classfile"
+    id: "file:///home/dan/wdl4s/r.cwl#classout"
 steps:
   - run: "arguments.cwl"
     in:
       -
-        source: "file://$pwd/r.cwl#untar/example_out"
-        id: "file://$pwd/r.cwl#compile/src"
+        source: "file:///home/dan/wdl4s/r.cwl#untar/example_out"
+        id: "file:///home/dan/wdl4s/r.cwl#compile/src"
     out:
-      - "file://$pwd/r.cwl#compile/classfile"
+      - "file:///home/dan/wdl4s/r.cwl#compile/classfile"
     id: "file:///home/dan/wdl4s/r.cwl#compile"
   - run: "tar-param.cwl"
     in:
@@ -91,10 +108,8 @@ name: "file:///home/dan/wdl4s/r.cwl"
 
     import CwlCodecs._
 
-    val pwd: String = (scala.sys.process.Process("pwd") !!).stripMargin
-    println(s"pwd was $pwd")
 
-    decodeCwlX(firstWorkflow(pwd)) match {
+    decodeCwlX(firstWorkflow) match {
       case Right((workflow:Workflow, map:Map[String, Cwl])) => workflow.womExecutable(map)
       case Left(error) => fail(s"did not parse!  $error")
     }

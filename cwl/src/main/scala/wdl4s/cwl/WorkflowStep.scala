@@ -53,33 +53,24 @@ case class WorkflowStep(
 
   def taskDefinitionInputs(typeMap: TypeMap):  Set[_ <: Callable.InputDefinition] =
     in.map{wsi =>
-      val tpe = typeMap(wsi.source.flatMap(_.select[String]).get)
+
+      val _value: String = wsi.source.flatMap(_.select[String]).get
+
+      println(s"value is ${_value}")
+
+      val mungedTypeMap = typeMap map {
+        case (id, tpe) => RunToTypeMap.mungeId(id) -> tpe
+      }
+
+
+      val value = WorkflowStep.mungeInputId(_value)
+
+      println(s"working with typemap $mungedTypeMap")
+      val tpe = mungedTypeMap(value)
       RequiredInputDefinition(wsi.id, tpe)
     }.toSet
 
 
-
-  object OutputsToTypeMap extends Poly1 {
-
-    def fullIdToOutputDefintition(fullyQualifiedName: String, typeMap: TypeMap) = {
-
-      //we want to only look at the id, not the filename
-      val _id = fullyQualifiedName.substring(fullyQualifiedName.lastIndexOf("/") + 1,fullyQualifiedName.length())
-
-      OutputDefinition(_id, typeMap(_id), PlaceholderExpression(typeMap(_id)))
-    }
-
-    implicit def a = at[Array[WorkflowStepOutput]] { o =>
-      (typeMap: TypeMap) =>
-        o.map(output => fullIdToOutputDefintition(output.id, typeMap)).toSet
-    }
-
-    implicit def b = at[Array[String]] { o =>
-      (typeMap: TypeMap) =>
-        o.map(fullIdToOutputDefintition(_, typeMap)).toSet
-    }
-
-  }
 
   def taskDefinitionOutputs(cwlMap: Map[String, Cwl]): Set[Callable.OutputDefinition] = {
 
@@ -88,12 +79,10 @@ case class WorkflowStep(
     val runnableFQNTypeMap: TypeMap = run.fold(RunToTypeMap).apply(cwlMap)
 
     val runnableIdToTypeMap = runnableFQNTypeMap.map {
-      case (id, tpe) => id.substring(id.lastIndexOf("#") + 1,id.length()) -> tpe
-    }.map {
-      case (runnableId, tpe) => (runnableId + id.substring(id.lastIndexOf("#") + 1,id.lastIndexOf("/"))) -> tpe
+      case (id, tpe) => RunToTypeMap.mungeId(id) -> tpe
     }
 
-    out.fold(OutputsToTypeMap).apply(runnableIdToTypeMap)
+    out.fold(WorkflowOutputsToOutputDefinition).apply(runnableIdToTypeMap)
   }
 
   def taskDefinition(typeMap: TypeMap, cwlMap: Map[String, Cwl]): TaskDefinition = {
@@ -127,21 +116,8 @@ case class WorkflowStep(
     Set.empty[GraphNode] ++ cwi.inputs + cwi.call
   }
 
-  /*
-  private def buildWomNodeAndInputs(wdlCall: WdlCall): CallWithInputs = {
-    val inputToOutputPort: Map[String, GraphNodeOutputPort] = for {
-      (inputName, expr) <- wdlCall.inputMappings
-      variable <- expr.variableReferences
-      parent <- wdlCall.parent
-      node <- parent.resolveVariable(variable.terminal.sourceString)
-      outputPort = outputPortFromNode(node, variable.terminalSubIdentifier)
-    } yield inputName -> outputPort
-
-    CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), wdlCall.callable.womDefinition, inputToOutputPort)
-  }
 
 
-   */
   def womDefinition: TaskDefinition =  {
     val commandTemplate : Seq[CommandPart] = WorkflowStep.runToCommandTemplate(run)
     val runtimeAttributes: RuntimeAttributes = ??? //requirements.
@@ -163,21 +139,6 @@ case class WorkflowStep(
       declarations
     )
   }
-
-
-  /*
-  private def buildWomTaskDefinition: TaskDefinition =
-  TaskDefinition(
-    name,
-    commandTemplate,
-    runtimeAttributes,
-    meta,
-    parameterMeta,
-    outputs.map(_.womOutputDefinition).toSet,
-    buildWomInputs,
-    buildWomDeclarations
-  )
-  */
 }
 
 /**
@@ -188,6 +149,16 @@ case class WorkflowStep(
 case class WorkflowStepOutput(id: String)
 
 object WorkflowStep {
+
+  def mungeInputId(in: String): String = {
+    val afterHash = in.substring(in.indexOf("#") + 1, in.length)
+
+    if (afterHash.contains("/"))
+      afterHash.substring(afterHash.lastIndexOf("/") + 1, afterHash.length)
+    else
+      afterHash
+  }
+
 
   def runToCommandTemplate: Run => Seq[CommandPart] = ???
 
