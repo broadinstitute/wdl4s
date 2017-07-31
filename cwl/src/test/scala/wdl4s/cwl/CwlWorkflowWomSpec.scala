@@ -4,7 +4,7 @@ import cats.data.Validated.{Invalid, Valid}
 import cats.syntax.traverse._
 import cats.instances.list._
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.wdl.types.WdlStringType
+import wdl4s.wdl.types.{WdlFileType, WdlStringType}
 import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
 import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{TaskDefinition, WorkflowDefinition}
@@ -110,8 +110,13 @@ name: "file:///home/dan/wdl4s/r.cwl"
     import CwlCodecs._
 
 
+    println("running")
     decodeCwlX(firstWorkflow) match {
-      case Right((workflow:Workflow, map:Map[String, CwlFile])) => workflow.womExecutable(map).foreach(validateWom)
+      case Right((workflow:Workflow, map:Map[String, CwlFile])) =>
+        workflow.womExecutable(map) match {
+          case Valid(ex) => validateWom(ex)
+          case e => fail(s"executable was not created $e")
+        }
       case Left(error) => fail(s"did not parse!  $error")
     }
 
@@ -121,7 +126,18 @@ name: "file:///home/dan/wdl4s/r.cwl"
           val nodes = wf.innerGraph.withDefaultOutputs.nodes
           nodes.collect{ case gin: GraphInputNode => gin.name } should be(Set("file:///home/dan/wdl4s/r.cwl#ex", "file:///home/dan/wdl4s/r.cwl#inp"))
           nodes collect { case cn: CallNode => cn.name } should be(Set("file:///home/dan/wdl4s/r.cwl#compile", "file:///home/dan/wdl4s/r.cwl#untar"))
+          nodes.collectFirst{
+            case tarParam: CallNode if tarParam.name == "file:///home/dan/wdl4s/r.cwl#untar" => tarParam
+          }.get.
+            upstream shouldBe Set(
+            RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#ex", WdlStringType),
+            RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#inp", WdlFileType))
 
+
+          nodes.collectFirst{
+            case compile: CallNode if compile.name == "file:///home/dan/wdl4s/r.cwl#compile" => compile
+          }.get.
+            upstream
       }
     }
 
