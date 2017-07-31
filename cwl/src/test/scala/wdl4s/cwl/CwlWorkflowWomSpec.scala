@@ -8,6 +8,7 @@ import wdl4s.wdl.types.WdlStringType
 import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
 import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{TaskDefinition, WorkflowDefinition}
+import wdl4s.wom.executable.Executable
 import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphOutputNode, RequiredGraphInputNode}
 
 class CwlWorkflowWomSpec extends FlatSpec with Matchers {
@@ -110,8 +111,18 @@ name: "file:///home/dan/wdl4s/r.cwl"
 
 
     decodeCwlX(firstWorkflow) match {
-      case Right((workflow:Workflow, map:Map[String, Cwl])) => workflow.womExecutable(map)
+      case Right((workflow:Workflow, map:Map[String, CwlFile])) => workflow.womExecutable(map).foreach(validateWom)
       case Left(error) => fail(s"did not parse!  $error")
+    }
+
+    def validateWom(ex: Executable) = {
+      ex match {
+        case Executable(wf: WorkflowDefinition) =>
+          val nodes = wf.innerGraph.withDefaultOutputs.nodes
+          nodes.collect{ case gin: GraphInputNode => gin.name } should be(Set("file:///home/dan/wdl4s/r.cwl#ex", "file:///home/dan/wdl4s/r.cwl#inp"))
+          nodes collect { case cn: CallNode => cn.name } should be(Set("file:///home/dan/wdl4s/r.cwl#compile", "file:///home/dan/wdl4s/r.cwl#untar"))
+
+      }
     }
 
   }

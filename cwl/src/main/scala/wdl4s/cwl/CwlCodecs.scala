@@ -23,19 +23,16 @@ object CwlCodecs {
 
   type EitherA[A] = Either[Error, A]
 
-  def decodeCwlX: Yaml => Either[Error, (Cwl, Map[String, Cwl])] = {
+  def decodeCwlX: Yaml => Either[Error, (CwlFile, Map[String, CwlFile])] = {
       decodeCwl(_).flatMap{
         case clt: CommandLineTool => Right((clt,Map.empty))
         case wf: Workflow =>
 
           val fileNames: List[String] = wf.steps.toList.flatMap(_.run.select[String].toList)
 
-          println(s"found filenames $fileNames")
-
-          val r: EitherA[List[(String, Cwl)]] = fileNames.traverse[EitherA, (String, Cwl)]{
+          val r: EitherA[List[(String, CwlFile)]] = fileNames.traverse[EitherA, (String, CwlFile)]{
             fileName=>
               val yaml = scala.io.Source.fromFile(fileName).getLines.mkString("\n")
-              println(s"trying to read filename $fileName: \n $yaml")
               decodeCwl(yaml).map(fileName -> _)
           }
 
@@ -43,17 +40,14 @@ object CwlCodecs {
       }
   }
 
-  def decodeCwl: Yaml => Either[Error, Cwl] = {
+  def decodeCwl: Yaml => Either[Error, CwlFile] = {
     import wdl4s.cwl.Implicits._
 
     YamlParser.
       parse(_).
       map(_.noSpaces).
       flatMap{json =>
-        val clt = decode[CommandLineTool](json)
-        println(s"clt result was $clt")
-        clt orElse
-          decode[Workflow](json)
+        decode[CommandLineTool](json) orElse decode[Workflow](json)
       }
   }
 
@@ -69,7 +63,7 @@ object CwlCodecs {
     workflow.asJson
   }
 
-  def encodeCwl(cwl: Cwl): Json = {
+  def encodeCwl(cwl: CwlFile): Json = {
     import io.circe.syntax._
     import wdl4s.cwl.Implicits.enumerationEncoder
     cwl match {
@@ -81,8 +75,8 @@ object CwlCodecs {
   val jsonPrettyPrinter = io.circe.Printer.spaces2.copy(dropNullKeys = true, preserveOrder = true)
   val yamlPrettyPrinter = io.circe.yaml.Printer.spaces2.copy(dropNullKeys = true, preserveOrder = true)
 
-  def cwlToJson(cwl: Cwl): String = jsonPrettyPrinter.pretty(encodeCwl(cwl))
+  def cwlToJson(cwl: CwlFile): String = jsonPrettyPrinter.pretty(encodeCwl(cwl))
 
-  def cwlToYaml(cwl: Cwl): Yaml = yamlPrettyPrinter.pretty(encodeCwl(cwl))
+  def cwlToYaml(cwl: CwlFile): Yaml = yamlPrettyPrinter.pretty(encodeCwl(cwl))
 
 }

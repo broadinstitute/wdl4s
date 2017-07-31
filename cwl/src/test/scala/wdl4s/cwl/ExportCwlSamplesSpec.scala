@@ -10,7 +10,7 @@ import wdl4s.cwl.WorkflowStep.Run
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
-  def assertCorrectJson(cwl: Cwl, expectedYaml: String): Unit = CwlCodecs.cwlToYaml(cwl) shouldBe expectedYaml
+  def assertCorrectJson(cwl: CwlFile, expectedYaml: String): Unit = CwlCodecs.cwlToYaml(cwl) shouldBe expectedYaml
 
   it should "encode sample CWL command line tool" in {
     val tool =

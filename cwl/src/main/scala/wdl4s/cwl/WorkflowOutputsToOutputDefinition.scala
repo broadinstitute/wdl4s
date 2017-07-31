@@ -9,7 +9,7 @@ object WorkflowOutputsToOutputDefinition extends Poly1 {
   def mungeId(fullyQualifiedName: String): String =
      fullyQualifiedName.substring(fullyQualifiedName.lastIndexOf("/") + 1,fullyQualifiedName.length())
 
-  def fullIdToOutputDefintition(fullyQualifiedName: String, typeMap: TypeMap) = {
+  def fullIdToOutputDefintition(fullyQualifiedName: String, typeMap: WdlTypeMap) = {
 
     //we want to only look at the id, not the filename
     val _id = fullyQualifiedName.substring(fullyQualifiedName.lastIndexOf("/") + 1,fullyQualifiedName.length())
@@ -18,12 +18,12 @@ object WorkflowOutputsToOutputDefinition extends Poly1 {
   }
 
   implicit def a = at[Array[WorkflowStepOutput]] { o =>
-    (typeMap: TypeMap) =>
+    (typeMap: WdlTypeMap) =>
       o.map(output => fullIdToOutputDefintition(output.id, typeMap)).toSet
   }
 
   implicit def b = at[Array[String]] { o =>
-    (typeMap: TypeMap) =>
+    (typeMap: WdlTypeMap) =>
       o.map(fullIdToOutputDefintition(_, typeMap)).toSet
   }
 

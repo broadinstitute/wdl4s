@@ -1,23 +1,18 @@
 package wdl4s.cwl
 
-import shapeless.{:+:, CNil, Poly1}
-import mouse.all._
-import cats.syntax.foldable._
-import cats.instances.list._
-import cats.instances.map._
+import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
+import wdl4s.wdl.command.CommandPart
+import wdl4s.wom.callable.Callable.{InputDefinition, RequiredInputDefinition}
+import wdl4s.wom.callable.{Callable, TaskDefinition}
+import wdl4s.wom.expression.Expression
+import wdl4s.wom.graph.{CallNode, GraphNode, RequiredGraphInputNode}
+import shapeless.{:+:, CNil}
 import ScatterMethod._
 import wdl4s.cwl.CwlType.CwlType
-import wdl4s.cwl.WorkflowStep.{Inputs, Outputs, Run}
-import wdl4s.wdl.{FullyQualifiedName, RuntimeAttributes, WdlExpression}
-import wdl4s.wdl.command.CommandPart
-import wdl4s.wdl.types.WdlType
-import wdl4s.wom.callable.Callable.{InputDefinition, OutputDefinition, RequiredInputDefinition}
-import wdl4s.wom.callable.{Callable, TaskDefinition}
-import wdl4s.wom.expression.{Expression, PlaceholderExpression}
-import wdl4s.wom.graph.{CallNode, GraphNode}
-import shapeless.{:+:, CNil, Coproduct}
-import ScatterMethod._
 import wdl4s.cwl.WorkflowStep.{Outputs, Run}
+import wdl4s.wdl.types.WdlType
+import wdl4s.wom.graph.CallNode.CallWithInputs
+import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
 
 /**
   * An individual job to run.
@@ -36,7 +31,7 @@ import wdl4s.cwl.WorkflowStep.{Outputs, Run}
   * @param scatterMethod
   */
 case class WorkflowStep(
-  id: String, //not actually optional but can be declared as a key for this whole object for convenience
+  id: String,
   in: Array[WorkflowStepInput] = Array.empty,
   out: Outputs,
   run: Run,
@@ -47,36 +42,32 @@ case class WorkflowStep(
   scatter: Option[String :+: Array[String] :+: CNil] = None,
   scatterMethod: Option[ScatterMethod] = None) {
 
+  def typedOutputs(cwlMap: Map[String, CwlFile]): WdlTypeMap = run.fold(RunToTypeMap).apply(cwlMap)
+
   def womGraphInputNodes: Set[GraphNode] = ???
 
   def womCallNode: GraphNode = ???
 
-  def taskDefinitionInputs(typeMap: TypeMap):  Set[_ <: Callable.InputDefinition] =
+  def taskDefinitionInputs(typeMap: WdlTypeMap):  Set[_ <: Callable.InputDefinition] =
     in.map{wsi =>
 
       val _value: String = wsi.source.flatMap(_.select[String]).get
-
-      println(s"value is ${_value}")
 
       val mungedTypeMap = typeMap map {
         case (id, tpe) => RunToTypeMap.mungeId(id) -> tpe
       }
 
-
       val value = WorkflowStep.mungeInputId(_value)
 
-      println(s"working with typemap $mungedTypeMap")
       val tpe = mungedTypeMap(value)
       RequiredInputDefinition(wsi.id, tpe)
     }.toSet
 
 
 
-  def taskDefinitionOutputs(cwlMap: Map[String, Cwl]): Set[Callable.OutputDefinition] = {
+  def taskDefinitionOutputs(cwlMap: Map[String, CwlFile]): Set[Callable.OutputDefinition] = {
 
-    println(s"id is $id")
-
-    val runnableFQNTypeMap: TypeMap = run.fold(RunToTypeMap).apply(cwlMap)
+    val runnableFQNTypeMap: WdlTypeMap = run.fold(RunToTypeMap).apply(cwlMap)
 
     val runnableIdToTypeMap = runnableFQNTypeMap.map {
       case (id, tpe) => RunToTypeMap.mungeId(id) -> tpe
@@ -85,7 +76,7 @@ case class WorkflowStep(
     out.fold(WorkflowOutputsToOutputDefinition).apply(runnableIdToTypeMap)
   }
 
-  def taskDefinition(typeMap: TypeMap, cwlMap: Map[String, Cwl]): TaskDefinition = {
+  def taskDefinition(typeMap: WdlTypeMap, cwlMap: Map[String, CwlFile]): TaskDefinition = {
 
     val id = this.id
 
@@ -99,7 +90,7 @@ case class WorkflowStep(
     val declarations: List[(String, Expression)] = List.empty
 
     TaskDefinition(
-      id, //this should be non-optional as a type
+      id,
       commandTemplate,
       runtimeAttributes,
       meta,
@@ -110,10 +101,50 @@ case class WorkflowStep(
     )
   }
 
-  def graphNodes(typeMap: TypeMap, cwlMap: Map[String, Cwl]): Set[GraphNode] = {
-    val cwi = CallNode.callWithInputs(id, taskDefinition(typeMap, cwlMap), Map.empty)
+  def callWithInputs(typeMap: WdlTypeMap, cwlMap: Map[String, CwlFile], workflow: Workflow): CallWithInputs = {
 
-    Set.empty[GraphNode] ++ cwi.inputs + cwi.call
+    val workflowInputs =
+      workflow.inputs.map {
+          workflowInput =>
+            val tpe = workflowInput.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get
+            val node = RequiredGraphInputNode(workflowInput.id, tpe)
+            workflowInput.id -> GraphNodeOutputPort(workflowInput.id, tpe, node)
+        }.toMap
+
+
+
+    //need the outputs mapped from other workflow steps in order to pass in this map
+    val workflowOutputsMap = in.flatMap{
+      workflowStepInput =>
+
+        def lookupStepWithOutput(stepId: String, outputId: String): (WorkflowStep, (String, WdlType)) = {
+          val step = workflow.steps.find{step =>
+            val lookup = WorkflowStepId(step.id).stepId
+            lookup == stepId
+          }.get
+
+          step.typedOutputs(cwlMap).map(step -> _)
+            .find{
+              case (_, (stepOutputId, _)) =>
+                WorkflowStepOutputId(stepOutputId).outputId == outputId
+            }.get
+        }
+
+        val inputSource = workflowStepInput.source.flatMap(_.select[String]).get
+
+        FullyQualifiedName(inputSource) match {
+          case WorkflowStepOutputIdReference(_, stepOutputId, stepId) =>
+            val (step, (id, tpe)) = lookupStepWithOutput(stepId, stepOutputId)
+            List((workflowStepInput.id -> GraphNodeOutputPort(inputSource, tpe, step.callWithInputs(typeMap, cwlMap, workflow).call)))
+          case _ => List.empty[(String, GraphNodeOutputPort)]
+        }
+
+    }.toMap
+
+
+    val td = taskDefinition(typeMap, cwlMap)
+
+    CallNode.callWithInputs(id, td, workflowInputs ++ workflowOutputsMap)
   }
 
 
@@ -129,7 +160,7 @@ case class WorkflowStep(
     val declarations: List[(String, Expression)] = ???
 
     TaskDefinition(
-      id, //this should be non-optional as a type
+      id,
       commandTemplate,
       runtimeAttributes,
       meta,

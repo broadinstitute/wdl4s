@@ -23,10 +23,10 @@ import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.executable.Executable
 import wdl4s.wom.expression.{Expression, PlaceholderExpression}
-import wdl4s.wom.graph.{CallNode, Graph, GraphNode}
+import wdl4s.wom.graph.{CallNode, Graph, GraphNode, RequiredGraphInputNode}
 
 
-sealed trait Cwl {
+sealed trait CwlFile {
 
   val cwlVersion: Option[CwlVersion]
 }
@@ -36,23 +36,38 @@ case class Workflow(
                      `class` : Workflow.`class`.type = Workflow.`class`,
                      inputs: Array[InputParameter] = Array.empty,
                      outputs: Array[WorkflowOutputParameter] = Array.empty,
-                     steps: Array[WorkflowStep]) extends Cwl {
+                     steps: Array[WorkflowStep]) extends CwlFile {
 
-  def womExecutable(cwlMap: Map[String, Cwl]): ErrorOr[Executable] = womDefinition(cwlMap).map(Executable.apply)
+  def womExecutable(cwlMap: Map[String, CwlFile]): ErrorOr[Executable] = womDefinition(cwlMap).map(Executable.apply)
 
-  def outputsTypeMap(cwlMap: Map[String, Cwl]): TypeMap = steps.foldLeft(Map.empty[String, WdlType]){
-    (acc, s) => acc ++ s.run.fold(RunToTypeMap).apply(cwlMap)
+  def outputsTypeMap(cwlMap: Map[String, CwlFile]): WdlTypeMap = steps.foldLeft(Map.empty[String, WdlType]){
+    (acc, s) => acc ++ s.typedOutputs(cwlMap)
   }
 
 
-  def womGraph(cwlMap: Map[String, Cwl]): ErrorOr[Graph] = {
-    val map: TypeMap = outputsTypeMap(cwlMap) ++ inputs.toList.flatMap{i =>
-      i.`type`.flatMap(_.select[CwlType].map(cwlTypeToWdlType).map(i.id -> _)).toList
-      }.toMap
-    Graph.validateAndConstruct(steps.toList.foldMap(_.graphNodes(map, cwlMap)))
+  def womGraph(cwlMap: Map[String, CwlFile]): ErrorOr[Graph] = {
+    val map: WdlTypeMap =
+      outputsTypeMap(cwlMap) ++
+        inputs.toList.flatMap{i =>
+          i.`type`.flatMap(_.select[CwlType].map(cwlTypeToWdlType).map(i.id -> _)).toList
+        }.toMap
+
+    val graphFromSteps = steps.toList.foldMap(_.callWithInputs(map, cwlMap, this).nodes)
+
+    val graphFromInputs: Set[GraphNode] = inputs.map{
+      input =>
+        input.`type`.flatMap(_.select[CwlType].map(cwlTypeToWdlType)).map(RequiredGraphInputNode(input.id, _)).get
+    }.toSet
+
+    val graphFromOutputs: Set[GraphNode] = Set.empty
+//      outputs.map{
+ //     output =>
+  //  }
+
+    Graph.validateAndConstruct(graphFromSteps ++ graphFromInputs ++ graphFromOutputs)
   }
 
-  def womDefinition(cwlMap: Map[String, Cwl]): ErrorOr[WorkflowDefinition] = {
+  def womDefinition(cwlMap: Map[String, CwlFile]): ErrorOr[WorkflowDefinition] = {
     val name: String = "workflow Id"
     val meta: Map[String, String] = Map.empty
     val paramMeta: Map[String, String] = Map.empty
@@ -113,7 +128,7 @@ case class CommandLineTool(
                             stdout: Option[StringOrExpression] = None,
                             successCodes: Option[Array[Int]] = None,
                             temporaryFailCodes: Option[Array[Int]] = None,
-                            permanentFailCodes: Option[Array[Int]] = None) extends Cwl {
+                            permanentFailCodes: Option[Array[Int]] = None) extends CwlFile {
 
   def womExecutable: ErrorOr[Executable] = {
     Valid(Executable(taskDefinition))
@@ -192,6 +207,10 @@ case class CommandLineTool(
   }
 
   def graphNodes: Set[GraphNode] = {
+
+    //need to gather up the step outputs and pass them into Call with inputs
+
+
     val cwi = CallNode.callWithInputs(id.getOrElse("this is a made up call node name"), taskDefinition, Map.empty)
 
     Set.empty[GraphNode] ++ cwi.inputs + cwi.call

@@ -69,6 +69,6 @@ package object cwl extends TypeAliases {
 
   type Yaml = String
 
-  type TypeMap = Map[String, WdlType]
+  type WdlTypeMap = Map[String, WdlType]
 
 }

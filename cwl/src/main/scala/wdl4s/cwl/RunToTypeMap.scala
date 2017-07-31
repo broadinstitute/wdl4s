@@ -24,13 +24,13 @@ object RunToTypeMap extends Poly1 {
   implicit def commandLineTool =
     at[CommandLineTool] {
       clt =>
-        (_: Map[String, Cwl]) =>
+        (_: Map[String, CwlFile]) =>
           handleCommandLine(clt)
     }
 
   implicit def string = at[String] {
     fileName =>
-      (cwlMap: Map[String, Cwl]) =>
+      (cwlMap: Map[String, CwlFile]) =>
         cwlMap(fileName) match {
           case clt: CommandLineTool => handleCommandLine(clt)
           case wf: Workflow => handleWorkflow(wf)
@@ -39,7 +39,7 @@ object RunToTypeMap extends Poly1 {
 
   implicit def expressionTool = at[ExpressionTool] {
     et =>
-      (cwlMap: Map[String, Cwl]) =>
+      (cwlMap: Map[String, CwlFile]) =>
          Map.empty[String, WdlType]
   }
 
@@ -50,7 +50,7 @@ object RunToTypeMap extends Poly1 {
 
   implicit def workflow = at[Workflow] {
     wf =>
-      (cwlMap: Map[String, Cwl]) =>
+      (cwlMap: Map[String, CwlFile]) =>
          handleWorkflow(wf)
   }
 }
