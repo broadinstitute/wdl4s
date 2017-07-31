@@ -53,7 +53,7 @@ object ScatterNode {
     val graphNodeSetter = new GraphNode.GraphNodeSetter()
     val inputPortLinker = GraphNode.linkInputPort("", inputMapping, graphNodeSetter.get) _
 
-    val scatterVariableMapping = ScatterVariableMapping(ConnectedInputPort(scatterVariableInput.name, scatterVariableInput.womType, scatterVariableSource, graphNodeSetter.get), scatterVariableInput)
+    val scatterVariableMapping = ScatterVariableMapping(ConnectedInputPort(scatterVariableInput.name, scatterVariableInput.womType, scatterVariableSource)(graphNodeSetter.get), scatterVariableInput)
 
     // TODO: Don't want to re-link the scatter variable...
     val linkedInputPortsAndGraphInputNodes: Set[LinkedInputPort] = (innerGraph.nodes - scatterVariableInput).inputDefinitions.map(inputPortLinker)
@@ -61,7 +61,7 @@ object ScatterNode {
     val graphInputNodes = linkedInputPortsAndGraphInputNodes collect { case LinkedInputPort(_, Some(gin)) => gin }
 
     val outputPorts: Set[ScatterGathererPort] = innerGraph.nodes.collect { case gon: GraphOutputNode =>
-      ScatterGathererPort(gon.name, WdlArrayType(gon.womType), gon, graphNodeSetter.get)
+      ScatterGathererPort(gon.name, WdlArrayType(gon.womType), gon)(graphNodeSetter.get)
     }
 
     val scatterNode: ScatterNode = ScatterNode(innerGraph, scatterVariableMapping, linkedInputPorts, outputPorts)
