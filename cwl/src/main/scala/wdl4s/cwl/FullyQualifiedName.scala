@@ -49,6 +49,8 @@ object WorkflowStepOutputIdReference {
 object FullyQualifiedName {
   def apply(in: String): FullyQualifiedName = {
 
+    println(s"trying to match $in w/ #")
+
    val Array(ignored, after) = in.split("#")
 
    if (after.contains("/"))

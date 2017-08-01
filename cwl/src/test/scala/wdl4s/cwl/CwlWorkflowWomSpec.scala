@@ -110,7 +110,6 @@ name: "file:///home/dan/wdl4s/r.cwl"
     import CwlCodecs._
 
 
-    println("running")
     decodeCwlX(firstWorkflow) match {
       case Right((workflow:Workflow, map:Map[String, CwlFile])) =>
         workflow.womExecutable(map) match {
@@ -124,130 +123,145 @@ name: "file:///home/dan/wdl4s/r.cwl"
       ex match {
         case Executable(wf: WorkflowDefinition) =>
           val nodes = wf.innerGraph.withDefaultOutputs.nodes
-          nodes.collect{ case gin: GraphInputNode => gin.name } should be(Set("file:///home/dan/wdl4s/r.cwl#ex", "file:///home/dan/wdl4s/r.cwl#inp"))
-          nodes collect { case cn: CallNode => cn.name } should be(Set("file:///home/dan/wdl4s/r.cwl#compile", "file:///home/dan/wdl4s/r.cwl#untar"))
+
+          nodes.collect{
+            case gin: GraphInputNode => gin.name
+          } should be(Set("file:///home/dan/wdl4s/r.cwl#ex", "file:///home/dan/wdl4s/r.cwl#inp"))
+
+          nodes collect {
+            case cn: CallNode => cn.name
+          } should be(Set("file:///home/dan/wdl4s/r.cwl#compile", "file:///home/dan/wdl4s/r.cwl#untar"))
+
           nodes.collectFirst{
             case tarParam: CallNode if tarParam.name == "file:///home/dan/wdl4s/r.cwl#untar" => tarParam
           }.get.
             upstream shouldBe Set(
-            RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#ex", WdlStringType),
-            RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#inp", WdlFileType))
+              RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#ex", WdlStringType),
+              RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#inp", WdlFileType))
+
 
           nodes.collectFirst{
             case compile: CallNode if compile.name == "file:///home/dan/wdl4s/r.cwl#compile" => compile
-          }.get.
-            upstream
+          }.get.inputPorts.map(_.upstream).head.name shouldBe "file:///home/dan/wdl4s/r.cwl#untar/example_out"
       }
     }
 
   }
 
-  /*
   "A WdlNamespace for 3step" should "provide conversion to WOM" in {
     val threeStep =
       """
-        |cwlVersion: v1.0
-        |class: Workflow
-        |inputs:
-        |- id: pattern
-        |  type: string
-        |outputs:
-        |- id: cgrep-stdOut
-        |  outputSource: '#cgrep/cgrep-stdOut'
-        |  type: File
-        |- id: wc-stdOut
-        |  outputSource: '#wc/wc-stdOut'
-        |  type: File
-        |steps:
-        |- id: ps
-        |  in: []
-        |  out:
-        |  - ps-stdOut
-        |  run:
-        |    inputs: []
-        |    outputs:
-        |    - id: ps-stdOut
-        |      outputBinding:
-        |        glob: ps-stdOut.txt
-        |      type: File
-        |    class: CommandLineTool
-        |    baseCommand: ps
-        |    stdout: ps-stdOut.txt
-        |- id: cgrep
-        |  in:
-        |  - id: pattern
-        |    source: '#pattern'
-        |  - id: file
-        |    source: ps/ps-stdOut
-        |  out:
-        |  - id: cgrep-stdOut
-        |  run:
-        |    inputs:
-        |    - id: pattern
-        |      type: string
-        |    - id: file
-        |      type: File
-        |    outputs:
-        |    - id: cgrep-stdOut
-        |      outputBinding:
-        |        glob: cgrep-stdOut.txt
-        |      type: File
-        |    class: CommandLineTool
-        |    requirements:
-        |    - class: ShellCommandRequirement
-        |    - class: InlineJavascriptRequirement
-        |    arguments:
-        |    - valueFrom: grep
-        |      shellQuote: false
-        |    - valueFrom: $(inputs.pattern).
-        |      shellQuote: false
-        |    - valueFrom: $(inputs.file)
-        |      shellQuote: false
-        |    - valueFrom: '|'
-        |      shellQuote: false
-        |    - valueFrom: wc
-        |      shellQuote: false
-        |    - valueFrom: -l
-        |      shellQuote: false
-        |    stdout: cgrep-stdOut.txt
-        |- id: wc
-        |  in:
-        |  - id: file
-        |    source: ps/ps-stdOut
-        |  out:
-        |  - id: wc-stdOut
-        |  run:
-        |    inputs:
-        |    - id: file
-        |      type: File
-        |    outputs:
-        |    - id: wc-stdOut
-        |      outputBinding:
-        |        glob: wc-stdOut.txt
-        |      type: File
-        |    class: CommandLineTool
-        |    requirements:
-        |    - class: ShellCommandRequirement
-        |    - class: InlineJavascriptRequirement
-        |    arguments:
-        |    - valueFrom: cat
-        |      shellQuote: false
-        |    - valueFrom: $(inputs.file)
-        |      shellQuote: false
-        |    - valueFrom: '|'
-        |      shellQuote: false
-        |    - valueFrom: wc
-        |      shellQuote: false
-        |    - valueFrom: -l
-        |      shellQuote: false
-        |    stdout: wc-stdOut.txt
+cwlVersion: v1.0
+class: Workflow
+inputs:
+- id: file:///Users/danb/wdl4s/r.cwl#pattern
+  type: string
+outputs:
+- id: file:///Users/danb/wdl4s/r.cwl#cgrep-stdOut
+  outputSource: file:///Users/danb/wdl4s/r.cwl#cgrep/cgrep-stdOut
+  type: File
+- id: file:///Users/danb/wdl4s/r.cwl#wc-stdOut
+  outputSource: file:///Users/danb/wdl4s/r.cwl#wc/wc-stdOut
+  type: File
+steps:
+- id: file:///Users/danb/wdl4s/r.cwl#ps
+  in: []
+  out:
+  - file:///Users/danb/wdl4s/r.cwl#ps/ps-stdOut
+  run:
+    inputs: []
+    outputs:
+    - id: file:///Users/danb/wdl4s/r.cwl#ps/0b4ba500-5584-4fed-a831-9fa6f914ad3f/ps-stdOut
+      outputBinding:
+        glob: ps-stdOut.txt
+      type: File
+    class: CommandLineTool
+    baseCommand: ps
+    stdout: ps-stdOut.txt
+    id: file:///Users/danb/wdl4s/r.cwl#ps/0b4ba500-5584-4fed-a831-9fa6f914ad3f
+- id: file:///Users/danb/wdl4s/r.cwl#cgrep
+  in:
+  - id: file:///Users/danb/wdl4s/r.cwl#cgrep/pattern
+    source: file:///Users/danb/wdl4s/r.cwl#pattern
+  - id: file:///Users/danb/wdl4s/r.cwl#cgrep/file
+    source: file:///Users/danb/wdl4s/r.cwl#ps/ps-stdOut
+  out:
+  - id: file:///Users/danb/wdl4s/r.cwl#cgrep/cgrep-stdOut
+  run:
+    inputs:
+    - id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875/pattern
+      type: string
+    - id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875/file
+      type: File
+    outputs:
+    - id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875/cgrep-stdOut
+      outputBinding:
+        glob: cgrep-stdOut.txt
+      type: File
+    class: CommandLineTool
+    requirements:
+    - class: ShellCommandRequirement
+    - class: InlineJavascriptRequirement
+    arguments:
+    - valueFrom: grep
+      shellQuote: false
+    - valueFrom: $(inputs.pattern).
+      shellQuote: false
+    - valueFrom: $(inputs.file)
+      shellQuote: false
+    - valueFrom: '|'
+      shellQuote: false
+    - valueFrom: wc
+      shellQuote: false
+    - valueFrom: -l
+      shellQuote: false
+    stdout: cgrep-stdOut.txt
+    id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875
+- id: file:///Users/danb/wdl4s/r.cwl#wc
+  in:
+  - id: file:///Users/danb/wdl4s/r.cwl#wc/file
+    source: file:///Users/danb/wdl4s/r.cwl#ps/ps-stdOut
+  out:
+  - id: file:///Users/danb/wdl4s/r.cwl#wc/wc-stdOut
+  run:
+    inputs:
+    - id: file:///Users/danb/wdl4s/r.cwl#wc/45d98851-7bfe-473e-ab24-aac922553f3e/file
+      type: File
+    outputs:
+    - id: file:///Users/danb/wdl4s/r.cwl#wc/45d98851-7bfe-473e-ab24-aac922553f3e/wc-stdOut
+      outputBinding:
+        glob: wc-stdOut.txt
+      type: File
+    class: CommandLineTool
+    requirements:
+    - class: ShellCommandRequirement
+    - class: InlineJavascriptRequirement
+    arguments:
+    - valueFrom: cat
+      shellQuote: false
+    - valueFrom: $(inputs.file)
+      shellQuote: false
+    - valueFrom: '|'
+      shellQuote: false
+    - valueFrom: wc
+      shellQuote: false
+    - valueFrom: -l
+      shellQuote: false
+    stdout: wc-stdOut.txt
+    id: file:///Users/danb/wdl4s/r.cwl#wc/45d98851-7bfe-473e-ab24-aac922553f3e
+id: file:///Users/danb/wdl4s/r.cwl
       """.stripMargin
 
-    val namespace = WdlNamespace.loadUsingSource(threeStep, None, None).get.asInstanceOf[WdlNamespaceWithWorkflow]
-    val workflow = decodeCwl(threeStep)
-    val wom3Step = namespace.womExecutable
+    val workflow = CwlCodecs.decodeCwl(threeStep) match {
+      case Right(wf: Workflow) => wf
+      case o => fail(s"didn't parse a workflow! $o")
+    }
+    val wf = workflow.womExecutable(Map.empty) match {
+      case Valid(Executable(wf: WorkflowDefinition)) => wf
+      case o => fail(s"invalid executable $o")
+    }
 
-    val workflowGraph = wom3Step.graph match {
+    val workflowGraph = wf.graph match {
       case Valid(g) => g
       case Invalid(errors) => fail(s"Unable to build wom version of 3step from WDL: ${errors.toList.mkString("\n", "\n", "\n")}")
     }
@@ -265,6 +279,5 @@ name: "file:///home/dan/wdl4s/r.cwl"
     cgrep.upstream shouldBe Set(ps, cgrepPatternInput)
     wc.upstream shouldBe Set(ps)
   }
-  */
 
 }
