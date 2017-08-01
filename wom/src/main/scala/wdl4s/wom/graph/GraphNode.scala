@@ -76,9 +76,6 @@ object GraphNode {
     */
   private[graph] def linkInputPort(inputPrefix: String, inputMapping: Map[String, OutputPort], callNodeRef: Unit => GraphNode)(inputDefinition: Callable.InputDefinition): LinkedInputPort = {
 
-    println(s"looking for ${inputDefinition.name} in \n")
-    inputMapping.keys.foreach(println)
-
     val (outputPort, graphNode): (OutputPort, Option[GraphInputNode]) = inputDefinition match {
       case input if inputMapping.contains(input.name) => (inputMapping(input.name), None)
       case RequiredInputDefinition(n, womType) =>

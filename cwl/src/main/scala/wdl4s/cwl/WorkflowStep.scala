@@ -42,7 +42,7 @@ case class WorkflowStep(
   scatter: Option[String :+: Array[String] :+: CNil] = None,
   scatterMethod: Option[ScatterMethod] = None) {
 
-  def typedOutputs(cwlMap: Map[String, CwlFile]): WdlTypeMap = run.fold(RunToTypeMap).apply(cwlMap)
+  def typedOutputs(cwlMap: Map[String, CwlFile]): WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
 
   def womGraphInputNodes: Set[GraphNode] = ???
 
@@ -54,7 +54,7 @@ case class WorkflowStep(
       val _source: String = workflowStepInput.source.flatMap(_.select[String]).get
 
       val mungedTypeMap = typeMap map {
-        case (id, tpe) => RunToTypeMap.mungeId(id) -> tpe
+        case (id, tpe) => RunOutputsToTypeMap.mungeId(id) -> tpe
       }
 
       val value = WorkflowStep.mungeInputId(_source)
@@ -66,10 +66,10 @@ case class WorkflowStep(
 
   def taskDefinitionOutputs(cwlMap: Map[String, CwlFile]): Set[Callable.OutputDefinition] = {
 
-    val runnableFQNTypeMap: WdlTypeMap = run.fold(RunToTypeMap).apply(cwlMap)
+    val runnableFQNTypeMap: WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
 
     val runnableIdToTypeMap = runnableFQNTypeMap.map {
-      case (id, tpe) => RunToTypeMap.mungeId(id) -> tpe
+      case (id, tpe) => RunOutputsToTypeMap.mungeId(id) -> tpe
     }
 
     out.fold(WorkflowOutputsToOutputDefinition).apply(runnableIdToTypeMap)
@@ -79,7 +79,13 @@ case class WorkflowStep(
 
     val id = this.id
 
-    val commandTemplate: Seq[CommandPart] = run.select[CommandLineTool].map(_.baseCommand.get.fold(BaseCommandToCommandParts)).toSeq.flatten
+    val commandTemplate: Seq[CommandPart] =
+      //TODO: turn this select into a fold that supports other types of runnables
+      run.select[CommandLineTool].map{
+      clt =>
+        clt.baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
+        clt.arguments.map(_.map(_.fold(ArgumentToCommandPart)).toSeq).toSeq.flatten
+    }.toSeq.flatten
 
     val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression])
 
@@ -125,14 +131,17 @@ case class WorkflowStep(
           step.typedOutputs(cwlMap).map(step -> _)
             .find{
               case (_, (stepOutputId, _)) =>
-                WorkflowStepOutputId(stepOutputId).outputId == outputId
+
+                val i = RunOutputId(stepOutputId).outputId
+                println(s"looking for $outputId against $i  for stepOUtputId $stepOutputId")
+                 i == outputId
             }.get
         }
 
         val inputSource = workflowStepInput.source.flatMap(_.select[String]).get
 
         FullyQualifiedName(inputSource) match {
-          case WorkflowStepOutputIdReference(_, stepOutputId, stepId) =>
+          case WorkflowStepInputSource(_, stepOutputId, stepId) =>
             val (step, (id, tpe)) = lookupStepWithOutput(stepId, stepOutputId)
             List((inputSource -> GraphNodeOutputPort(inputSource, tpe, step.callWithInputs(typeMap, cwlMap, workflow).call)))
           case _ => List.empty[(String, GraphNodeOutputPort)]
@@ -145,29 +154,6 @@ case class WorkflowStep(
     CallNode.callWithInputs(id, td, workflowInputs ++ workflowOutputsMap)
   }
 
-
-
-  def womDefinition: TaskDefinition =  {
-    val commandTemplate : Seq[CommandPart] = WorkflowStep.runToCommandTemplate(run)
-    val runtimeAttributes: RuntimeAttributes = ??? //requirements.
-
-    val meta: Map[String, String] = ???
-    val parameterMeta: Map[String, String] = ???
-    val outputs: Set[Callable.OutputDefinition] = ???
-    val inputs: Set[_ <: Callable.InputDefinition] = ???
-    val declarations: List[(String, Expression)] = ???
-
-    TaskDefinition(
-      id,
-      commandTemplate,
-      runtimeAttributes,
-      meta,
-      parameterMeta,
-      outputs,
-      inputs,
-      declarations
-    )
-  }
 }
 
 /**
@@ -188,24 +174,11 @@ object WorkflowStep {
       afterHash
   }
 
-
-  def runToCommandTemplate: Run => Seq[CommandPart] = ???
-
-  def fromInputs: Inputs => InputDefinition = ???
-
-  def fromResourceRequirement: ResourceRequirement => RuntimeAttributes = ???
-
   type Run =
     String :+:
       CommandLineTool :+:
       ExpressionTool :+:
       Workflow :+:
-      CNil
-
-  type Inputs =
-    Array[WorkflowStepInput] :+:
-      Map[WorkflowStepInputId, WorkflowStepInputSource] :+:
-      Map[WorkflowStepInputId, WorkflowStepInput] :+:
       CNil
 
   type Outputs =

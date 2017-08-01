@@ -35,26 +35,44 @@ object WorkflowStepOutputId {
 }
 
 
-case class WorkflowStepOutputIdReference(fileName: String, stepOutputId: String, stepId: String) extends FullyQualifiedName
+case class WorkflowStepInputSource(fileName: String, stepOutputId: String, stepId: String) extends FullyQualifiedName
 
-object WorkflowStepOutputIdReference {
-  def apply(in: String): WorkflowStepOutputIdReference = {
+object WorkflowStepInputSource {
+  def apply(in: String): WorkflowStepInputSource = {
     val Array(fileName, stepAndid) = in.split("#")
     val Array(step, id) = stepAndid.split("/")
 
-    WorkflowStepOutputIdReference(fileName, id, step)
+    WorkflowStepInputSource(fileName, id, step)
   }
 }
 
+sealed trait RunOutputId {
+  def fileName: String
+  def outputId: String
+}
+
+case class SameFileRunOutputId(fileName: String, outputId: String, uuid: String, stepId: String) extends RunOutputId
+
+case class DifferentFileRunOutputId(fileName: String, outputId: String) extends RunOutputId
+
+object RunOutputId {
+  def apply(in: String): RunOutputId = {
+    val Array(fileName, stepAndid) = in.split("#")
+
+    if (stepAndid.contains("/")) {
+      val Array(step, uuid, id) = stepAndid.split("/")
+      SameFileRunOutputId(fileName, id, uuid, step)
+    } else
+      DifferentFileRunOutputId(fileName, stepAndid)
+  }
+}
 object FullyQualifiedName {
   def apply(in: String): FullyQualifiedName = {
-
-    println(s"trying to match $in w/ #")
 
    val Array(ignored, after) = in.split("#")
 
    if (after.contains("/"))
-     WorkflowStepOutputIdReference(in)
+     WorkflowStepInputSource(in)
     else
      WorkflowInputId(in)
   }

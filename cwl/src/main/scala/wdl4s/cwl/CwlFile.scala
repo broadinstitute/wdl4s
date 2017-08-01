@@ -17,7 +17,7 @@ import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
-import wdl4s.wdl.command.{CommandPart, StringCommandPart}
+import wdl4s.wdl.command.{CommandPart, CwlExpressionCommandPart, StringCommandPart}
 import wdl4s.wdl.types._
 import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
@@ -225,4 +225,34 @@ object CommandLineTool {
   type BaseCommand = String :+: Array[String] :+: CNil
 
   type Argument = ECMAScriptExpression :+: CommandLineBinding :+: String :+: CNil
+}
+
+object ArgumentToCommandPart extends Poly1 {
+  implicit def expr = at[ECMAScriptExpression] {
+    expr =>
+      println("bom")
+      StringCommandPart(???)
+  }
+
+  implicit def clb = at[CommandLineBinding] {
+    clb =>
+
+      //TODO: This option.get will not hold up under scrutiny
+      clb.valueFrom.map(_.fold(StringOrExpressionToCommandPart)).get
+
+      //TODO: Shell Quote = false?
+  }
+
+  implicit def string = at[String] {
+    s => StringCommandPart(s)
+  }
+
+}
+
+object StringOrExpressionToCommandPart extends Poly1 {
+
+  implicit def expression = at[ECMAScriptExpression] {ex => CwlExpressionCommandPart(ex.value):CommandPart}
+
+  implicit def string = at[String] {StringCommandPart(_):CommandPart}
+
 }

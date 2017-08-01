@@ -7,6 +7,7 @@ import shapeless.{Coproduct, Witness}
 import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
 import wdl4s.cwl.CwlVersion.CwlVersion
 import wdl4s.cwl.WorkflowStep.Run
+import wdl4s.cwl.WorkflowStepInput.InputSource
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
@@ -59,8 +60,8 @@ baseCommand: echo
             run = Coproduct[WorkflowStep.Run]("tar-param.cwl"),
             in =
               Array(
-                WorkflowStepInput(id = "tarfile", source = Option(Coproduct[WorkflowStepInputSource]("inp"))),
-                WorkflowStepInput(id = "extractfile", source =  Option(Coproduct[WorkflowStepInputSource]("ex")))
+                WorkflowStepInput(id = "tarfile", source = Option(Coproduct[InputSource]("inp"))),
+                WorkflowStepInput(id = "extractfile", source =  Option(Coproduct[InputSource]("ex")))
               ),
             out = Coproduct[WorkflowStep.Outputs](Array("example_out"))
           ),
@@ -68,7 +69,7 @@ baseCommand: echo
             id = "compile",
             run = Coproduct[WorkflowStep.Run]("arguments.cwl"),
             in = Array(
-                 WorkflowStepInput(id = "src", source = Option(Coproduct[WorkflowStepInputSource]("untar/example_out")))
+                 WorkflowStepInput(id = "src", source = Option(Coproduct[InputSource]("untar/example_out")))
               ),
             out = Coproduct[WorkflowStep.Outputs](Array("classfile"))
           )

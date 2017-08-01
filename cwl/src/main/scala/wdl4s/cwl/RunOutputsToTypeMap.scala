@@ -4,9 +4,15 @@ import shapeless.Poly1
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.wdl.types.WdlType
 
-object RunToTypeMap extends Poly1 {
-  def mungeId(fullyQualifiedId: String): String =
-    fullyQualifiedId.substring(fullyQualifiedId.lastIndexOf("#") + 1,fullyQualifiedId.length())
+object RunOutputsToTypeMap extends Poly1 {
+  def mungeId(fullyQualifiedId: String): String = {
+    val step1 = fullyQualifiedId.substring(fullyQualifiedId.lastIndexOf("#") + 1,fullyQualifiedId.length())
+
+    if (step1.contains("/"))
+      step1.substring(step1.lastIndexOf("/") + 1, step1.length)
+    else
+      step1
+  }
 
   def handleCommandLine(clt: CommandLineTool):Map[String, WdlType] = {
     clt.outputs.toList.foldLeft(Map.empty[String,WdlType]) {

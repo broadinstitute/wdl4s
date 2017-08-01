@@ -10,8 +10,6 @@ trait TypeAliases {
 
   type WorkflowStepInputId = String
 
-  type WorkflowStepInputSource = String :+: Array[String] :+: CNil
-
   type Requirement =
     InlineJavascriptRequirement :+:
       SchemaDefRequirement :+:

@@ -14,8 +14,6 @@ object WorkflowOutputsToOutputDefinition extends Poly1 {
     //we want to only look at the id, not the filename
     val _id = fullyQualifiedName.substring(fullyQualifiedName.lastIndexOf("/") + 1,fullyQualifiedName.length())
 
-    println(s"looking for ${_id} in \n${typeMap.mkString("\n")}")
-
     OutputDefinition(_id, typeMap(_id), PlaceholderExpression(typeMap(_id)))
   }
 

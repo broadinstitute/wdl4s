@@ -23,9 +23,17 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
   "munging the runnable id" should "remove the filename" in {
     val id = "file:///home/dan/common-workflow-language/v1.0/examples/tar-param.cwl#example_out"
 
-    val out = RunToTypeMap.mungeId(id)
+    val out = RunOutputsToTypeMap.mungeId(id)
 
     out shouldBe "example_out"
+  }
+
+  "munging runnable output id " should "be able to skip the path args" in  {
+    val id = "file:///home/dan/common-workflow-language/v1.0/examples/tar-param.cwl#ps/0b4ba500-5584-4fed-a831-9fa6f914ad3f/ps-stdOut"
+
+    val out = RunOutputsToTypeMap.mungeId(id)
+
+    out shouldBe "ps-stdOut"
   }
 
 
