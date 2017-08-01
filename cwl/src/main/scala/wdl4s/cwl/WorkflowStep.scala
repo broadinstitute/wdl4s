@@ -49,20 +49,19 @@ case class WorkflowStep(
   def womCallNode: GraphNode = ???
 
   def taskDefinitionInputs(typeMap: WdlTypeMap):  Set[_ <: Callable.InputDefinition] =
-    in.map{wsi =>
+    in.map{workflowStepInput =>
 
-      val _value: String = wsi.source.flatMap(_.select[String]).get
+      val _source: String = workflowStepInput.source.flatMap(_.select[String]).get
 
       val mungedTypeMap = typeMap map {
         case (id, tpe) => RunToTypeMap.mungeId(id) -> tpe
       }
 
-      val value = WorkflowStep.mungeInputId(_value)
+      val value = WorkflowStep.mungeInputId(_source)
 
       val tpe = mungedTypeMap(value)
-      RequiredInputDefinition(wsi.id, tpe)
+      RequiredInputDefinition(_source, tpe)
     }.toSet
-
 
 
   def taskDefinitionOutputs(cwlMap: Map[String, CwlFile]): Set[Callable.OutputDefinition] = {
@@ -135,12 +134,11 @@ case class WorkflowStep(
         FullyQualifiedName(inputSource) match {
           case WorkflowStepOutputIdReference(_, stepOutputId, stepId) =>
             val (step, (id, tpe)) = lookupStepWithOutput(stepId, stepOutputId)
-            List((workflowStepInput.id -> GraphNodeOutputPort(inputSource, tpe, step.callWithInputs(typeMap, cwlMap, workflow).call)))
+            List((inputSource -> GraphNodeOutputPort(inputSource, tpe, step.callWithInputs(typeMap, cwlMap, workflow).call)))
           case _ => List.empty[(String, GraphNodeOutputPort)]
         }
 
     }.toMap
-
 
     val td = taskDefinition(typeMap, cwlMap)
 

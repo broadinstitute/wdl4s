@@ -133,7 +133,6 @@ name: "file:///home/dan/wdl4s/r.cwl"
             RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#ex", WdlStringType),
             RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#inp", WdlFileType))
 
-
           nodes.collectFirst{
             case compile: CallNode if compile.name == "file:///home/dan/wdl4s/r.cwl#compile" => compile
           }.get.
