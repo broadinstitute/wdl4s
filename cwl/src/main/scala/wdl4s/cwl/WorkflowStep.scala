@@ -132,18 +132,16 @@ case class WorkflowStep(
             .find{
               case (_, (stepOutputId, _)) =>
 
-                val i = RunOutputId(stepOutputId).outputId
-                println(s"looking for $outputId against $i  for stepOUtputId $stepOutputId")
-                 i == outputId
+                RunOutputId(stepOutputId).outputId == outputId
             }.get
         }
 
         val inputSource = workflowStepInput.source.flatMap(_.select[String]).get
 
         FullyQualifiedName(inputSource) match {
-          case WorkflowStepInputSource(_, stepOutputId, stepId) =>
+          case WorkflowStepOutputIdReference(_, stepOutputId, stepId) =>
             val (step, (id, tpe)) = lookupStepWithOutput(stepId, stepOutputId)
-            List((inputSource -> GraphNodeOutputPort(inputSource, tpe, step.callWithInputs(typeMap, cwlMap, workflow).call)))
+            List((inputSource -> GraphNodeOutputPort(workflowStepInput.id, tpe, step.callWithInputs(typeMap, cwlMap, workflow).call)))
           case _ => List.empty[(String, GraphNodeOutputPort)]
         }
 

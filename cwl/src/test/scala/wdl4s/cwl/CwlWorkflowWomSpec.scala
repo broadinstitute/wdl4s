@@ -130,7 +130,7 @@ name: "file:///home/dan/wdl4s/r.cwl"
     def validateWom(ex: Executable) = {
       ex match {
         case Executable(wf: WorkflowDefinition) =>
-          val nodes = wf.innerGraph.withDefaultOutputs.nodes
+          val nodes = wf.innerGraph.nodes
 
           nodes.collect{
             case gin: GraphInputNode => gin.name
@@ -150,7 +150,9 @@ name: "file:///home/dan/wdl4s/r.cwl"
 
           nodes.collectFirst{
             case compile: CallNode if compile.name == "file:///home/dan/wdl4s/r.cwl#compile" => compile
-          }.get.inputPorts.map(_.upstream).head.name shouldBe "file:///home/dan/wdl4s/r.cwl#untar/example_out"
+          }.get.inputPorts.map(_.upstream).head.name shouldBe "file:///home/dan/wdl4s/r.cwl#compile/src"
+
+          //TODO: test for outputs
       }
     }
 
@@ -165,12 +167,12 @@ inputs:
 - id: file:///Users/danb/wdl4s/r.cwl#pattern
   type: string
 outputs:
-- id: file:///Users/danb/wdl4s/r.cwl#cgrep-stdOut
-  outputSource: file:///Users/danb/wdl4s/r.cwl#cgrep/cgrep-stdOut
-  type: File
-- id: file:///Users/danb/wdl4s/r.cwl#wc-stdOut
-  outputSource: file:///Users/danb/wdl4s/r.cwl#wc/wc-stdOut
-  type: File
+- id: file:///Users/danb/wdl4s/r.cwl#cgrep-count
+  outputSource: file:///Users/danb/wdl4s/r.cwl#cgrep/cgrep-count
+  type: int
+- id: file:///Users/danb/wdl4s/r.cwl#wc-count
+  outputSource: file:///Users/danb/wdl4s/r.cwl#wc/wc-count
+  type: int
 steps:
 - id: file:///Users/danb/wdl4s/r.cwl#ps
   in: []
@@ -194,7 +196,7 @@ steps:
   - id: file:///Users/danb/wdl4s/r.cwl#cgrep/file
     source: file:///Users/danb/wdl4s/r.cwl#ps/ps-stdOut
   out:
-  - id: file:///Users/danb/wdl4s/r.cwl#cgrep/cgrep-stdOut
+  - id: file:///Users/danb/wdl4s/r.cwl#cgrep/cgrep-count
   run:
     inputs:
     - id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875/pattern
@@ -202,10 +204,12 @@ steps:
     - id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875/file
       type: File
     outputs:
-    - id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875/cgrep-stdOut
+    - id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875/cgrep-count
       outputBinding:
         glob: cgrep-stdOut.txt
-      type: File
+        loadContents: true
+        outputEval: $(self[0].contents.toInt)
+      type: int
     class: CommandLineTool
     requirements:
     - class: ShellCommandRequirement
@@ -230,16 +234,18 @@ steps:
   - id: file:///Users/danb/wdl4s/r.cwl#wc/file
     source: file:///Users/danb/wdl4s/r.cwl#ps/ps-stdOut
   out:
-  - id: file:///Users/danb/wdl4s/r.cwl#wc/wc-stdOut
+  - id: file:///Users/danb/wdl4s/r.cwl#wc/wc-count
   run:
     inputs:
     - id: file:///Users/danb/wdl4s/r.cwl#wc/45d98851-7bfe-473e-ab24-aac922553f3e/file
       type: File
     outputs:
-    - id: file:///Users/danb/wdl4s/r.cwl#wc/45d98851-7bfe-473e-ab24-aac922553f3e/wc-stdOut
+    - id: file:///Users/danb/wdl4s/r.cwl#wc/45d98851-7bfe-473e-ab24-aac922553f3e/wc-count
       outputBinding:
         glob: wc-stdOut.txt
-      type: File
+        loadContents: true
+        outputEval: $(self[0].contents.toInt)
+      type: int
     class: CommandLineTool
     requirements:
     - class: ShellCommandRequirement
@@ -269,19 +275,23 @@ id: file:///Users/danb/wdl4s/r.cwl
       case o => fail(s"invalid executable $o")
     }
 
-    val workflowGraph = wf.graph match {
-      case Valid(g) => g
-      case Invalid(errors) => fail(s"Unable to build wom version of 3step from WDL: ${errors.toList.mkString("\n", "\n", "\n")}")
-    }
+    val nodes = wf.innerGraph.nodes
 
-    workflowGraph.nodes collect { case gin: GraphInputNode => gin.name } should be(Set("cgrep.pattern"))
-    workflowGraph.nodes collect { case gon: GraphOutputNode => gon.name } should be(Set("wc.count", "cgrep.count", "ps.procs"))
-    workflowGraph.nodes collect { case cn: CallNode => cn.name } should be(Set("wc", "cgrep", "ps"))
+    nodes collect { case gin: GraphInputNode => gin.name } should be(Set("file:///Users/danb/wdl4s/r.cwl#pattern"))
+    nodes collect { case gon: GraphOutputNode => gon.name } should be(Set(
+      "file:///Users/danb/wdl4s/r.cwl#cgrep-count",
+      "file:///Users/danb/wdl4s/r.cwl#wc-count"
+    ))
+    nodes collect { case cn: CallNode => cn.name } should be(
+      Set(
+        "file:///Users/danb/wdl4s/r.cwl#ps",
+        "file:///Users/danb/wdl4s/r.cwl#cgrep",
+        "file:///Users/danb/wdl4s/r.cwl#wc"))
 
-    val ps = workflowGraph.nodes.collectFirst({ case ps: CallNode if ps.name == "ps" => ps }).get
-    val cgrep = workflowGraph.nodes.collectFirst({ case cgrep: CallNode if cgrep.name == "cgrep" => cgrep }).get
-    val cgrepPatternInput = workflowGraph.nodes.collectFirst({ case cgrepInput: GraphInputNode if cgrepInput.name == "cgrep.pattern" => cgrepInput }).get
-    val wc = workflowGraph.nodes.collectFirst({ case wc: CallNode if wc.name == "wc" => wc }).get
+    val ps = nodes.collectFirst({ case ps: CallNode if ps.name == "file:///Users/danb/wdl4s/r.cwl#ps" => ps }).get
+    val cgrep = nodes.collectFirst({ case cgrep: CallNode if cgrep.name == "file:///Users/danb/wdl4s/r.cwl#cgrep" => cgrep }).get
+    val cgrepPatternInput = nodes.collectFirst({ case cgrepInput: GraphInputNode if cgrepInput.name == "file:///Users/danb/wdl4s/r.cwl#pattern" => cgrepInput }).get
+    val wc = nodes.collectFirst({ case wc: CallNode if wc.name == "file:///Users/danb/wdl4s/r.cwl#wc" => wc }).get
 
     ps.upstream shouldBe empty
     cgrep.upstream shouldBe Set(ps, cgrepPatternInput)

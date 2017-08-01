@@ -23,8 +23,8 @@ import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.executable.Executable
 import wdl4s.wom.expression.{Expression, PlaceholderExpression}
-import wdl4s.wom.graph.{CallNode, Graph, GraphNode, RequiredGraphInputNode}
-
+import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
+import wdl4s.wom.graph._
 
 sealed trait CwlFile {
 
@@ -44,6 +44,8 @@ case class Workflow(
     (acc, s) => acc ++ s.typedOutputs(cwlMap)
   }
 
+  lazy val stepById: Map[String, WorkflowStep] = steps.map(ws => ws.id -> ws).toMap
+
 
   def womGraph(cwlMap: Map[String, CwlFile]): ErrorOr[Graph] = {
     val map: WdlTypeMap =
@@ -59,10 +61,23 @@ case class Workflow(
         input.`type`.flatMap(_.select[CwlType].map(cwlTypeToWdlType)).map(RequiredGraphInputNode(input.id, _)).get
     }.toSet
 
-    val graphFromOutputs: Set[GraphNode] = Set.empty
-//      outputs.map{
- //     output =>
-  //  }
+
+    val graphFromOutputs: Set[GraphNode] =
+      outputs.map {
+        output =>
+          val tpe = cwlTypeToWdlType(output.`type`.flatMap(_.select[CwlType]).get)
+          def lookupOutputSource(source: String): OutputPort = {
+            val workflowOutput = WorkflowStepOutputIdReference(source)
+            val node = stepById(s"${workflowOutput.fileName}#${workflowOutput.stepId}").callWithInputs(map, cwlMap, this).call
+
+            GraphNodeOutputPort(output.id,tpe, node)
+          }
+          GraphOutputNode(
+            output.id,
+            tpe,
+            lookupOutputSource(output.outputSource.flatMap(_.select[String]).get)
+          )
+      }.toSet
 
     Graph.validateAndConstruct(graphFromSteps ++ graphFromInputs ++ graphFromOutputs)
   }
@@ -130,20 +145,8 @@ case class CommandLineTool(
                             temporaryFailCodes: Option[Array[Int]] = None,
                             permanentFailCodes: Option[Array[Int]] = None) extends CwlFile {
 
-  def womExecutable: ErrorOr[Executable] = {
+  def womExecutable: ErrorOr[Executable] =
     Valid(Executable(taskDefinition))
-    //Graph.validateAndConstruct(womNode).map(Executable.apply)
-
-  }
-  /*
-    Graph.
-      validateAndConstruct(womNode).
-      map(graph =>  WorkflowDefinition("some workflow name", graph, Map.empty, Map.empty, List.empty)).
-      map(Executable(_))
-      */
-
-
-
 
 
   object BaseCommandToString extends Poly1 {
@@ -180,6 +183,9 @@ case class CommandLineTool(
     val meta: Map[String, String] = Map.empty
     val parameterMeta: Map[String, String] = Map.empty
 
+    //TODO: This output does _not_ capture expressions from the output.outputBinding
+    //The implementation must include the expression evaluation pieces as detailed in:
+    //http://www.commonwl.org/v1.0/CommandLineTool.html#CommandOutputBinding
     val outputs: Set[Callable.OutputDefinition] = this.outputs.map {
       output =>
         val tpe = output.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get //<-- here be `get` dragons
@@ -188,8 +194,12 @@ case class CommandLineTool(
 
     val inputs: Set[_ <: Callable.InputDefinition] =
       this.inputs.map{ cip =>
-          val tpe = cip.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get
-          RequiredInputDefinition(cip.id, tpe)
+        val tpe = cip.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get
+
+        //TODO: This id includes the filename, which makes assigning input values more laborious
+        //We should consider dropping filenames for _all_ ids, as long as we can guarantee uniqueness
+        val inputId = cip.id
+        RequiredInputDefinition(inputId, tpe)
       }.toSet
 
     val declarations: List[(String, Expression)] = List.empty
@@ -227,32 +237,3 @@ object CommandLineTool {
   type Argument = ECMAScriptExpression :+: CommandLineBinding :+: String :+: CNil
 }
 
-object ArgumentToCommandPart extends Poly1 {
-  implicit def expr = at[ECMAScriptExpression] {
-    expr =>
-      println("bom")
-      StringCommandPart(???)
-  }
-
-  implicit def clb = at[CommandLineBinding] {
-    clb =>
-
-      //TODO: This option.get will not hold up under scrutiny
-      clb.valueFrom.map(_.fold(StringOrExpressionToCommandPart)).get
-
-      //TODO: Shell Quote = false?
-  }
-
-  implicit def string = at[String] {
-    s => StringCommandPart(s)
-  }
-
-}
-
-object StringOrExpressionToCommandPart extends Poly1 {
-
-  implicit def expression = at[ECMAScriptExpression] {ex => CwlExpressionCommandPart(ex.value):CommandPart}
-
-  implicit def string = at[String] {StringCommandPart(_):CommandPart}
-
-}

@@ -7,14 +7,8 @@ import wdl4s.wom.graph.GraphNodePort.InputPort
 /**
   * A sealed set of graph nodes.
   */
-final case class Graph private(nodes: Set[GraphNode]) {
-  def withDefaultOutputs: Graph = {
-    val defaultOutputs: Set[GraphNode] = (nodes collect {
-      case callNode: CallNode => callNode.outputPorts.map(op => GraphOutputNode(s"${callNode.name}.${op.name}", op.womType, op))
-    }).flatten
-    Graph(nodes.union(defaultOutputs))
-  }
-}
+final case class Graph private(nodes: Set[GraphNode])
+
 
 object Graph {
 

@@ -35,14 +35,14 @@ object WorkflowStepOutputId {
 }
 
 
-case class WorkflowStepInputSource(fileName: String, stepOutputId: String, stepId: String) extends FullyQualifiedName
+case class WorkflowStepOutputIdReference(fileName: String, stepOutputId: String, stepId: String) extends FullyQualifiedName
 
-object WorkflowStepInputSource {
-  def apply(in: String): WorkflowStepInputSource = {
+object WorkflowStepOutputIdReference {
+  def apply(in: String): WorkflowStepOutputIdReference = {
     val Array(fileName, stepAndid) = in.split("#")
     val Array(step, id) = stepAndid.split("/")
 
-    WorkflowStepInputSource(fileName, id, step)
+    WorkflowStepOutputIdReference(fileName, id, step)
   }
 }
 
@@ -72,7 +72,7 @@ object FullyQualifiedName {
    val Array(ignored, after) = in.split("#")
 
    if (after.contains("/"))
-     WorkflowStepInputSource(in)
+     WorkflowStepOutputIdReference(in)
     else
      WorkflowInputId(in)
   }
