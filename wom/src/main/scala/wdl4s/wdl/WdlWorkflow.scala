@@ -9,7 +9,7 @@ import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlType
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.callable.WorkflowDefinition
-import wdl4s.wom.graph.{Graph, GraphNode}
+import wdl4s.wom.graph.{CallNode, Graph, GraphNode, GraphOutputNode}
 
 import scala.language.postfixOps
 import scala.util.Try
@@ -55,10 +55,18 @@ object WdlWorkflow {
     })
 
     Graph.validateAndConstruct(graphNodes) match {
-      case Valid(wg) => wg.withDefaultOutputs
+      case Valid(wg) =>
+        //TODO: These outputs are being auto-generated.  It seems the case where outputs are explicitly stated is not being handled?
+          val defaultOutputs: Set[GraphNode] = (wg.nodes collect {
+            case callNode: CallNode => callNode.outputPorts.map(op => GraphOutputNode(s"${callNode.name}.${op.name}", op.womType, op))
+          }).flatten
+
+          Graph(wg.nodes.union(defaultOutputs))
       case Invalid(errors) => throw ValidationException("Unable to validate graph", errors.map(new Exception(_)).toList)
     }
   }
+
+
 
   /**
     * Convert this WdlWorkflow into a wom.components.Workflow

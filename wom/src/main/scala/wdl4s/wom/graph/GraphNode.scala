@@ -75,6 +75,7 @@ object GraphNode {
     * @return The new input port, and a GraphInputNode if we needed to make one. Wrapped in a case class.
     */
   private[graph] def linkInputPort(inputPrefix: String, inputMapping: Map[String, OutputPort], callNodeRef: Unit => GraphNode)(inputDefinition: Callable.InputDefinition): LinkedInputPort = {
+
     val (outputPort, graphNode): (OutputPort, Option[GraphInputNode]) = inputDefinition match {
       case input if inputMapping.contains(input.name) => (inputMapping(input.name), None)
       case RequiredInputDefinition(n, womType) =>
@@ -88,7 +89,7 @@ object GraphNode {
         (result.singleOutputPort, Option(result)) // Read: Some(result)
     }
 
-    LinkedInputPort(ConnectedInputPort(inputDefinition.name, inputDefinition.womType, outputPort, callNodeRef), graphNode)
+    LinkedInputPort(ConnectedInputPort(inputDefinition.name, inputDefinition.womType, outputPort)(callNodeRef), graphNode)
   }
 
   private[wom] implicit class EnhancedGraphNodeSet(val nodes: Set[GraphNode]) extends AnyVal {
