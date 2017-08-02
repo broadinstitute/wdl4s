@@ -1,17 +1,14 @@
 package wdl4s.cwl
 
-import io.circe.yaml.Printer
-import shapeless.syntax.singleton._
 import org.scalatest.{FlatSpec, Matchers}
-import shapeless.{Coproduct, Witness}
+import shapeless.Coproduct
+import shapeless.syntax.singleton._
 import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
-import wdl4s.cwl.CwlVersion.CwlVersion
-import wdl4s.cwl.WorkflowStep.Run
 import wdl4s.cwl.WorkflowStepInput.InputSource
 
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
 
-  def assertCorrectJson(cwl: CwlFile, expectedYaml: String): Unit = CwlCodecs.cwlToYaml(cwl) shouldBe expectedYaml
+  def assertCorrectJson(cwl: CwlFile, expectedYaml: String) = CwlCodecs.cwlToYaml(cwl) shouldBe expectedYaml
 
   it should "encode sample CWL command line tool" in {
     val tool =
@@ -44,13 +41,11 @@ baseCommand: echo
           InputParameter(id = "inp", `type` = Option(Coproduct[MyriadInputType](CwlType.File))),
           InputParameter(id = "ex", `type` = Option(Coproduct[MyriadInputType](CwlType.String))),
         ),
-      outputs = (
-        Array(
-           WorkflowOutputParameter(
-            id = "classout",
-            `type` = Option(Coproduct[MyriadOutputType](CwlType.File)),
-            outputSource = Option(Coproduct[WorkflowOutputParameter#OutputSource]("compile/classfile"))
-          )
+      outputs = Array(
+        WorkflowOutputParameter(
+          id = "classout",
+          `type` = Option(Coproduct[MyriadOutputType](CwlType.File)),
+          outputSource = Option(Coproduct[WorkflowOutputParameter#OutputSource]("compile/classfile"))
         )
       ),
       steps =

@@ -1,12 +1,12 @@
 package wdl4s.cwl
 
 import shapeless._
-import wdl4s.wdl.command.{CommandPart, CwlExpressionCommandPart, StringCommandPart}
+import wdl4s.wdl.command.StringCommandPart
 
 object ArgumentToCommandPart extends Poly1 {
   implicit def expr = at[ECMAScriptExpression] {
     expr =>
-      StringCommandPart(???)
+      StringCommandPart(null)
   }
 
   implicit def clb = at[CommandLineBinding] {

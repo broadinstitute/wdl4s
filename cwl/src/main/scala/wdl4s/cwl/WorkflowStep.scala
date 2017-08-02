@@ -1,18 +1,18 @@
 package wdl4s.cwl
 
-import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
+import shapeless.{:+:, CNil}
+import wdl4s.cwl.CwlType.CwlType
+import wdl4s.cwl.ScatterMethod._
+import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 import wdl4s.wdl.command.CommandPart
-import wdl4s.wom.callable.Callable.{InputDefinition, RequiredInputDefinition}
+import wdl4s.wdl.types.WdlType
+import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
+import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.expression.Expression
-import wdl4s.wom.graph.{CallNode, GraphNode, RequiredGraphInputNode}
-import shapeless.{:+:, CNil}
-import ScatterMethod._
-import wdl4s.cwl.CwlType.CwlType
-import wdl4s.cwl.WorkflowStep.{Outputs, Run}
-import wdl4s.wdl.types.WdlType
 import wdl4s.wom.graph.CallNode.CallWithInputs
 import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
+import wdl4s.wom.graph.{CallNode, GraphNode, RequiredGraphInputNode}
 
 /**
   * An individual job to run.
@@ -140,8 +140,8 @@ case class WorkflowStep(
 
         FullyQualifiedName(inputSource) match {
           case WorkflowStepOutputIdReference(_, stepOutputId, stepId) =>
-            val (step, (id, tpe)) = lookupStepWithOutput(stepId, stepOutputId)
-            List((inputSource -> GraphNodeOutputPort(workflowStepInput.id, tpe, step.callWithInputs(typeMap, cwlMap, workflow).call)))
+            val (step, (_, tpe)) = lookupStepWithOutput(stepId, stepOutputId)
+            List(inputSource -> GraphNodeOutputPort(workflowStepInput.id, tpe, step.callWithInputs(typeMap, cwlMap, workflow).call))
           case _ => List.empty[(String, GraphNodeOutputPort)]
         }
 

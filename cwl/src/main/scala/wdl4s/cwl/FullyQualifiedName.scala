@@ -69,7 +69,7 @@ object RunOutputId {
 object FullyQualifiedName {
   def apply(in: String): FullyQualifiedName = {
 
-   val Array(ignored, after) = in.split("#")
+   val Array(_, after) = in.split("#")
 
    if (after.contains("/"))
      WorkflowStepOutputIdReference(in)

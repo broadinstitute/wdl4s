@@ -43,7 +43,7 @@ object GraphNodePort {
     *               by identity and identities are likely to be unequal for legitimately equal `ConnectedInputPort`s.
     */
   final case class ConnectedInputPort(name: String, womType: WdlType, upstream: OutputPort)(setter: Unit => GraphNode) extends InputPort with DelayedGraphNodePort {
-    override def g(): GraphNode = setter.apply()
+    override def g(): GraphNode = setter.apply(())
   }
 
   /**
@@ -56,7 +56,7 @@ object GraphNodePort {
     * Represents the gathered output from a call/declaration in a scatter.
     */
   final case class ScatterGathererPort(name: String, womType: WdlArrayType, outputToGather: GraphOutputNode)(setter: Unit => GraphNode) extends OutputPort with DelayedGraphNodePort {
-    override def g(): GraphNode = setter()
+    override def g(): GraphNode = setter(())
   }
 
   final case class ConditionalOutputPort(name: String, womType: WdlOptionalType, outputToExpose: OutputPort, graphNode: GraphNode) extends OutputPort

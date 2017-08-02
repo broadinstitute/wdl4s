@@ -1,11 +1,8 @@
 package wdl4s.cwl
 
 import cats.data.Validated.{Invalid, Valid}
-import cats.syntax.traverse._
-import cats.instances.list._
 import org.scalatest.{FlatSpec, Matchers}
 import wdl4s.wdl.types.{WdlFileType, WdlStringType}
-import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
 import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.executable.Executable
@@ -52,26 +49,28 @@ outputs: []
 """.stripMargin
 
     CwlCodecs.decodeCwl(firstTool) match {
-      case Right(clt:CommandLineTool) =>
-        clt.womExecutable match{
+      case Right((clt: CommandLineTool, _)) =>
+        clt.womExecutable match {
           case Valid(wom) =>
-            wom.entryPoint match{
+            wom.entryPoint match {
               case workflow: TaskDefinition =>
 
                 workflow.inputs shouldBe Set(RequiredInputDefinition("message", WdlStringType))
 
-                workflow.graph.map{
+                workflow.graph.map {
                   graph =>
-                    graph.nodes.collect{ case gin: GraphInputNode => gin.name } should be(Set("echo.message"))
+                    graph.nodes.collect { case gin: GraphInputNode => gin.name } should be(Set("echo.message"))
                     graph.nodes collect { case cn: CallNode => cn.name } should be(Set("echo"))
 
-                    graph.nodes.collectFirst{ case echo: CallNode if echo.name == "echo" => echo }.get.
+                    graph.nodes.collectFirst { case echo: CallNode if echo.name == "echo" => echo }.get.
                       upstream shouldBe Set(RequiredGraphInputNode("echo.message", WdlStringType))
                 }
 
-              case  _ => fail("not a workflow")
+              case _ => fail("not a workflow")
             }
+          case i@Invalid(_) => fail(s"Invalid: $i")
         }
+      case Right((wth: Any, _)) => fail(s"parsed unexpected type $wth")
       case Left(error) => fail(s"did not parse!  $error")
     }
   }
@@ -118,12 +117,13 @@ name: "file:///home/dan/wdl4s/r.cwl"
     import CwlCodecs._
 
 
-    decodeCwlX(firstWorkflow) match {
-      case Right((workflow:Workflow, map:Map[String, CwlFile])) =>
+    decodeCwl(firstWorkflow) match {
+      case Right((workflow: Workflow, map: Map[String, CwlFile])) =>
         workflow.womExecutable(map) match {
           case Valid(ex) => validateWom(ex)
           case e => fail(s"executable was not created $e")
         }
+      case Right((wth: Any, _)) => fail(s"Parsed unexpected type $wth")
       case Left(error) => fail(s"did not parse!  $error")
     }
 
@@ -153,9 +153,9 @@ name: "file:///home/dan/wdl4s/r.cwl"
           }.get.inputPorts.map(_.upstream).head.name shouldBe "file:///home/dan/wdl4s/r.cwl#compile/src"
 
           //TODO: test for outputs
+        case Executable(wth: Any) => fail(s"Parsed unexpected executable: $wth")
       }
     }
-
   }
 
   "A WdlNamespace for 3step" should "provide conversion to WOM" in {
@@ -267,7 +267,7 @@ id: file:///Users/danb/wdl4s/r.cwl
       """.stripMargin
 
     val workflow = CwlCodecs.decodeCwl(threeStep) match {
-      case Right(wf: Workflow) => wf
+      case Right((wf: Workflow, _)) => wf
       case o => fail(s"didn't parse a workflow! $o")
     }
     val wf = workflow.womExecutable(Map.empty) match {
