@@ -3,6 +3,7 @@ package wdl4s.wdl.wom
 import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{FlatSpec, Matchers}
 import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
+import wdl4s.wom.expression.WomExpression
 import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphOutputNode}
 
 class WdlNamespaceWomSpec extends FlatSpec with Matchers {
@@ -44,7 +45,7 @@ class WdlNamespaceWomSpec extends FlatSpec with Matchers {
         |workflow three_step {
         |  call ps
         |  call cgrep {
-        |    input: in_file = ps.procs
+        |    input: in_file = ps.procs + "hello"
         |  }
         |  call wc {
         |    input: in_file = ps.procs
@@ -66,12 +67,16 @@ class WdlNamespaceWomSpec extends FlatSpec with Matchers {
     
     val ps = workflowGraph.nodes.collectFirst({ case ps: CallNode if ps.name == "ps" => ps }).get
     val cgrep = workflowGraph.nodes.collectFirst({ case cgrep: CallNode if cgrep.name == "cgrep" => cgrep }).get
+    val cgrepInFileExpression = workflowGraph.nodes.collectFirst({ case cgrepExpression: WomExpression if cgrepExpression.name == "cgrep.in_file.expression" => cgrepExpression }).get
     val cgrepPatternInput = workflowGraph.nodes.collectFirst({ case cgrepInput: GraphInputNode if cgrepInput.name == "cgrep.pattern" => cgrepInput }).get
+    val wcInFileExpression = workflowGraph.nodes.collectFirst({ case wcExpression: WomExpression if wcExpression.name == "wc.in_file.expression" => wcExpression }).get
     val wc = workflowGraph.nodes.collectFirst({ case wc: CallNode if wc.name == "wc" => wc }).get
     
     ps.upstream shouldBe empty
-    cgrep.upstream shouldBe Set(ps, cgrepPatternInput)
-    wc.upstream shouldBe Set(ps)
+    cgrepInFileExpression.upstream shouldBe Set(ps)
+    cgrep.upstream shouldBe Set(cgrepInFileExpression, cgrepPatternInput)
+    wcInFileExpression.upstream shouldBe Set(ps)
+    wc.upstream shouldBe Set(wcInFileExpression)
   }
 
 }

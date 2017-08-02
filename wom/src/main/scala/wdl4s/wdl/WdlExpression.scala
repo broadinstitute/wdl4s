@@ -3,13 +3,18 @@ package wdl4s.wdl
 import wdl4s.parser.WdlParser
 import wdl4s.parser.WdlParser.{Ast, AstList, AstNode, Terminal}
 import wdl4s.wdl.AstTools.{EnhancedAstNode, VariableReference}
+import wdl4s.wdl.WdlCall.outputPortFromNode
 import wdl4s.wdl.WdlExpression._
-import wdl4s.wdl.expression._
+import wdl4s.wdl.expression.{WdlFunctions, _}
 import wdl4s.wdl.formatter.{NullSyntaxHighlighter, SyntaxHighlighter}
 import wdl4s.wdl.types._
 import wdl4s.wdl.values._
+import wdl4s.wom.expression.{IoFunctions, VariableLookupContext, WomExpression}
+import wdl4s.wom.graph.GraphNodePort
+import wdl4s.wom.graph.GraphNodePort.{ConnectedInputPort, GraphNodeOutputPort, InputPort}
 
 import scala.collection.JavaConverters._
+import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.Try
 
@@ -18,6 +23,24 @@ class WdlExpressionException(message: String = null, cause: Throwable = null) ex
 case object NoLookup extends ScopedLookupFunction {
   def apply(value: String): WdlValue =
     throw new UnsupportedOperationException(s"No identifiers should be looked up: $value")
+}
+
+class WdlWomExpression(attachedNode: WdlGraphNode, wdlExpression: WdlExpression) extends WomExpression {
+  override lazy val name = wdlExpression.name
+  
+  override def evaluate(variableLookupContext: VariableLookupContext, ioFunctions: IoFunctions): Future[WdlValue] = {
+    // TODO figure out functions
+    val lf = attachedNode.womLookupFunction(variableLookupContext.inputs, NoFunctions, variableLookupContext.outputResolver, Map.empty, attachedNode)
+    Future.fromTry(wdlExpression.evaluate(lf, NoFunctions))
+  }
+  override lazy val inputPorts: Set[InputPort] = wdlExpression.variablesToOutputPort map {
+    case (inputName, outputPort) => ConnectedInputPort(inputName, outputPort.womType, outputPort, _ => this)
+  } toSet
+
+  override lazy val outputPorts: Set[GraphNodePort.GraphNodeOutputPort] = {
+    // TODO figure something out for name and type here
+    Set(GraphNodeOutputPort(wdlExpression + ".output", WdlAnyType, this))
+  }
 }
 
 object WdlExpression {
@@ -94,7 +117,7 @@ object WdlExpression {
     val tokens = parser.lex(expression, "string")
     val terminalMap = (tokens.asScala.toVector map {(_, expression)}).toMap
     val parseTree = parser.parse_e(tokens, WdlSyntaxErrorFormatter(terminalMap))
-    new WdlExpression(parseTree.toAst)
+    new WdlExpression(parseTree.toAst, "N/A")
   }
 
   def toString(ast: AstNode, highlighter: SyntaxHighlighter = NullSyntaxHighlighter): String = {
@@ -157,10 +180,22 @@ object WdlExpression {
         s"${highlighter.function(a.name)}(${params.mkString(", ")})"
     }
   }
+  
+  // TODO: Does the name need to be set later so we can use the FQN of nodes instead of LQNs ?
+  def apply(ast: AstNode, name: String): WdlExpression = {
+    new WdlExpression(ast, name + ".expression")
+  }
 }
 
-case class WdlExpression(ast: AstNode) extends WdlValue {
+case class WdlExpression private (ast: AstNode, name: String) extends WdlValue {
   override val wdlType = WdlExpressionType
+  
+  private var attachedToNode: Option[WdlGraphNode] = None
+  
+  def attachToNode(wdlGraphNode: WdlGraphNode) = attachedToNode match {
+    case None => attachedToNode = Option(wdlGraphNode)
+    case Some(_) => throw new IllegalStateException("WdlExpression can only be attached to a node once at construction time.")
+  }
 
   def evaluate(lookup: ScopedLookupFunction, functions: WdlFunctions[WdlValue]): Try[WdlValue] =
     WdlExpression.evaluate(ast, lookup, functions)
@@ -182,8 +217,23 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
   def prerequisiteCallNames: Set[FullyQualifiedName] = {
     this.topLevelMemberAccesses map { _.lhs }
   }
+  
   def topLevelMemberAccesses: Set[MemberAccess] = AstTools.findTopLevelMemberAccesses(ast) map { MemberAccess(_) } toSet
+
   def variableReferences: Iterable[VariableReference] = AstTools.findVariableReferences(ast)
+
+  lazy val variablesToOutputPort: Map[String, GraphNodeOutputPort] = (for {
+    variable <- variableReferences
+    node <- attachedToNode
+    node <- node.resolveVariable(variable.terminal.sourceString)
+    outputPort = outputPortFromNode(node, variable.terminalSubIdentifier)
+  } yield variable.name -> outputPort).toMap
+  
+  lazy val toWomExpression: WdlWomExpression = attachedToNode match {
+    case Some(node) => new WdlWomExpression(node, this)
+    case None => throw new Exception("Cannot convert WdlExpression to WomExpression without a attaching this expression to its WdlGraphNode.")
+  }
+  
 }
 
 object TernaryIf {

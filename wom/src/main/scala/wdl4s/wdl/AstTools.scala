@@ -246,6 +246,8 @@ object AstTools {
         && a.getAttribute("lhs") == terminal
         && a.getAttribute("rhs").isTerminal => a.getAttribute("rhs").asInstanceOf[Terminal]
     }
+    
+    lazy val name = terminal.sourceString + terminalSubIdentifier.map("." + _).getOrElse("")
   }
 
   /**

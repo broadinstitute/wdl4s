@@ -6,7 +6,7 @@ import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
 
 object CallOutput {
   def buildOutputPort(callOutput: CallOutput) = {
-    GraphNodeOutputPort(callOutput.unqualifiedName, callOutput.wdlType, callOutput.call.womCallNode)
+    GraphNodeOutputPort(callOutput.unqualifiedName, callOutput.wdlType, callOutput.call.toWomNode)
   }
 }
 

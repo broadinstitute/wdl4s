@@ -30,19 +30,23 @@ object WdlCall {
       throw new SyntaxError(wdlSyntaxErrorFormatter.callReferencesBadTaskName(ast, taskName))
     }
 
-    val callInputSectionMappings = processCallInput(ast, wdlSyntaxErrorFormatter)
+    val callInputSectionMappings = processCallInput(ast, wdlSyntaxErrorFormatter, alias.getOrElse(taskName))
 
-    callable match {
+    val call = callable match {
       case task: WdlTask => WdlTaskCall(alias, task, callInputSectionMappings, ast)
       case workflow: WdlWorkflow => WdlWorkflowCall(alias, workflow, callInputSectionMappings, ast)
     }
+    
+    call.inputMappings.values.foreach(_.attachToNode(call))
+    
+    call
   }
 
   private def processCallInput(ast: Ast,
-                               wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Map[String, WdlExpression] = {
+                               wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, callName: String): Map[String, WdlExpression] = {
     AstTools.callInputSectionIOMappings(ast, wdlSyntaxErrorFormatter) map { a =>
       val key = a.getAttribute("key").sourceString
-      val expression = new WdlExpression(a.getAttribute("value"))
+      val expression = WdlExpression(a.getAttribute("value"), callName + "." + key)
       (key, expression)
     } toMap
   }
@@ -50,16 +54,13 @@ object WdlCall {
   private def buildWomNodeAndInputs(wdlCall: WdlCall): CallWithInputs = {
     val inputToOutputPort: Map[String, GraphNodeOutputPort] = for {
       (inputName, expr) <- wdlCall.inputMappings
-      variable <- expr.variableReferences
-      parent <- wdlCall.parent
-      node <- parent.resolveVariable(variable.terminal.sourceString)
-      outputPort = outputPortFromNode(node, variable.terminalSubIdentifier)
+      outputPort = expr.toWomExpression.outputPorts.head
     } yield inputName -> outputPort
 
     CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), wdlCall.callable.womDefinition, inputToOutputPort)
   }
 
-  private def outputPortFromNode(node: WdlGraphNode, terminal: Option[Terminal]): GraphNodeOutputPort = {
+  def outputPortFromNode(node: WdlGraphNode, terminal: Option[Terminal]): GraphNodeOutputPort = {
     (node, terminal) match {
       case (wdlCall: WdlCall, Some(subTerminal)) =>
         wdlCall.womGraphOutputPorts.find(_.name == subTerminal.sourceString) getOrElse {
@@ -94,9 +95,11 @@ sealed abstract class WdlCall(val alias: Option[String],
 
   private lazy val CallWithInputs(womNode, womInputs) = WdlCall.buildWomNodeAndInputs(this)
 
-  lazy val womCallNode: CallNode = womNode
+  override lazy val toWomNode: CallNode = womNode
 
   lazy val womGraphInputNodes: Set[GraphInputNode] = womInputs
+  
+  lazy val mappingsExpressionNodes = inputMappings.values.map(_.toWomExpression)
 
   lazy val womGraphOutputPorts: Seq[GraphNodeOutputPort] = outputs.map(_.toWomOutputPort)
 
@@ -131,7 +134,7 @@ sealed abstract class WdlCall(val alias: Option[String],
     */
   def evaluateTaskInputs(inputs: WorkflowCoercedInputs,
                          wdlFunctions: WdlFunctions[WdlValue],
-                         outputResolver: OutputResolver = NoOutputResolver,
+                         outputResolver: WdlOutputResolver = NoOutputResolver,
                          shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): Try[EvaluatedTaskInputs] = {
 
     type EvaluatedDeclarations = Map[Declaration, Try[WdlValue]]
@@ -173,7 +176,7 @@ sealed abstract class WdlCall(val alias: Option[String],
     */
   override def lookupFunction(inputs: WorkflowCoercedInputs,
                               wdlFunctions: WdlFunctions[WdlValue],
-                              outputResolver: OutputResolver = NoOutputResolver,
+                              outputResolver: WdlOutputResolver = NoOutputResolver,
                               shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
                               relativeTo: Scope = this): String => WdlValue = {
     def lookup(name: String): WdlValue = {

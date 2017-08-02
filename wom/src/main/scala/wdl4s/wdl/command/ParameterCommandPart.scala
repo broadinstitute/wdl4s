@@ -17,7 +17,7 @@ object ParameterCommandPart {
       val ast = a.asInstanceOf[Ast]
       (ast.getAttribute("key").sourceString, ast.getAttribute("value").sourceString)
     } toMap
-    val expression = WdlExpression(ast.getAttribute("expr"))
+    val expression = WdlExpression(ast.getAttribute("expr"), "N/A")
     if ((attributes.contains("true") && !attributes.contains("false")) || (attributes.contains("false") && !attributes.contains("true"))) {
       // .head because we can't get here without there being at least one attribute
       val firstAttr = ast.getAttribute("attributes").astListAsVector.head.asInstanceOf[Ast].getAttribute("key").asInstanceOf[Terminal]

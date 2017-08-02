@@ -14,7 +14,9 @@ package object wdl {
   type LocallyQualifiedName = String
   type EvaluatedTaskInputs = Map[Declaration, WdlValue]
   type ImportResolver = String => WorkflowSource
-  type OutputResolver = (WdlGraphNode, Option[Int]) => Try[WdlValue]
+  
+  case class WdlNodeAtShard(node: WdlGraphNode, shard: Option[Int])
+  type WdlOutputResolver = WdlNodeAtShard => Try[WdlValue]
 
-  val NoOutputResolver: OutputResolver = (node: WdlGraphNode, i: Option[Int]) => Failure(OutputVariableLookupException(node, i))
+  val NoOutputResolver: WdlOutputResolver = (nodeAtShard: WdlNodeAtShard) => Failure(OutputVariableLookupException(nodeAtShard.node, nodeAtShard.shard))
 }

@@ -70,8 +70,8 @@ class WdlWorkflowSpec extends WordSpec with Matchers {
 
     val workflowInputs = Map("main_workflow.workflow_input" -> WdlString("workflow_input"))
 
-    def outputResolverForWorkflow(workflow: WdlWorkflow)(call: WdlGraphNode, index: Option[Int])= {
-      call match {
+    def outputResolverForWorkflow(workflow: WdlWorkflow)(wdlNodeAtShard: WdlNodeAtShard)= {
+      wdlNodeAtShard.node match {
         // Main Task
         case c: WdlCall if c == workflow.findCallByName("main_task").get =>
           Success(WdlCallOutputsObject(c, Map(
@@ -132,7 +132,7 @@ class WdlWorkflowSpec extends WordSpec with Matchers {
     def verifyOutputsForNamespace(ns: WdlNamespaceWithWorkflow,
                                   declarationExpectations: Seq[WorkflowOutputExpectation],
                                   evaluationExpectations: Map[String, WdlValue],
-                                  outputResolver: OutputResolver) = {
+                                  outputResolver: WdlOutputResolver) = {
       val outputs = ns.workflow.outputs
       outputs should contain theSameElementsAs declarationExpectations
 
@@ -440,8 +440,8 @@ class WdlWorkflowSpec extends WordSpec with Matchers {
 
       val ns = WdlNamespaceWithWorkflow.load(wdl, Seq.empty).get
 
-      def outputResolver(call: WdlGraphNode, index: Option[Int])= {
-        call match {
+      def outputResolver(wdlNodeAtShard: WdlNodeAtShard)= {
+        wdlNodeAtShard.node match {
           case c: WdlCall if c == ns.workflow.findCallByName("t").get =>
             Success(WdlCallOutputsObject(c, Map(
               "o1" -> WdlString("o1"),

@@ -2,15 +2,20 @@ package wdl4s.wom.expression
 
 import wdl4s.wdl.types.WdlType
 import wdl4s.wdl.values.WdlValue
-import wdl4s.wom.callable.Callable.InputDefinition
+import wdl4s.wom.graph.{GraphNode, GraphNodePort}
 
-sealed trait Expression {
-  def inputs: Set[InputDefinition]
-  def evaluate(variableValues: Map[String, WdlValue]): Unit
-  def womType: WdlType
+import scala.concurrent.Future
+
+sealed trait Expression extends GraphNode {
+  def name: String
+  def evaluate(variableLookupContext: VariableLookupContext, ioFunctions: IoFunctions): Future[WdlValue]
 }
 
 case class PlaceholderExpression(womType: WdlType) extends Expression {
-  override def inputs: Set[InputDefinition] = ???
-  override def evaluate(variableValues: Map[String, WdlValue]): Unit = ???
+  override def evaluate(variableLookupContext: VariableLookupContext, ioFunctions: IoFunctions): Future[WdlValue] = ???
+  override def inputPorts: Set[GraphNodePort.InputPort] = ???
+  override def outputPorts: Set[GraphNodePort.OutputPort] = ???
+  override def name: String = ???
 }
+
+abstract class WomExpression extends Expression

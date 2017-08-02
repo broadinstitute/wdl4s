@@ -8,7 +8,7 @@ object WorkflowOutput {
   def apply(ast: Ast, syntaxErrorFormatter: WdlSyntaxErrorFormatter, parent: Option[Scope]): WorkflowOutput = {
     val wdlType = ast.getAttribute("type").wdlType(syntaxErrorFormatter)
     val name = ast.getAttribute("name").sourceString
-    val expression = WdlExpression(ast.getAttribute("expression"))
+    val expression = WdlExpression(ast.getAttribute("expression"), name)
     WorkflowOutput(name, wdlType, expression, ast, parent)
   }
 }

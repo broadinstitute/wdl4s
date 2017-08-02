@@ -19,14 +19,14 @@ class WdlCallSpec extends WordSpec with Matchers {
 
     val inputs = namespace.coerceRawInputs(SampleWdl.TaskDeclarationsWdl.rawInputs).get
     
-    def outputResolver(call: WdlGraphNode, index: Option[Int]): Try[WdlValue] = {
-      (call, index) match {
-        case (c, Some(2)) if c == callT => Success(WdlCallOutputsObject(callT, Map("o" -> WdlString(s"c ${index.getOrElse(-1)}"))))
-        case (c, Some(2)) if c == callT3 => Success(WdlCallOutputsObject(callT, Map("o" -> WdlString(s"c ${index.getOrElse(-1)}"))))
-        case (c, None) if c == callT2 => Success(WdlCallOutputsObject(callT2, Map(
+    def outputResolver(wdlNodeAtShard: WdlNodeAtShard): Try[WdlValue] = {
+      wdlNodeAtShard match {
+        case WdlNodeAtShard(c, Some(2)) if c == callT => Success(WdlCallOutputsObject(callT, Map("o" -> WdlString(s"c 2"))))
+        case WdlNodeAtShard(c, Some(2)) if c == callT3 => Success(WdlCallOutputsObject(callT, Map("o" -> WdlString(s"c 2"))))
+        case WdlNodeAtShard(c, None) if c == callT2 => Success(WdlCallOutputsObject(callT2, Map(
           "outputArray" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(WdlInteger(0), WdlInteger(1), WdlInteger(2)))
         )))
-        case _ => Failure(new Exception(s"no output found for call ${call.fullyQualifiedName}"))
+        case WdlNodeAtShard(call, _) => Failure(new Exception(s"no output found for call ${call.fullyQualifiedName}"))
       }
     }
     

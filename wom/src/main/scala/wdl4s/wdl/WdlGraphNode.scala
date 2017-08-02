@@ -1,8 +1,11 @@
 package wdl4s.wdl
 
 import wdl4s.wdl.AstTools.{EnhancedAstNode, VariableReference}
+import wdl4s.wom.graph.GraphNode
 
 sealed trait WdlGraphNode extends Scope {
+  
+  lazy val toWomNode: GraphNode = throw new UnsupportedOperationException(s"${this.getClass.getSimpleName} cannot be converted to a Wom GraphNode")
 
   /**
     * The set of all graph nodes which are (transitively) upstream from this one.

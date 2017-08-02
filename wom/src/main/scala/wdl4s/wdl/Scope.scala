@@ -5,6 +5,7 @@ import wdl4s.wdl.exception.{ScatterIndexNotFound, VariableLookupException, Varia
 import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.values.WdlArray.WdlArrayLike
 import wdl4s.wdl.values.WdlValue
+import wdl4s.wom.expression.VariableLookupContext.{WomNodeAtShard, WomOutputResolver}
 
 import scala.util.{Failure, Success, Try}
 
@@ -172,6 +173,18 @@ trait Scope {
       case None => parent.flatMap(_.resolveVariable(name, relativeTo))
     }
   }
+  
+  def womLookupFunction(knownInputs: WorkflowCoercedInputs,
+                        wdlFunctions: WdlFunctions[WdlValue],
+                        outputResolver: WomOutputResolver,
+                        shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
+                        relativeTo: Scope = this) = {
+    val wdlResolver: WdlOutputResolver = outputResolver.compose[WdlNodeAtShard] {
+      case WdlNodeAtShard(node, shard) => WomNodeAtShard(node.toWomNode, shard)
+    }
+
+    lookupFunction(knownInputs, wdlFunctions, wdlResolver, shards, relativeTo)
+  }
 
   /**
     * This will return a lookup function for evaluating expressions which will traverse up the
@@ -187,7 +200,7 @@ trait Scope {
     */
   def lookupFunction(knownInputs: WorkflowCoercedInputs,
                      wdlFunctions: WdlFunctions[WdlValue],
-                     outputResolver: OutputResolver = NoOutputResolver,
+                     outputResolver: WdlOutputResolver = NoOutputResolver,
                      shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
                      relativeTo: Scope = this): String => WdlValue = {
 
@@ -217,7 +230,7 @@ trait Scope {
     def fromOutputs(node: WdlGraphNode) = {
       def withShard(s: Scatter) = {
         shards.get(s) map { shard =>
-          outputResolver(node, Option(shard))
+          outputResolver(WdlNodeAtShard(node, Option(shard)))
         } getOrElse {
           Failure(ScatterIndexNotFound(s"Could not find a shard for scatter block with expression (${s.collection.toWdlString})"))
         }
@@ -228,7 +241,7 @@ trait Scope {
         case other =>
           other.closestCommonScatter(node) match {
             case Some(s: Scatter) => withShard(s)
-            case _ => outputResolver(node, None)
+            case _ => outputResolver(WdlNodeAtShard(node, None))
           }
       }
     }

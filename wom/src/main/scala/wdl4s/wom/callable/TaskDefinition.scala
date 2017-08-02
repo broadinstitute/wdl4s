@@ -26,7 +26,7 @@ case class TaskDefinition(name: String,
 
   def lookupFunction(knownInputs: WorkflowCoercedInputs,
                      wdlFunctions: WdlFunctions[WdlValue],
-                     outputResolver: OutputResolver = NoOutputResolver,
+                     outputResolver: WdlOutputResolver = NoOutputResolver,
                      shards: Map[Scatter, Int] = Map.empty[Scatter, Int],
                      relativeTo: Scope = null): String => WdlValue = ???
 

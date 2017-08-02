@@ -81,11 +81,12 @@ trait DeclarationInterface extends WdlGraphNodeWithUpstreamReferences {
 object Declaration {
 
   def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, parent: Option[Scope]): Declaration = {
+    val declarationName = ast.getAttribute("name").sourceString
     Declaration(
       ast.getAttribute("type").wdlType(wdlSyntaxErrorFormatter),
-      ast.getAttribute("name").sourceString,
+      declarationName,
       ast.getAttribute("expression") match {
-        case a: AstNode => Option(WdlExpression(a))
+        case a: AstNode => Option(WdlExpression(a, declarationName))
         case _ => None
       },
       parent,
