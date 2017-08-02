@@ -90,7 +90,7 @@ outputs:
     outputSource: "file:///home/dan/wdl4s/r.cwl#compile/classfile"
     id: "file:///home/dan/wdl4s/r.cwl#classout"
 steps:
-  - run: "arguments.cwl"
+  - run: "cwl/src/test/resources/arguments.cwl"
     in:
       -
         source: "file:///home/dan/wdl4s/r.cwl#untar/example_out"
@@ -98,7 +98,7 @@ steps:
     out:
       - "file:///home/dan/wdl4s/r.cwl#compile/classfile"
     id: "file:///home/dan/wdl4s/r.cwl#compile"
-  - run: "tar-param.cwl"
+  - run: "cwl/src/test/resources/tar-param.cwl"
     in:
       -
         source: "file:///home/dan/wdl4s/r.cwl#ex"
