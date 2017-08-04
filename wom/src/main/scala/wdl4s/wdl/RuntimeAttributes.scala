@@ -22,7 +22,7 @@ object RuntimeAttributes {
 
   private def processRuntimeAttribute(ast: Ast): (String, WdlExpression) = {
     val key = ast.getAttribute("key").sourceString
-    val expression = WdlExpression(ast.getAttribute("value"), key)
+    val expression = WdlExpression(ast.getAttribute("value"))
     key -> expression
   }
 }

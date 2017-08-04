@@ -9,7 +9,7 @@ object If {
     * @param index Index of the if block. The index is computed during tree generation to reflect WDL scope structure.
     */
   def apply(ast: Ast, index: Int): If = {
-    new If(index, WdlExpression(ast.getAttribute("expression"), s"${If.FQNIdentifier}_$index"), ast)
+    new If(index, WdlExpression(ast.getAttribute("expression")), ast)
   }
 }
 

@@ -24,7 +24,7 @@ object DeclarationInterface {
     * }
     */
   def relativeWdlType(from: Scope, target: DeclarationInterface, wdlType: WdlType): WdlType = {
-    target.closestCommonAncestor(from) map { ancestor =>
+    target.closestCommonAncestorSafe(from) map { ancestor =>
       target.ancestrySafe.takeWhile(_ != ancestor).foldLeft(wdlType){
         case (acc, _: Scatter) => WdlArrayType(acc)
         case (acc, _: If) => WdlOptionalType(acc)
@@ -86,7 +86,7 @@ object Declaration {
       ast.getAttribute("type").wdlType(wdlSyntaxErrorFormatter),
       declarationName,
       ast.getAttribute("expression") match {
-        case a: AstNode => Option(WdlExpression(a, declarationName))
+        case a: AstNode => Option(WdlExpression(a))
         case _ => None
       },
       parent,

@@ -7,7 +7,7 @@ import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.values.{WdlOptionalValue, WdlValue}
 import wdl4s.wom.graph.CallNode.CallWithInputs
-import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
+import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 import wdl4s.wom.graph.{CallNode, GraphInputNode}
 
 import scala.language.postfixOps
@@ -46,16 +46,16 @@ object WdlCall {
                                wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, callName: String): Map[String, WdlExpression] = {
     AstTools.callInputSectionIOMappings(ast, wdlSyntaxErrorFormatter) map { a =>
       val key = a.getAttribute("key").sourceString
-      val expression = WdlExpression(a.getAttribute("value"), callName + "." + key)
+      val expression = WdlExpression(a.getAttribute("value"))
       (key, expression)
     } toMap
   }
   
   private def buildWomNodeAndInputs(wdlCall: WdlCall): CallWithInputs = {
-    val inputToOutputPort: Map[String, GraphNodeOutputPort] = for {
+    val inputToOutputPort: Map[String, Set[_ <: OutputPort]] = for {
       (inputName, expr) <- wdlCall.inputMappings
-      outputPort = expr.toWomExpression.outputPorts.head
-    } yield inputName -> outputPort
+      outputPorts = expr.toWomExpression.referencedVariables.values.toSet
+    } yield inputName -> outputPorts
 
     CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), wdlCall.callable.womDefinition, inputToOutputPort)
   }
@@ -98,8 +98,6 @@ sealed abstract class WdlCall(val alias: Option[String],
   override lazy val toWomNode: CallNode = womNode
 
   lazy val womGraphInputNodes: Set[GraphInputNode] = womInputs
-  
-  lazy val mappingsExpressionNodes = inputMappings.values.map(_.toWomExpression)
 
   lazy val womGraphOutputPorts: Seq[GraphNodeOutputPort] = outputs.map(_.toWomOutputPort)
 

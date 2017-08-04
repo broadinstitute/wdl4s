@@ -49,13 +49,13 @@ class ScatterNodeSpec extends FlatSpec with Matchers {
     val xs_inputNode = RequiredGraphInputNode("xs", WdlArrayType(WdlIntegerType))
 
     val x_inputNode = RequiredGraphInputNode("x", WdlIntegerType)
-    val CallWithInputs(foo_callNode, _) = CallNode.callWithInputs("foo", task_foo, Map("i" -> x_inputNode.singleOutputPort))
+    val CallWithInputs(foo_callNode, _) = CallNode.callWithInputs("foo", task_foo, Map("i" -> Set(x_inputNode.singleOutputPort)))
     val scatterGraph = Graph.validateAndConstruct(Set(foo_callNode, x_inputNode)) match {
       case Valid(sg) => sg.withDefaultOutputs
       case Invalid(es) => fail("Failed to make scatter graph: " + es.toList.mkString(", "))
     }
 
-    val ScatterNodeWithInputs(scatterNode, unsuppliedScatterInputNodes) = ScatterNode.scatterOverGraph(scatterGraph, xs_inputNode.singleOutputPort, x_inputNode, Map.empty)
+    val ScatterNodeWithInputs(scatterNode, unsuppliedScatterInputNodes) = ScatterNode.scatterOverGraph(scatterGraph, Set(xs_inputNode.singleOutputPort), x_inputNode, Map.empty)
     unsuppliedScatterInputNodes.size should be(0)
 
     val workflowGraphValidation = for {
@@ -85,7 +85,7 @@ class ScatterNodeSpec extends FlatSpec with Matchers {
     finalOutput.upstream should be(Set(scatterNode))
 
     // The scatter output port is called foo.out:
-    finalOutput.inputPorts.head.upstream.name should be("foo.out")
+    finalOutput.inputPorts.head.upstream.map(_.name) should be(Set("foo.out"))
 
     // foo.out links back to the correct output in the inner graph:
     val innerGraphFooOutNode = scatterNode.outputMapping.find(_.name == "foo.out").getOrElse(fail("Scatter couldn't link back the foo.out output.")).outputToGather

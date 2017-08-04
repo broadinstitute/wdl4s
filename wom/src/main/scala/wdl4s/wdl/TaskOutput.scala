@@ -9,7 +9,7 @@ object TaskOutput {
   def apply(ast: Ast, syntaxErrorFormatter: WdlSyntaxErrorFormatter, parent: Option[Scope]): TaskOutput = {
     val wdlType = ast.getAttribute("type").wdlType(syntaxErrorFormatter)
     val name = ast.getAttribute("name").sourceString
-    val expression = WdlExpression(ast.getAttribute("expression"), name)
+    val expression = WdlExpression(ast.getAttribute("expression"))
     val taskOutput = TaskOutput(name, wdlType, expression, ast, parent)
     expression.attachToNode(taskOutput)
     taskOutput

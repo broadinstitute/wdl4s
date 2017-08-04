@@ -48,8 +48,8 @@ class GraphSpec extends FlatSpec with Matchers {
     val CallWithInputs(psCall, psGraphInputs) = CallNode.callWithInputs("ps", taskDefinition_ps, Map.empty)
     val ps_procsOutputPort = psCall.outputByName("procs").getOrElse(fail("Unexpectedly unable to find 'procs' output"))
 
-    val CallWithInputs(cgrepCall, cgrepGraphInputs) = CallNode.callWithInputs("cgrep", taskDefinition_cgrep, Map("in_file" -> ps_procsOutputPort))
-    val CallWithInputs(wcCall, wcGraphInputs) = CallNode.callWithInputs("wc", taskDefinition_wc, Map("in_file" -> ps_procsOutputPort))
+    val CallWithInputs(cgrepCall, cgrepGraphInputs) = CallNode.callWithInputs("cgrep", taskDefinition_cgrep, Map("in_file" -> Set(ps_procsOutputPort)))
+    val CallWithInputs(wcCall, wcGraphInputs) = CallNode.callWithInputs("wc", taskDefinition_wc, Map("in_file" -> Set(ps_procsOutputPort)))
 
     val graphNodes: Set[GraphNode] =
       Set[GraphNode](psCall, cgrepCall, wcCall)

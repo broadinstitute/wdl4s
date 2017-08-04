@@ -13,6 +13,7 @@ sealed trait GraphInputNode extends GraphNode {
   override val outputPorts: Set[GraphNodePort.OutputPort] = Set(singleOutputPort)
 }
 
+final case class DeclaredGraphInputNode(name: String, womType: WdlType, expression: Expression) extends GraphInputNode
 final case class RequiredGraphInputNode(name: String, womType: WdlType) extends GraphInputNode
 final case class OptionalGraphInputNode(name: String, womType: WdlOptionalType) extends GraphInputNode
 final case class OptionalGraphInputNodeWithDefault(name: String, womType: WdlType, default: Expression) extends GraphInputNode

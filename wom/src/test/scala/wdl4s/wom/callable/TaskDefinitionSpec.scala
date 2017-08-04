@@ -49,7 +49,7 @@ class TaskDefinitionSpec extends FlatSpec with Matchers {
         (graph.nodes.toList.find(_.isInstanceOf[GraphInputNode]), graph.nodes.toList.find(_.isInstanceOf[CallNode])) match {
           case (Some(inputNode), Some(callNode)) =>
             callNode.inputPorts.size should be(1)
-            callNode.inputPorts.head.upstream.graphNode should be(inputNode)
+            callNode.inputPorts.head.upstream map { _.graphNode } should be(Set(inputNode))
           case other => fail(s"Oops: $other")
         }
       case Invalid(l) => fail(s"Failed to construct a one-input TaskCall graph: ${l.toList.mkString(", ")}")
@@ -76,7 +76,7 @@ class TaskDefinitionSpec extends FlatSpec with Matchers {
           case (Some(outputNode), Some(callNode)) =>
             callNode.outputPorts.size should be(1)
             outputNode.inputPorts.size should be(1)
-            outputNode.inputPorts.head.upstream.graphNode should be(callNode)
+            outputNode.inputPorts.head.upstream map { _.graphNode } should be(Set(callNode))
           case other => fail(s"Oops: $other")
         }
       case Invalid(l) => fail(s"Failed to construct a one-input TaskCall graph: ${l.toList.mkString(", ")}")

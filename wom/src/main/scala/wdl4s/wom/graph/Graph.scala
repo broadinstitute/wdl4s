@@ -26,10 +26,10 @@ object Graph {
     def goodLink(port: InputPort): ErrorOr[Unit] = {
       val upstreamOutputPort = port.upstream
 
-      if (nodes.contains(upstreamOutputPort.graphNode)) {
+      if (upstreamOutputPort.map(_.graphNode).forall(nodes.contains)) {
         ().validNel
       } else {
-        s"The input link ${port.name} is linked to a node outside the graph set (${upstreamOutputPort.name})".invalidNel
+        s"The input link ${port.name} is linked to on or several nodes outside the graph set (${upstreamOutputPort.map(_.name)})".invalidNel
       }
     }
 

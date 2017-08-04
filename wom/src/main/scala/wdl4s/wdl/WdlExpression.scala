@@ -10,8 +10,7 @@ import wdl4s.wdl.formatter.{NullSyntaxHighlighter, SyntaxHighlighter}
 import wdl4s.wdl.types._
 import wdl4s.wdl.values._
 import wdl4s.wom.expression.{IoFunctions, VariableLookupContext, WomExpression}
-import wdl4s.wom.graph.GraphNodePort
-import wdl4s.wom.graph.GraphNodePort.{ConnectedInputPort, GraphNodeOutputPort, InputPort}
+import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -26,21 +25,12 @@ case object NoLookup extends ScopedLookupFunction {
 }
 
 class WdlWomExpression(attachedNode: WdlGraphNode, wdlExpression: WdlExpression) extends WomExpression {
-  override lazy val name = wdlExpression.name
-  
   override def evaluate(variableLookupContext: VariableLookupContext, ioFunctions: IoFunctions): Future[WdlValue] = {
     // TODO figure out functions
     val lf = attachedNode.womLookupFunction(variableLookupContext.inputs, NoFunctions, variableLookupContext.outputResolver, Map.empty, attachedNode)
     Future.fromTry(wdlExpression.evaluate(lf, NoFunctions))
   }
-  override lazy val inputPorts: Set[InputPort] = wdlExpression.variablesToOutputPort map {
-    case (inputName, outputPort) => ConnectedInputPort(inputName, outputPort.womType, outputPort, _ => this)
-  } toSet
-
-  override lazy val outputPorts: Set[GraphNodePort.GraphNodeOutputPort] = {
-    // TODO figure something out for name and type here
-    Set(GraphNodeOutputPort(wdlExpression + ".output", WdlAnyType, this))
-  }
+  override lazy val referencedVariables: Map[String, GraphNodeOutputPort] = wdlExpression.variablesToOutputPort
 }
 
 object WdlExpression {
@@ -117,7 +107,7 @@ object WdlExpression {
     val tokens = parser.lex(expression, "string")
     val terminalMap = (tokens.asScala.toVector map {(_, expression)}).toMap
     val parseTree = parser.parse_e(tokens, WdlSyntaxErrorFormatter(terminalMap))
-    new WdlExpression(parseTree.toAst, "N/A")
+    new WdlExpression(parseTree.toAst)
   }
 
   def toString(ast: AstNode, highlighter: SyntaxHighlighter = NullSyntaxHighlighter): String = {
@@ -181,13 +171,9 @@ object WdlExpression {
     }
   }
   
-  // TODO: Does the name need to be set later so we can use the FQN of nodes instead of LQNs ?
-  def apply(ast: AstNode, name: String): WdlExpression = {
-    new WdlExpression(ast, name + ".expression")
-  }
 }
 
-case class WdlExpression private (ast: AstNode, name: String) extends WdlValue {
+case class WdlExpression private (ast: AstNode) extends WdlValue {
   override val wdlType = WdlExpressionType
   
   private var attachedToNode: Option[WdlGraphNode] = None

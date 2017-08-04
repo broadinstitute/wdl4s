@@ -54,9 +54,12 @@ trait Scope {
     case None => Seq.empty[Scope]
   }
 
-  // This is needed in one specific case during WdlNamespace validation
-  // where we need to compute the ancestries at a point where the full
-  // parent branch has not been set yet.
+  /**
+    * Same as ancestry except it's a def and therefore recomputes the branch on every call, also not forcing the 
+    * lazy val ancestry to evaluate.
+    * This is used only in Declaration.relativeWdlType because it's called before the graph is fully built.
+    * TL;DR: Your probably DO NOT want to use this method. Use the ancestry val instead.
+    */
   private [wdl4s] def ancestrySafe: Seq[Scope] = parent match {
     case Some(p) => Seq(p) ++ p.ancestrySafe
     case None => Seq.empty[Scope]
@@ -136,13 +139,18 @@ trait Scope {
     * @return closest common ancestor
     */
   def closestCommonAncestor(other: Scope): Option[Scope] = {
+    val otherAncestry = other.ancestry
+    ancestry find { otherAncestry.contains(_) }
+  }
+  
+  private [wdl4s] def closestCommonAncestorSafe(other: Scope): Option[Scope] = {
     val otherAncestry = other.ancestrySafe
     ancestrySafe find { otherAncestry.contains(_) }
   }
 
   def closestCommonScatter(other: Scope): Option[Scatter] = {
-    val otherAncestry = other.ancestrySafe
-    ancestrySafe collectFirst  {
+    val otherAncestry = other.ancestry
+    ancestry collectFirst  {
       case s: Scatter if otherAncestry.contains(s) => s
     }
   }

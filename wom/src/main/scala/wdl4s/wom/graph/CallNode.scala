@@ -62,7 +62,7 @@ object CallNode {
     *   _2: any GraphInputNodes we created for unsupplied inputs
     * )
     */
-  def callWithInputs(name: String, callable: Callable, inputMapping: Map[String, OutputPort]): CallWithInputs = {
+  def callWithInputs(name: String, callable: Callable, inputMapping: Map[String, Set[_ <: OutputPort]]): CallWithInputs = {
 
     val graphNodeSetter = new GraphNode.GraphNodeSetter()
     val inputPortLinker = GraphNode.linkInputPort(callable.name + ".", inputMapping, graphNodeSetter.get) _

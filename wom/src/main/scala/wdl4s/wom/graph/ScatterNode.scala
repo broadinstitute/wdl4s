@@ -41,7 +41,7 @@ object ScatterNode {
   /**
     * Creates a ScatterNode that's been connected to the inputs provided.
     * @param innerGraph The inner graph that's being scattered over.
-    * @param scatterVariableSource The OutputPort (in the outer Graph) to connect to the ScatterNode's scatterVariable InputPort.
+    * @param scatterVariableSource The OutputPorts (in the outer Graph) to connect to the ScatterNode's scatterVariable InputPort.
     * @param scatterVariableInput the GraphInputNode in the innerGraph which represents the scatter variable.
     * @param inputMapping The mapping to inputs expected by the innerGraph
     * @return The ScatterNodeWithInputs containing:
@@ -49,7 +49,7 @@ object ScatterNode {
     *         * inputs: A set of GraphInputNodes for inputs which weren't supplied
     */
   // TODO: Validate that the scatter source is an array type (oh how I wish ports could be typed!)
-  def scatterOverGraph(innerGraph: Graph, scatterVariableSource: OutputPort, scatterVariableInput: GraphInputNode, inputMapping: Map[String, OutputPort]): ScatterNodeWithInputs = {
+  def scatterOverGraph(innerGraph: Graph, scatterVariableSource: Set[OutputPort], scatterVariableInput: GraphInputNode, inputMapping: Map[String, Set[OutputPort]]): ScatterNodeWithInputs = {
     val graphNodeSetter = new GraphNode.GraphNodeSetter()
     val inputPortLinker = GraphNode.linkInputPort("", inputMapping, graphNodeSetter.get) _
 

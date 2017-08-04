@@ -17,7 +17,7 @@ object GraphNodePort {
   // TODO: It'd be really cool if these could be typed (eg InputPort[WdlString], OutputPort[WdlInteger] but
   // TODO: we'd have to think about coercion... maybe some sort of implicit CoercionSocket[WdlString, WdlInteger]...?
   sealed trait InputPort extends GraphNodePort {
-    def upstream: OutputPort
+    def upstream: Set[_ <: OutputPort]
   }
 
   sealed trait OutputPort extends GraphNodePort {
@@ -34,7 +34,7 @@ object GraphNodePort {
     override lazy val graphNode = g.apply(())
   }
 
-  final case class ConnectedInputPort(name: String, womType: WdlType, upstream: OutputPort, g: Unit => GraphNode) extends InputPort with DelayedGraphNodePort
+  final case class ConnectedInputPort(name: String, womType: WdlType, upstream: Set[_ <: OutputPort], g: Unit => GraphNode) extends InputPort with DelayedGraphNodePort
 
   /**
     * For any graph node that uses a declarations to produce outputs (e.g. call, declaration):

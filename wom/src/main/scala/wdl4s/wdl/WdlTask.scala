@@ -147,7 +147,7 @@ case class WdlTask(name: String,
 
     val lookup = lookupFunction(inputs, functions)
     val evaluatedExpressionMap = writeFunctionAsts map { ast =>
-      val expression = WdlExpression(ast, "N/A")
+      val expression = WdlExpression(ast)
       val value = expression.evaluate(lookup, functions)
       expression -> value
     } toMap

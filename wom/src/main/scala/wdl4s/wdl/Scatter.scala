@@ -10,7 +10,7 @@ object Scatter {
    */
   def apply(ast: Ast, index: Int): Scatter = {
     val item = ast.getAttribute("item").asInstanceOf[Terminal].getSourceString
-    new Scatter(index, item, WdlExpression(ast.getAttribute("collection"), s"${Scatter.FQNIdentifier}_$index"), ast)
+    new Scatter(index, item, WdlExpression(ast.getAttribute("collection")), ast)
   }
 }
 
