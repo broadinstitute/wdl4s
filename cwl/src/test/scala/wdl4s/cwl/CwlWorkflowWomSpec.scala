@@ -48,8 +48,8 @@ inputs:
 outputs: []
 """.stripMargin
 
-    CwlCodecs.decodeCwl(firstTool) match {
-      case Right((clt: CommandLineTool, _)) =>
+    CwlCodecs.decodeCwl(firstTool) map {
+      case (clt: CommandLineTool, _) =>
         clt.womExecutable match {
           case Valid(wom) =>
             wom.entryPoint match {
@@ -70,9 +70,8 @@ outputs: []
             }
           case i@Invalid(_) => fail(s"Invalid: $i")
         }
-      case Right((wth: Any, _)) => fail(s"parsed unexpected type $wth")
-      case Left(error) => fail(s"did not parse!  $error")
-    }
+      case (wth: Any, _) => fail(s"parsed unexpected type $wth")
+    } leftMap { error => fail(s"did not parse!  $error") }
   }
 
   "Cwl for 1st workflow" should "convert to WOM" in {
@@ -117,15 +116,14 @@ name: "file:///home/dan/wdl4s/r.cwl"
     import CwlCodecs._
 
 
-    decodeCwl(firstWorkflow) match {
-      case Right((workflow: Workflow, nameToFile)) =>
+    decodeCwl(firstWorkflow) map {
+      case (workflow: Workflow, nameToFile) =>
         workflow.womExecutable(nameToFile) match {
           case Valid(ex) => validateWom(ex)
           case e => fail(s"executable was not created $e")
         }
-      case Right((wth: Any, _)) => fail(s"Parsed unexpected CwlFile subtype $wth")
-      case Left(error) => fail(s"did not parse!  $error")
-    }
+      case (wth: Any, _) => fail(s"Parsed unexpected CwlFile subtype $wth")
+    } leftMap { error => fail(s"did not parse!  $error") }
 
     def validateWom(ex: Executable) = {
       ex match {
@@ -267,7 +265,7 @@ id: file:///Users/danb/wdl4s/r.cwl
       """.stripMargin
 
     val workflow = CwlCodecs.decodeCwl(threeStep) match {
-      case Right((wf: Workflow, _)) => wf
+      case Valid((wf: Workflow, _)) => wf
       case o => fail(s"didn't parse a workflow! $o")
     }
     val wf = workflow.womExecutable(Map.empty) match {

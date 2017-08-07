@@ -13,6 +13,9 @@ import io.circe.literal._
 import cats.syntax.traverse._
 import cats.instances.list._
 import cats.instances.either._
+import cats.syntax.validated._
+
+import lenthall.validation.ErrorOr.ErrorOr
 
 object CwlCodecs {
 
@@ -23,10 +26,10 @@ object CwlCodecs {
     * very simplistic logic that assumes only one level of depth max.
     * @return a `Map[String, CwlFile]` of filenames to `CwlFile`s.
     */
-  def decodeCwl: Yaml => EitherA[(CwlFile, Map[String, CwlFile])] = {
-    decodeSingleFileCwl(_).flatMap {
-      case clt: CommandLineTool => Right((clt, Map.empty))
-      case wf: Workflow =>
+  def decodeCwl(yaml: Yaml): ErrorOr[(CwlFile, Map[String, CwlFile])] = {
+    decodeSingleFileCwl(yaml) match {
+      case Right(clt: CommandLineTool) => (clt, Map.empty[String, CwlFile]).validNel
+      case Right(wf: Workflow) =>
         val fileNames: List[String] = wf.steps.toList.flatMap(_.run.select[String].toList)
 
         val fileNameToFiles: EitherA[List[(String, CwlFile)]] = fileNames.traverse[EitherA, (String, CwlFile)] {
@@ -35,7 +38,12 @@ object CwlCodecs {
             // TODO: This should recurse and decodeSingleFileCwl should go away.
             decodeSingleFileCwl(yaml).map(fileName -> _)
         }
-        fileNameToFiles.map(_.toMap).map(wf -> _)
+
+        fileNameToFiles.map(_.toMap).map(wf -> _) match {
+          case Left(e) => e.getMessage.invalidNel
+          case Right(f) => f.validNel
+        }
+      case Left(e) => e.getMessage.invalidNel
     }
   }
 
