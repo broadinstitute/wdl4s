@@ -18,7 +18,7 @@ class ExportCwlSamplesSpec extends FlatSpec with Matchers {
           id = "message",
           inputBinding = Option(CommandLineBinding(
             position = Option(1)
-          )),
+          ))
         )),
         baseCommand = Option(Coproduct[BaseCommand]("echo"))
       )
@@ -39,7 +39,7 @@ baseCommand: echo
     val workflow = Workflow(
       inputs = Array(
           InputParameter(id = "inp", `type` = Option(Coproduct[MyriadInputType](CwlType.File))),
-          InputParameter(id = "ex", `type` = Option(Coproduct[MyriadInputType](CwlType.String))),
+          InputParameter(id = "ex", `type` = Option(Coproduct[MyriadInputType](CwlType.String)))
         ),
       outputs = Array(
         WorkflowOutputParameter(

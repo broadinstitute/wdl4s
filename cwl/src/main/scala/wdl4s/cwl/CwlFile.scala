@@ -230,7 +230,6 @@ case class CommandLineTool(
 }
 
 object CommandLineTool {
-  val `class`: Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow
 
   type StringOrExpression = ECMAScriptExpression :+: String :+: CNil
 
