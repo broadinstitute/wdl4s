@@ -47,7 +47,20 @@ case class Workflow(
           i.`type`.flatMap(_.select[CwlType].map(cwlTypeToWdlType).map(i.id -> _)).toList
         }.toMap
 
-    val graphFromSteps = steps.toList.foldMap(_.callWithInputs(map, cwlMap, this).nodes)
+
+    val workflowInputs: Map[String, GraphNodeOutputPort] =
+      inputs.map {
+        workflowInput =>
+
+          val tpe = workflowInput.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get
+
+          val node = RequiredGraphInputNode(workflowInput.id, tpe)
+
+          workflowInput.id -> GraphNodeOutputPort(workflowInput.id, tpe, node)
+      }.toMap
+
+
+    val graphFromSteps = steps.toList.foldLeft(Set.empty[GraphNode])((nodes, step) => step.callWithInputs(map, cwlMap, this, nodes, workflowInputs))
 
     val graphFromInputs: Set[GraphNode] = inputs.map {
       input =>

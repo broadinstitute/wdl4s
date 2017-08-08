@@ -11,8 +11,8 @@ import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.expression.Expression
 import wdl4s.wom.graph.CallNode.CallWithInputs
-import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
-import wdl4s.wom.graph.{CallNode, GraphNode, RequiredGraphInputNode}
+import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
+import wdl4s.wom.graph.{CallNode, GraphNode, RequiredGraphInputNode, TaskCallNode}
 
 /**
   * An individual job to run.
@@ -59,7 +59,7 @@ case class WorkflowStep(
     val runnableFQNTypeMap: WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
 
     val runnableIdToTypeMap = runnableFQNTypeMap.map {
-      case (i, tpe) => RunOutputsToTypeMap.mungeId(i) -> tpe
+      case (i, tpe) => i -> tpe
     }
 
     out.fold(WorkflowOutputsToOutputDefinition).apply(runnableIdToTypeMap)
@@ -96,49 +96,95 @@ case class WorkflowStep(
     )
   }
 
-  def callWithInputs(typeMap: WdlTypeMap, cwlMap: Map[String, CwlFile], workflow: Workflow): CallWithInputs = {
+  /**
+    * In order to produce a map to lookup workflow
+    * @param typeMap
+    * @param cwlMap
+    * @param workflow
+    * @return
+    */
+  def callWithInputs(typeMap: WdlTypeMap,
+                     cwlMap: Map[String, CwlFile],
+                     workflow: Workflow,
+                     knownNodes: Set[GraphNode],
+                     workflowInputs: Map[String,
+                       GraphNodeOutputPort]): Set[GraphNode] = {
 
-    val workflowInputs =
-      workflow.inputs.map {
-        workflowInput =>
-          val tpe = workflowInput.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get
-          val node = RequiredGraphInputNode(workflowInput.id, tpe)
-          workflowInput.id -> GraphNodeOutputPort(workflowInput.id, tpe, node)
-      }.toMap
+    //TODO: Check to see if this step is already present in the graphNodes
+
+    val haveWeSeenThisStep = knownNodes.flatMap{_ match {
+      case TaskCallNode(name, _, _) => Set(name)
+      case _ => Set.empty[String]
+    }}.contains(id)
+
+    if (haveWeSeenThisStep)
+      Set.empty
+    else {
+      //need the outputs mapped from other workflow steps in order to pass in this map
+      val workflowOutputsMap: (Map[String, OutputPort], Set[GraphNode]) = in.foldLeft((Map.empty[String, OutputPort], knownNodes)) {
+        case ((map, upstreamNodes), workflowStepInput) =>
 
 
-    //need the outputs mapped from other workflow steps in order to pass in this map
-    val workflowOutputsMap = in.flatMap {
-      workflowStepInput =>
 
-        def lookupStepWithOutput(stepId: String, outputId: String): (WorkflowStep, (String, WdlType)) = {
-          val step = workflow.steps.find { step =>
-            val lookup = WorkflowStepId(step.id).stepId
-            lookup == stepId
-          }.get
+          val inputSource = workflowStepInput.source.flatMap(_.select[String]).get
 
-          step.typedOutputs(cwlMap).map(step -> _)
-            .find {
-              case (_, (stepOutputId, _)) =>
+          FullyQualifiedName(inputSource) match {
+            case WorkflowStepOutputIdReference(_, stepOutputId, stepId) =>
 
-                RunOutputId(stepOutputId).outputId == outputId
-            }.get
-        }
 
-        val inputSource = workflowStepInput.source.flatMap(_.select[String]).get
 
-        FullyQualifiedName(inputSource) match {
-          case WorkflowStepOutputIdReference(_, stepOutputId, stepId) =>
-            val (step, (_, tpe)) = lookupStepWithOutput(stepId, stepOutputId)
-            List(inputSource -> GraphNodeOutputPort(workflowStepInput.id, tpe, step.callWithInputs(typeMap, cwlMap, workflow).call))
-          case _ => List.empty[(String, GraphNodeOutputPort)]
-        }
+              //generate a node for this output
 
-    }.toMap
+              def findThisInputInSet(set: Set[GraphNode]) ={
 
-    val td = taskDefinition(typeMap, cwlMap)
+                val lookupSet: Set[OutputPort] =
+                  for {
+                    node <- set
+                    outputPort <- node.outputPorts
+                  } yield outputPort
 
-    CallNode.callWithInputs(id, td, workflowInputs ++ workflowOutputsMap)
+                lookupSet.find(_.name == inputSource)
+              }
+
+              val foundInSeenNodes: Option[OutputPort] = findThisInputInSet(knownNodes)
+
+              val newNodesAndOutputPort: Option[(Set[GraphNode],OutputPort)] = foundInSeenNodes.map(Set.empty[GraphNode] -> _) orElse lookupUpstreamNodes
+
+            def lookupUpstreamNodes:Option[(Set[GraphNode], OutputPort)] = {
+                val (step, (_, tpe))  = {
+                  val step = workflow.steps.find { step =>
+                    val lookup = WorkflowStepId(step.id).stepId
+                    lookup == stepId
+                  }.get
+
+                  step.typedOutputs(cwlMap).map(step -> _)
+                    .find {
+                      case (_, (stepOutputId, _)) =>
+
+                        RunOutputId(stepOutputId).outputId == stepOutputId
+                    }.get
+                }
+
+
+                val upstreamNodesForFoundStep:Set[GraphNode] = step.callWithInputs(typeMap, cwlMap, workflow, knownNodes,workflowInputs)
+
+                findThisInputInSet(upstreamNodesForFoundStep).map(upstreamNodesForFoundStep -> _)
+              }
+
+              val (newNodes, outputPort) = newNodesAndOutputPort.get
+
+              //TODO: Option . get makes kittens sad
+              (map + (inputSource -> outputPort), upstreamNodes ++ newNodes)
+
+            case _ => (map, upstreamNodes)
+          }
+
+      }
+
+      val td = taskDefinition(typeMap, cwlMap)
+
+      knownNodes ++ CallNode.callWithInputs(id, td, workflowInputs ++ workflowOutputsMap._1).nodes
+    }
   }
 
 }
