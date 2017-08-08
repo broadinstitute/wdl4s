@@ -48,8 +48,8 @@ inputs:
 outputs: []
 """.stripMargin
 
-    CwlCodecs.decodeCwl(firstTool) map {
-      case (clt: CommandLineTool, _) =>
+    CwlCodecs.decodeCwl(firstTool) match {
+      case Right((clt: CommandLineTool, _)) =>
         clt.womExecutable match {
           case Valid(wom) =>
             wom.entryPoint match {
@@ -70,8 +70,8 @@ outputs: []
             }
           case i@Invalid(_) => fail(s"Invalid: $i")
         }
-      case Valid((wth: Any, _)) => fail(s"parsed unexpected type $wth")
-      case Invalid(error) => fail(s"did not parse!  $error")
+      case Right(other)  => fail(s"did not parse Command Line tool, instead parsed $other")
+      case Left(error) => fail(s"did not parse!  $error")
     }
   }
 
@@ -267,8 +267,9 @@ id: file:///Users/danb/wdl4s/r.cwl
       """.stripMargin
 
     val workflow = CwlCodecs.decodeCwl(threeStep) match {
-      case Valid((wf: Workflow, _)) => wf
-      case o => fail(s"didn't parse a workflow! $o")
+      case Right((wf: Workflow, _)) => wf
+      case Right(other) => fail(s"did not parse a workflow, instead got $other")
+      case Left(o) => fail(s"didn't parse a workflow! $o")
     }
     val wf = workflow.womExecutable(Map.empty) match {
       case Valid(Executable(wf: WorkflowDefinition)) => wf
