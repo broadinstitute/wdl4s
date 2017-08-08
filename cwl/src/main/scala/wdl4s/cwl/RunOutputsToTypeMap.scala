@@ -6,16 +6,14 @@ import wdl4s.wdl.types.WdlType
 
 object RunOutputsToTypeMap extends Poly1 {
   def mungeId(fullyQualifiedId: String): String = {
-    val step1 = fullyQualifiedId.substring(fullyQualifiedId.lastIndexOf("#") + 1,fullyQualifiedId.length())
-
-    if (step1.contains("/"))
-      step1.substring(step1.lastIndexOf("/") + 1, step1.length)
-    else
-      step1
+    val step = fullyQualifiedId.substring(fullyQualifiedId.lastIndexOf("#") + 1)
+    // Doesn't matter if the string actually contains '/' or not, this takes the whole string if it's absent
+    // which works out to be the right thing to do.
+    step.substring(step.lastIndexOf("/") + 1)
   }
 
-  def handleCommandLine(clt: CommandLineTool):Map[String, WdlType] = {
-    clt.outputs.toList.foldLeft(Map.empty[String,WdlType]) {
+  def handleCommandLine(clt: CommandLineTool): Map[String, WdlType] = {
+    clt.outputs.toList.foldLeft(Map.empty[String, WdlType]) {
       (acc, out) =>
         acc ++
           out.
@@ -27,6 +25,7 @@ object RunOutputsToTypeMap extends Poly1 {
             toMap
     }
   }
+
   implicit def commandLineTool =
     at[CommandLineTool] {
       clt =>
@@ -56,8 +55,8 @@ object RunOutputsToTypeMap extends Poly1 {
 
   implicit def workflow = at[Workflow] {
     wf =>
-      (cwlMap: Map[String, CwlFile]) =>
-         handleWorkflow(wf)
+      (_: Map[String, CwlFile]) =>
+        handleWorkflow(wf)
   }
 }
 

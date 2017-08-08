@@ -119,7 +119,7 @@ case class Workflow(
 
 
 object Workflow {
-  val `class` : Witness.`"Workflow"`.T = "Workflow".narrow
+  val `class`: Witness.`"Workflow"`.T = "Workflow".narrow
 }
 
 /**
@@ -167,17 +167,25 @@ case class CommandLineTool(
 
 
   object BaseCommandToString extends Poly1 {
-    implicit def one = at[String] {identity}
+    implicit def one = at[String] {
+      identity
+    }
 
-    implicit def many = at[Array[String]] {_.mkString(" && ")}
+    implicit def many = at[Array[String]] {
+      _.mkString(" && ")
+    }
   }
 
   object ArgumentToId extends Poly1 {
-    implicit def ecmaScript = at[ECMAScriptExpression] {_.value}
+    implicit def ecmaScript = at[ECMAScriptExpression] {
+      _.value
+    }
 
-    implicit def commandLineBinding = at[CommandLineBinding] {_ => ""}
+    implicit def commandLineBinding = at[CommandLineBinding] { _ => "" }
 
-    implicit def string = at[String] {identity}
+    implicit def string = at[String] {
+      identity
+    }
   }
 
   /**
@@ -210,7 +218,7 @@ case class CommandLineTool(
     }.toSet
 
     val inputs: Set[_ <: Callable.InputDefinition] =
-      this.inputs.map{ cip =>
+      this.inputs.map { cip =>
         val tpe = cip.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get
 
         //TODO: This id includes the filename, which makes assigning input values more laborious
@@ -245,7 +253,6 @@ case class CommandLineTool(
 }
 
 object CommandLineTool {
-  val `class` : Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow
 
   type StringOrExpression = ECMAScriptExpression :+: String :+: CNil
 

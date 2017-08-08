@@ -23,7 +23,7 @@ inputs:
 outputs: []
 """
 
-  decodeCwl(firstTool).isRight shouldBe true
+  decodeCwl(firstTool).isValid shouldBe true
   }
 
   it should "parse first workflow" in {
@@ -58,7 +58,7 @@ steps:
   id: untar
 """
     decodeCwl(firstWorkflow)
-      .isRight should be (true)
+      .isValid should be (true)
   }
 
   it should "parse env cwl" in {
@@ -79,6 +79,8 @@ id: file:///Users/danb/common-workflow-language/v1.0/examples/env.cwl
 name: file:///Users/danb/common-workflow-language/v1.0/examples/env.cwl
 """
 
-    decodeCwl(envCwl).isRight should be (true)
+    val output = decodeCwl(envCwl)
+    println(s"output was $output")
+    output.isValid should be (true)
   }
 }

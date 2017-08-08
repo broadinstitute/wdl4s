@@ -18,16 +18,16 @@ import wdl4s.wom.graph.{CallNode, GraphNode, TaskCallNode}
   * @param run Purposefully not defaulted as it's required and it is unreasonable to not have something to run.
   */
 case class WorkflowStep(
-  id: String,
-  in: Array[WorkflowStepInput] = Array.empty,
-  out: Outputs,
-  run: Run,
-  requirements: Option[Array[Requirement]] = None,
-  hints: Option[Array[CwlAny]] = None,
-  label: Option[String] = None,
-  doc: Option[String] = None,
-  scatter: Option[String :+: Array[String] :+: CNil] = None,
-  scatterMethod: Option[ScatterMethod] = None) {
+                         id: String,
+                         in: Array[WorkflowStepInput] = Array.empty,
+                         out: Outputs,
+                         run: Run,
+                         requirements: Option[Array[Requirement]] = None,
+                         hints: Option[Array[CwlAny]] = None,
+                         label: Option[String] = None,
+                         doc: Option[String] = None,
+                         scatter: Option[String :+: Array[String] :+: CNil] = None,
+                         scatterMethod: Option[ScatterMethod] = None) {
 
   def typedOutputs(cwlMap: Map[String, CwlFile]): WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
 
@@ -41,7 +41,7 @@ case class WorkflowStep(
       val _source: String = workflowStepInput.source.flatMap(_.select[String]).get
 
       val mungedTypeMap = typeMap map {
-        case (id, tpe) => RunOutputsToTypeMap.mungeId(id) -> tpe
+        case (i, t) => RunOutputsToTypeMap.mungeId(i) -> t
       }
 
       val value = WorkflowStep.mungeInputId(_source)
@@ -53,9 +53,9 @@ case class WorkflowStep(
 
   def taskDefinitionOutputs(cwlMap: Map[String, CwlFile]): Set[Callable.OutputDefinition] = {
 
-    val runnableFQNTypeMap: WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
+    val runnableIdToTypeMap: WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
 
-    out.fold(WorkflowOutputsToOutputDefinition).apply(runnableFQNTypeMap)
+    out.fold(WorkflowOutputsToOutputDefinition).apply(runnableIdToTypeMap)
   }
 
   def taskDefinition(typeMap: WdlTypeMap, cwlMap: Map[String, CwlFile]): TaskDefinition = {
@@ -63,12 +63,12 @@ case class WorkflowStep(
     val id = this.id
 
     val commandTemplate: Seq[CommandPart] =
-      //TODO: turn this select into a fold that supports other types of runnables
-      run.select[CommandLineTool].map{
-      clt =>
-        clt.baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
-        clt.arguments.map(_.map(_.fold(ArgumentToCommandPart)).toSeq).toSeq.flatten
-    }.toSeq.flatten
+    //TODO: turn this select into a fold that supports other types of runnables
+      run.select[CommandLineTool].map {
+        clt =>
+          clt.baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
+            clt.arguments.map(_.map(_.fold(ArgumentToCommandPart)).toSeq).toSeq.flatten
+      }.toSeq.flatten
 
     val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression])
 
@@ -177,12 +177,10 @@ case class WorkflowStepOutput(id: String)
 object WorkflowStep {
 
   def mungeInputId(in: String): String = {
-    val afterHash = in.substring(in.indexOf("#") + 1, in.length)
+    val afterHash = in.substring(in.indexOf("#") + 1)
 
-    if (afterHash.contains("/"))
-      afterHash.substring(afterHash.lastIndexOf("/") + 1, afterHash.length)
-    else
-      afterHash
+    // Everything after the '/' if the '/' is present, otherwise the whole string.
+    afterHash.substring(afterHash.lastIndexOf("/") + 1)
   }
 
   type Run =
@@ -196,4 +194,5 @@ object WorkflowStep {
     Array[String] :+:
       Array[WorkflowStepOutput] :+:
       CNil
+
 }

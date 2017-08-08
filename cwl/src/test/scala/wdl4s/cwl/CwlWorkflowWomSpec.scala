@@ -25,7 +25,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
     out shouldBe "example_out"
   }
 
-  "munging runnable output id " should "be able to skip the path args" in  {
+  "munging runnable output id " should "be able to skip the path args" in {
     val id = "file:///home/dan/common-workflow-language/v1.0/examples/tar-param.cwl#ps/0b4ba500-5584-4fed-a831-9fa6f914ad3f/ps-stdOut"
 
     val out = RunOutputsToTypeMap.mungeId(id)
@@ -48,8 +48,8 @@ inputs:
 outputs: []
 """.stripMargin
 
-    CwlCodecs.decodeCwl(firstTool) match {
-      case Right((clt: CommandLineTool, _)) =>
+    CwlCodecs.decodeCwl(firstTool) map {
+      case (clt: CommandLineTool, _) =>
         clt.womExecutable match {
           case Valid(wom) =>
             wom.entryPoint match {
@@ -70,9 +70,8 @@ outputs: []
             }
           case i@Invalid(_) => fail(s"Invalid: $i")
         }
-      case Right(other)  => fail(s"did not parse Command Line tool, instead parsed $other")
-      case Left(error) => fail(s"did not parse!  $error")
-    }
+      case (wth: Any, _) => fail(s"parsed unexpected type $wth")
+    } leftMap { error => fail(s"did not parse!  $error") }
   }
 
   "Cwl for 1st workflow" should "convert to WOM" in {
@@ -117,22 +116,21 @@ name: "file:///home/dan/wdl4s/r.cwl"
     import CwlCodecs._
 
 
-    decodeCwl(firstWorkflow) match {
-      case Right((workflow: Workflow, map: Map[String, CwlFile])) =>
-        workflow.womExecutable(map) match {
+    decodeCwl(firstWorkflow) map {
+      case (workflow: Workflow, nameToFile) =>
+        workflow.womExecutable(nameToFile) match {
           case Valid(ex) => validateWom(ex)
           case e => fail(s"executable was not created $e")
         }
-      case Right((wth: Any, _)) => fail(s"Parsed unexpected type $wth")
-      case Left(error) => fail(s"did not parse!  $error")
-    }
+      case (wth: Any, _) => fail(s"Parsed unexpected CwlFile subtype $wth")
+    } leftMap { error => fail(s"did not parse!  $error") }
 
     def validateWom(ex: Executable) = {
       ex match {
         case Executable(wf: WorkflowDefinition) =>
           val nodes = wf.innerGraph.nodes
 
-          nodes.collect{
+          nodes collect {
             case gin: GraphInputNode => gin.name
           } should be(Set("file:///home/dan/wdl4s/r.cwl#ex", "file:///home/dan/wdl4s/r.cwl#inp"))
 
@@ -140,20 +138,20 @@ name: "file:///home/dan/wdl4s/r.cwl"
             case cn: CallNode => cn.name
           } should be(Set("file:///home/dan/wdl4s/r.cwl#compile", "file:///home/dan/wdl4s/r.cwl#untar"))
 
-          nodes.collectFirst{
+          nodes.collectFirst {
             case tarParam: CallNode if tarParam.name == "file:///home/dan/wdl4s/r.cwl#untar" => tarParam
           }.get.
             upstream shouldBe Set(
-              RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#ex", WdlStringType),
-              RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#inp", WdlFileType))
+            RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#ex", WdlStringType),
+            RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#inp", WdlFileType))
 
 
-          nodes.collectFirst{
+          nodes.collectFirst {
             case compile: CallNode if compile.name == "file:///home/dan/wdl4s/r.cwl#compile" => compile
           }.get.inputPorts.map(_.upstream).head.name shouldBe "file:///home/dan/wdl4s/r.cwl#compile/src"
 
-          //TODO: test for outputs
-        case Executable(wth: Any) => fail(s"Parsed unexpected executable: $wth")
+        //TODO: test for outputs
+        case Executable(wth: Any) => fail(s"Parsed unexpected Callable: $wth")
       }
     }
   }
@@ -267,9 +265,8 @@ id: file:///Users/danb/wdl4s/r.cwl
       """.stripMargin
 
     val workflow = CwlCodecs.decodeCwl(threeStep) match {
-      case Right((wf: Workflow, _)) => wf
-      case Right(other) => fail(s"did not parse a workflow, instead got $other")
-      case Left(o) => fail(s"didn't parse a workflow! $o")
+      case Valid((wf: Workflow, _)) => wf
+      case o => fail(s"didn't parse a workflow! $o")
     }
     val wf = workflow.womExecutable(Map.empty) match {
       case Valid(Executable(wf: WorkflowDefinition)) => wf

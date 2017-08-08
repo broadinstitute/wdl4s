@@ -5,7 +5,9 @@ import wdl4s.wdl.command.{CommandPart, CwlExpressionCommandPart, StringCommandPa
 
 object StringOrExpressionToCommandPart extends Poly1 {
 
-  implicit def expression = at[ECMAScriptExpression] {ex => CwlExpressionCommandPart(ex.value):CommandPart}
+  implicit def expression = at[ECMAScriptExpression] { ex => CwlExpressionCommandPart(ex.value): CommandPart }
 
-  implicit def string = at[String] {StringCommandPart(_):CommandPart}
+  implicit def string = at[String] {
+    StringCommandPart(_): CommandPart
+  }
 }

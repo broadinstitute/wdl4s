@@ -23,7 +23,6 @@ object GraphNodePort {
   sealed trait OutputPort extends GraphNodePort {
 
     // TODO: Might end up wanting a backwards link to the InputPorts that use this (eg def downstream: Set[InputPort])?
-    def name: String
   }
 
   /**
