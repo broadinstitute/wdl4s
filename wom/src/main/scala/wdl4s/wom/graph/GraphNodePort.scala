@@ -34,15 +34,7 @@ object GraphNodePort {
     override lazy val graphNode = g()
   }
 
-  /**
-    *
-    * @param name Name
-    * @param womType WOM type (well WDL type really)
-    * @param upstream Upstream output port connected to this input port.
-    * @param setter In its own parameter list to be excluded from automagical case class equals and hashCode since functions will be compared
-    *               by identity and identities are likely to be unequal for legitimately equal `ConnectedInputPort`s.
-    */
-  final case class ConnectedInputPort(name: String, womType: WdlType, upstream: OutputPort)(setter: Unit => GraphNode) extends InputPort with DelayedGraphNodePort {
+  final case class ConnectedInputPort(name: String, womType: WdlType, upstream: OutputPort, setter: Unit => GraphNode) extends InputPort with DelayedGraphNodePort {
     override def g(): GraphNode = setter.apply(())
   }
 

@@ -89,7 +89,7 @@ object GraphNode {
         (result.singleOutputPort, Option(result)) // Read: Some(result)
     }
 
-    LinkedInputPort(ConnectedInputPort(inputDefinition.name, inputDefinition.womType, outputPort)(callNodeRef), graphNode)
+    LinkedInputPort(ConnectedInputPort(inputDefinition.name, inputDefinition.womType, outputPort, callNodeRef), graphNode)
   }
 
   private[wom] implicit class EnhancedGraphNodeSet(val nodes: Set[GraphNode]) extends AnyVal {
