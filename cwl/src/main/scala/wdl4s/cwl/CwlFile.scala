@@ -32,43 +32,59 @@ case class Workflow(
                      outputs: Array[WorkflowOutputParameter] = Array.empty,
                      steps: Array[WorkflowStep]) extends CwlFile {
 
-  def womExecutable(cwlMap: Map[String, CwlFile]): ErrorOr[Executable] = womDefinition(cwlMap).map(Executable.apply)
+  def womExecutable(cwlFileMap: Map[String, CwlFile]): ErrorOr[Executable] = womDefinition(cwlFileMap) map Executable.apply
 
-  def outputsTypeMap(cwlMap: Map[String, CwlFile]): WdlTypeMap = steps.foldLeft(Map.empty[String, WdlType]) {
-    (acc, s) => acc ++ s.typedOutputs(cwlMap)
+  def outputsTypeMap(cwlFileMap: Map[String, CwlFile]): WdlTypeMap = steps.foldLeft(Map.empty[String, WdlType]) {
+    // Not implemented as a `foldMap` because there is no semigroup instance for `WdlType`s.  `foldMap` doesn't know that
+    // we don't need a semigroup instance since the map keys should be unique and therefore map values would never need
+    // to be combined under the same key.
+    (acc, s) => acc ++ s.typedOutputs(cwlFileMap)
   }
 
   lazy val stepById: Map[String, WorkflowStep] = steps.map(ws => ws.id -> ws).toMap
 
-  def womGraph(cwlMap: Map[String, CwlFile]): ErrorOr[Graph] = {
-    val map: WdlTypeMap =
-      outputsTypeMap(cwlMap) ++
+  def womGraph(cwlFileMap: Map[String, CwlFile]): ErrorOr[Graph] = {
+
+    def cwlTypeForInputParameter(input: InputParameter): Option[CwlType] = input.`type`.flatMap(_.select[CwlType])
+
+    def wdlTypeForInputParameter(input: InputParameter): Option[WdlType] = {
+      cwlTypeForInputParameter(input) map cwlTypeToWdlType
+    }
+
+    val typeMap: WdlTypeMap =
+      outputsTypeMap(cwlFileMap) ++
+        // Note this is only looking at the workflow inputs and not recursing into steps, because our current thinking
+        // is that in CWL graph inputs can only be defined at the workflow level.  It's possible that's not actually
+        // correct, but that's the assumption being made here.
         inputs.toList.flatMap { i =>
-          i.`type`.flatMap(_.select[CwlType].map(cwlTypeToWdlType).map(i.id -> _)).toList
+          wdlTypeForInputParameter(i).map(i.id -> _).toList
         }.toMap
 
-    val graphFromSteps = steps.toList.foldMap(_.callWithInputs(map, cwlMap, this).nodes)
+    val graphFromSteps = steps.toList.foldMap(_.callWithInputs(typeMap, cwlFileMap, this).nodes)
 
     val graphFromInputs: Set[GraphNode] = inputs.map {
-      input =>
-        input.`type`.flatMap(_.select[CwlType].map(cwlTypeToWdlType)).map(RequiredGraphInputNode(input.id, _)).get
+      input => RequiredGraphInputNode(input.id, wdlTypeForInputParameter(input).get)
     }.toSet
 
     val graphFromOutputs: Set[GraphNode] =
       outputs.map {
         output =>
-          val tpe = cwlTypeToWdlType(output.`type`.flatMap(_.select[CwlType]).get)
+          val wdlType = cwlTypeToWdlType(output.`type`.flatMap(_.select[CwlType]).get)
 
           def lookupOutputSource(source: String): OutputPort = {
             val workflowOutput = WorkflowStepOutputIdReference(source)
-            val node = stepById(s"${workflowOutput.fileName}#${workflowOutput.stepId}").callWithInputs(map, cwlMap, this).call
+            // FIXME as there is a nice cache for steps by ID, I think there needs to be one for calls by ID too to avoid
+            // FIXME making more calls which is a no-no for a system that wants instance equality.
+            val node = stepById(s"${workflowOutput.fileName}#${workflowOutput.stepId}").callWithInputs(typeMap, cwlFileMap, this).call
 
-            GraphNodeOutputPort(output.id, tpe, node)
+            GraphNodeOutputPort(output.id, wdlType, node)
           }
 
           GraphOutputNode(
             output.id,
-            tpe,
+            wdlType,
+            // FIXME Should cache these output sources as well.  cgrep and wc inputs should both point to the same
+            // FIXME ps stdout output instance.
             lookupOutputSource(output.outputSource.flatMap(_.select[String]).get)
           )
       }.toSet
@@ -76,13 +92,13 @@ case class Workflow(
     Graph.validateAndConstruct(graphFromSteps ++ graphFromInputs ++ graphFromOutputs)
   }
 
-  def womDefinition(cwlMap: Map[String, CwlFile]): ErrorOr[WorkflowDefinition] = {
+  def womDefinition(cwlFileMap: Map[String, CwlFile]): ErrorOr[WorkflowDefinition] = {
     val name: String = "workflow Id"
     val meta: Map[String, String] = Map.empty
     val paramMeta: Map[String, String] = Map.empty
     val declarations: List[(String, Expression)] = List.empty
 
-    womGraph(cwlMap).map(graph =>
+    womGraph(cwlFileMap).map(graph =>
       WorkflowDefinition(
         name,
         graph,
