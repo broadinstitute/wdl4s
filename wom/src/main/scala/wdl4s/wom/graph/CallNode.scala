@@ -50,7 +50,7 @@ object TaskCall {
 object CallNode {
 
   final case class CallWithInputs(call: CallNode, inputs: Set[GraphInputNode]) {
-    def nodes: Set[GraphNode] = Set(call) ++ inputs
+    def nodes: Set[GraphNode] = Set.empty[GraphNode] + call ++ inputs
   }
 
   /**

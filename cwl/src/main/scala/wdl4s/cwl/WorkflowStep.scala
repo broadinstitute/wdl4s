@@ -1,18 +1,15 @@
 package wdl4s.cwl
 
 import shapeless.{:+:, CNil}
-import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.ScatterMethod._
 import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 import wdl4s.wdl.command.CommandPart
-import wdl4s.wdl.types.WdlType
 import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
 import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.expression.Expression
-import wdl4s.wom.graph.CallNode.CallWithInputs
 import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
-import wdl4s.wom.graph.{CallNode, GraphNode, RequiredGraphInputNode, TaskCallNode}
+import wdl4s.wom.graph.{CallNode, GraphNode, TaskCallNode}
 
 /**
   * An individual job to run.
@@ -21,16 +18,16 @@ import wdl4s.wom.graph.{CallNode, GraphNode, RequiredGraphInputNode, TaskCallNod
   * @param run Purposefully not defaulted as it's required and it is unreasonable to not have something to run.
   */
 case class WorkflowStep(
-                         id: String,
-                         in: Array[WorkflowStepInput] = Array.empty,
-                         out: Outputs,
-                         run: Run,
-                         requirements: Option[Array[Requirement]] = None,
-                         hints: Option[Array[CwlAny]] = None,
-                         label: Option[String] = None,
-                         doc: Option[String] = None,
-                         scatter: Option[String :+: Array[String] :+: CNil] = None,
-                         scatterMethod: Option[ScatterMethod] = None) {
+  id: String,
+  in: Array[WorkflowStepInput] = Array.empty,
+  out: Outputs,
+  run: Run,
+  requirements: Option[Array[Requirement]] = None,
+  hints: Option[Array[CwlAny]] = None,
+  label: Option[String] = None,
+  doc: Option[String] = None,
+  scatter: Option[String :+: Array[String] :+: CNil] = None,
+  scatterMethod: Option[ScatterMethod] = None) {
 
   def typedOutputs(cwlMap: Map[String, CwlFile]): WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
 
@@ -44,7 +41,7 @@ case class WorkflowStep(
       val _source: String = workflowStepInput.source.flatMap(_.select[String]).get
 
       val mungedTypeMap = typeMap map {
-        case (i, t) => RunOutputsToTypeMap.mungeId(i) -> t
+        case (id, tpe) => RunOutputsToTypeMap.mungeId(id) -> tpe
       }
 
       val value = WorkflowStep.mungeInputId(_source)
@@ -58,11 +55,7 @@ case class WorkflowStep(
 
     val runnableFQNTypeMap: WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
 
-    val runnableIdToTypeMap = runnableFQNTypeMap.map {
-      case (i, tpe) => i -> tpe
-    }
-
-    out.fold(WorkflowOutputsToOutputDefinition).apply(runnableIdToTypeMap)
+    out.fold(WorkflowOutputsToOutputDefinition).apply(runnableFQNTypeMap)
   }
 
   def taskDefinition(typeMap: WdlTypeMap, cwlMap: Map[String, CwlFile]): TaskDefinition = {
@@ -70,12 +63,12 @@ case class WorkflowStep(
     val id = this.id
 
     val commandTemplate: Seq[CommandPart] =
-    //TODO: turn this select into a fold that supports other types of runnables
-      run.select[CommandLineTool].map {
-        clt =>
-          clt.baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
-            clt.arguments.map(_.map(_.fold(ArgumentToCommandPart)).toSeq).toSeq.flatten
-      }.toSeq.flatten
+      //TODO: turn this select into a fold that supports other types of runnables
+      run.select[CommandLineTool].map{
+      clt =>
+        clt.baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
+        clt.arguments.map(_.map(_.fold(ArgumentToCommandPart)).toSeq).toSeq.flatten
+    }.toSeq.flatten
 
     val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression])
 
@@ -124,14 +117,10 @@ case class WorkflowStep(
       val workflowOutputsMap: (Map[String, OutputPort], Set[GraphNode]) = in.foldLeft((Map.empty[String, OutputPort], knownNodes)) {
         case ((map, upstreamNodes), workflowStepInput) =>
 
-
-
           val inputSource = workflowStepInput.source.flatMap(_.select[String]).get
 
           FullyQualifiedName(inputSource) match {
-            case WorkflowStepOutputIdReference(_, stepOutputId, stepId) =>
-
-
+            case WorkflowStepOutputIdReference(_, _, stepId) =>
 
               //generate a node for this output
 
@@ -148,28 +137,21 @@ case class WorkflowStep(
 
               val foundInSeenNodes: Option[OutputPort] = findThisInputInSet(knownNodes)
 
-              val newNodesAndOutputPort: Option[(Set[GraphNode],OutputPort)] = foundInSeenNodes.map(Set.empty[GraphNode] -> _) orElse lookupUpstreamNodes
-
-            def lookupUpstreamNodes:Option[(Set[GraphNode], OutputPort)] = {
-                val (step, (_, tpe))  = {
-                  val step = workflow.steps.find { step =>
+              def lookupUpstreamNodes:Option[(Set[GraphNode], OutputPort)] = {
+                //TODO: Option get!
+                val step  =
+                  workflow.steps.find { step =>
                     val lookup = WorkflowStepId(step.id).stepId
                     lookup == stepId
                   }.get
-
-                  step.typedOutputs(cwlMap).map(step -> _)
-                    .find {
-                      case (_, (stepOutputId, _)) =>
-
-                        RunOutputId(stepOutputId).outputId == stepOutputId
-                    }.get
-                }
-
 
                 val upstreamNodesForFoundStep:Set[GraphNode] = step.callWithInputs(typeMap, cwlMap, workflow, knownNodes,workflowInputs)
 
                 findThisInputInSet(upstreamNodesForFoundStep).map(upstreamNodesForFoundStep -> _)
               }
+
+              val newNodesAndOutputPort: Option[(Set[GraphNode],OutputPort)] = foundInSeenNodes.map(Set.empty[GraphNode] -> _) orElse lookupUpstreamNodes
+
 
               val (newNodes, outputPort) = newNodesAndOutputPort.get
 
@@ -178,7 +160,6 @@ case class WorkflowStep(
 
             case _ => (map, upstreamNodes)
           }
-
       }
 
       val td = taskDefinition(typeMap, cwlMap)
@@ -186,7 +167,6 @@ case class WorkflowStep(
       knownNodes ++ CallNode.callWithInputs(id, td, workflowInputs ++ workflowOutputsMap._1).nodes
     }
   }
-
 }
 
 /**
@@ -197,10 +177,12 @@ case class WorkflowStepOutput(id: String)
 object WorkflowStep {
 
   def mungeInputId(in: String): String = {
-    val afterHash = in.substring(in.indexOf("#") + 1)
+    val afterHash = in.substring(in.indexOf("#") + 1, in.length)
 
-    // Everything after the '/' if the '/' is present, otherwise the whole string.
-    afterHash.substring(afterHash.lastIndexOf("/") + 1)
+    if (afterHash.contains("/"))
+      afterHash.substring(afterHash.lastIndexOf("/") + 1, afterHash.length)
+    else
+      afterHash
   }
 
   type Run =
@@ -214,5 +196,4 @@ object WorkflowStep {
     Array[String] :+:
       Array[WorkflowStepOutput] :+:
       CNil
-
 }

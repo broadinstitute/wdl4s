@@ -25,7 +25,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
     out shouldBe "example_out"
   }
 
-  "munging runnable output id " should "be able to skip the path args" in {
+  "munging runnable output id " should "be able to skip the path args" in  {
     val id = "file:///home/dan/common-workflow-language/v1.0/examples/tar-param.cwl#ps/0b4ba500-5584-4fed-a831-9fa6f914ad3f/ps-stdOut"
 
     val out = RunOutputsToTypeMap.mungeId(id)
@@ -70,8 +70,9 @@ outputs: []
             }
           case i@Invalid(_) => fail(s"Invalid: $i")
         }
-      case (wth: Any, _) => fail(s"parsed unexpected type $wth")
-    } leftMap { error => fail(s"did not parse!  $error") }
+      case Valid((wth: Any, _)) => fail(s"parsed unexpected type $wth")
+      case Invalid(error) => fail(s"did not parse!  $error")
+    }
   }
 
   "Cwl for 1st workflow" should "convert to WOM" in {
@@ -116,21 +117,22 @@ name: "file:///home/dan/wdl4s/r.cwl"
     import CwlCodecs._
 
 
-    decodeCwl(firstWorkflow) map {
-      case (workflow: Workflow, nameToFile) =>
-        workflow.womExecutable(nameToFile) match {
+    decodeCwl(firstWorkflow) match {
+      case Right((workflow: Workflow, map: Map[String, CwlFile])) =>
+        workflow.womExecutable(map) match {
           case Valid(ex) => validateWom(ex)
           case e => fail(s"executable was not created $e")
         }
-      case (wth: Any, _) => fail(s"Parsed unexpected CwlFile subtype $wth")
-    } leftMap { error => fail(s"did not parse!  $error") }
+      case Right((wth: Any, _)) => fail(s"Parsed unexpected type $wth")
+      case Left(error) => fail(s"did not parse!  $error")
+    }
 
     def validateWom(ex: Executable) = {
       ex match {
         case Executable(wf: WorkflowDefinition) =>
           val nodes = wf.innerGraph.nodes
 
-          nodes collect {
+          nodes.collect{
             case gin: GraphInputNode => gin.name
           } should be(Set("file:///home/dan/wdl4s/r.cwl#ex", "file:///home/dan/wdl4s/r.cwl#inp"))
 
@@ -138,20 +140,20 @@ name: "file:///home/dan/wdl4s/r.cwl"
             case cn: CallNode => cn.name
           } should be(Set("file:///home/dan/wdl4s/r.cwl#compile", "file:///home/dan/wdl4s/r.cwl#untar"))
 
-          nodes.collectFirst {
+          nodes.collectFirst{
             case tarParam: CallNode if tarParam.name == "file:///home/dan/wdl4s/r.cwl#untar" => tarParam
           }.get.
             upstream shouldBe Set(
-            RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#ex", WdlStringType),
-            RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#inp", WdlFileType))
+              RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#ex", WdlStringType),
+              RequiredGraphInputNode("file:///home/dan/wdl4s/r.cwl#inp", WdlFileType))
 
 
-          nodes.collectFirst {
+          nodes.collectFirst{
             case compile: CallNode if compile.name == "file:///home/dan/wdl4s/r.cwl#compile" => compile
           }.get.inputPorts.map(_.upstream).head.name shouldBe "file:///home/dan/wdl4s/r.cwl#compile/src"
 
-        //TODO: test for outputs
-        case Executable(wth: Any) => fail(s"Parsed unexpected Callable: $wth")
+          //TODO: test for outputs
+        case Executable(wth: Any) => fail(s"Parsed unexpected executable: $wth")
       }
     }
   }

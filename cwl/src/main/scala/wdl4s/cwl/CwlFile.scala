@@ -1,18 +1,21 @@
 package wdl4s.cwl
 
-import cats.data.Validated.Valid
-import cats.instances.list._
-import cats.instances.set._
-import cats.syntax.foldable._
-import lenthall.validation.ErrorOr.ErrorOr
 import shapeless.syntax.singleton._
+import cats.syntax.foldable._
+import cats.syntax.traverse._
+import cats.instances.list._
+import cats.syntax.option._
 import shapeless.{:+:, CNil, Poly1, Witness}
+import CwlType._
+import shapeless.syntax.singleton._
+import CwlVersion._
+import cats.data.Validated._
+import lenthall.validation.ErrorOr._
 import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
 import wdl4s.cwl.CwlType.CwlType
-import wdl4s.cwl.CwlVersion._
+import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
 import wdl4s.wdl.command.CommandPart
 import wdl4s.wdl.types._
-import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
 import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.executable.Executable
@@ -67,26 +70,22 @@ case class Workflow(
         input.`type`.flatMap(_.select[CwlType].map(cwlTypeToWdlType)).map(RequiredGraphInputNode(input.id, _)).get
     }.toSet
 
-    val graphFromOutputs: Set[GraphNode] =
-      outputs.map {
+    val graphFromOutputs: ErrorOr[Set[GraphNode]] =
+      outputs.toList.traverse[ErrorOr, GraphNode] {
         output =>
+
           val tpe = cwlTypeToWdlType(output.`type`.flatMap(_.select[CwlType]).get)
 
-          def lookupOutputSource(source: String): OutputPort = {
-            val workflowOutput = WorkflowStepOutputIdReference(source)
-            val node = stepById(s"${workflowOutput.fileName}#${workflowOutput.stepId}").callWithInputs(map, cwlMap, this).call
+          def lookupOutputSource(source: String): ErrorOr[OutputPort] =
+            graphFromSteps.
+              flatMap(_.outputPorts).
+              find(_.name == source).
+              toValidNel(s"unable to find upstream port corresponding to $source")
 
-            GraphNodeOutputPort(output.id, tpe, node)
-          }
-
-          GraphOutputNode(
-            output.id,
-            tpe,
-            lookupOutputSource(output.outputSource.flatMap(_.select[String]).get)
-          )
-      }.toSet
-
-    Graph.validateAndConstruct(graphFromSteps ++ graphFromInputs ++ graphFromOutputs)
+          lookupOutputSource(output.outputSource.flatMap(_.select[String]).get).
+            map(GraphOutputNode(output.id, tpe, _))
+      }.map(_.toSet)
+    graphFromOutputs.flatMap(outputs => Graph.validateAndConstruct(graphFromSteps ++ graphFromInputs ++ outputs))
   }
 
   def womDefinition(cwlMap: Map[String, CwlFile]): ErrorOr[WorkflowDefinition] = {
@@ -109,7 +108,7 @@ case class Workflow(
 
 
 object Workflow {
-  val `class`: Witness.`"Workflow"`.T = "Workflow".narrow
+  val `class` : Witness.`"Workflow"`.T = "Workflow".narrow
 }
 
 /**
@@ -157,25 +156,17 @@ case class CommandLineTool(
 
 
   object BaseCommandToString extends Poly1 {
-    implicit def one = at[String] {
-      identity
-    }
+    implicit def one = at[String] {identity}
 
-    implicit def many = at[Array[String]] {
-      _.mkString(" && ")
-    }
+    implicit def many = at[Array[String]] {_.mkString(" && ")}
   }
 
   object ArgumentToId extends Poly1 {
-    implicit def ecmaScript = at[ECMAScriptExpression] {
-      _.value
-    }
+    implicit def ecmaScript = at[ECMAScriptExpression] {_.value}
 
-    implicit def commandLineBinding = at[CommandLineBinding] { _ => "" }
+    implicit def commandLineBinding = at[CommandLineBinding] {_ => ""}
 
-    implicit def string = at[String] {
-      identity
-    }
+    implicit def string = at[String] {identity}
   }
 
   /**
@@ -208,7 +199,7 @@ case class CommandLineTool(
     }.toSet
 
     val inputs: Set[_ <: Callable.InputDefinition] =
-      this.inputs.map { cip =>
+      this.inputs.map{ cip =>
         val tpe = cip.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get
 
         //TODO: This id includes the filename, which makes assigning input values more laborious
@@ -243,6 +234,7 @@ case class CommandLineTool(
 }
 
 object CommandLineTool {
+  val `class` : Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow
 
   type StringOrExpression = ECMAScriptExpression :+: String :+: CNil
 
