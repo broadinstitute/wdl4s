@@ -10,10 +10,11 @@ object WorkflowOutputsToOutputDefinition extends Poly1 {
     fullyQualifiedName.substring(fullyQualifiedName.lastIndexOf("/") + 1)
 
   def fullIdToOutputDefintition(fullyQualifiedName: String, typeMap: WdlTypeMap) = {
-    //we want to only look at the id, not the filename
-    val _id = fullyQualifiedName.substring(fullyQualifiedName.lastIndexOf("/") + 1)
 
-    OutputDefinition(_id, typeMap(_id), PlaceholderExpression(typeMap(_id)))
+    //we want to only look at the id, not the filename
+    val lookupId = WorkflowStepOutputId(fullyQualifiedName).outputId
+
+    OutputDefinition(fullyQualifiedName, typeMap(lookupId), PlaceholderExpression(typeMap(lookupId)))
   }
 
   implicit def a = at[Array[WorkflowStepOutput]] { outputs =>

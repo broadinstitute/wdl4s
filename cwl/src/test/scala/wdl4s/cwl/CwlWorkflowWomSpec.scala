@@ -148,7 +148,7 @@ name: "file:///home/dan/wdl4s/r.cwl"
 
           nodes.collectFirst {
             case compile: CallNode if compile.name == "file:///home/dan/wdl4s/r.cwl#compile" => compile
-          }.get.inputPorts.map(_.upstream).head.name shouldBe "file:///home/dan/wdl4s/r.cwl#compile/src"
+          }.get.inputPorts.map(_.upstream).head.name shouldBe "file:///home/dan/wdl4s/r.cwl#untar/example_out"
 
         //TODO: test for outputs
         case Executable(wth: Any) => fail(s"Parsed unexpected Callable: $wth")

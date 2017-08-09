@@ -79,8 +79,6 @@ id: file:///Users/danb/common-workflow-language/v1.0/examples/env.cwl
 name: file:///Users/danb/common-workflow-language/v1.0/examples/env.cwl
 """
 
-    val output = decodeCwl(envCwl)
-    println(s"output was $output")
-    output.isValid should be (true)
+    decodeCwl(envCwl).isValid should be (true)
   }
 }

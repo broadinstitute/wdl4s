@@ -24,13 +24,15 @@ object WorkflowStepId {
   }
 }
 
-case class WorkflowStepOutputId private (fileName: String, outputId: String) extends FullyQualifiedName
+case class WorkflowStepOutputId private (fileName: String, stepId: String, outputId: String) extends FullyQualifiedName
 
 object WorkflowStepOutputId {
   def apply(in: String): WorkflowStepOutputId = {
     val Array(fileName, id) = in.split("#")
 
-    WorkflowStepOutputId(fileName, id)
+    val Array(stepId, outputId) = id.split("/")
+
+    WorkflowStepOutputId(fileName, stepId, outputId)
   }
 }
 

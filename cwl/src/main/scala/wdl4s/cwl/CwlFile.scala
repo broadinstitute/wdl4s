@@ -75,7 +75,11 @@ case class Workflow(
       }.toMap
 
 
-    val graphFromSteps = steps.toList.foldLeft(Set.empty[GraphNode])((nodes, step) => step.callWithInputs(typeMap, cwlFileMap, this, nodes, workflowInputs))
+    val graphFromSteps =
+      steps.
+        toList.
+        foldLeft(Set.empty[GraphNode])(
+          (nodes, step) => step.callWithInputs(typeMap, cwlFileMap, this, nodes, workflowInputs))
 
     val graphFromInputs: Set[GraphNode] = inputs.map {
       input => RequiredGraphInputNode(input.id, wdlTypeForInputParameter(input).get)

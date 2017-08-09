@@ -31,10 +31,6 @@ case class WorkflowStep(
 
   def typedOutputs(cwlMap: Map[String, CwlFile]): WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
 
-  def womGraphInputNodes: Set[GraphNode] = ???
-
-  def womCallNode: GraphNode = ???
-
   def taskDefinitionInputs(typeMap: WdlTypeMap): Set[_ <: Callable.InputDefinition] =
     in.map { workflowStepInput =>
 
@@ -55,7 +51,12 @@ case class WorkflowStep(
 
     val runnableIdToTypeMap: WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(cwlMap)
 
-    out.fold(WorkflowOutputsToOutputDefinition).apply(runnableIdToTypeMap)
+    //this map will only match on the "id" field of the fully qualified name
+    val idMap = runnableIdToTypeMap map {
+      case (id, tpe) => RunOutputId(id).outputId -> tpe
+    }
+
+    out.fold(WorkflowOutputsToOutputDefinition).apply(idMap)
   }
 
   def taskDefinition(typeMap: WdlTypeMap, cwlMap: Map[String, CwlFile]): TaskDefinition = {
@@ -111,7 +112,7 @@ case class WorkflowStep(
     }}.contains(id)
 
     if (haveWeSeenThisStep)
-      Set.empty
+      knownNodes
     else {
       //need the outputs mapped from other workflow steps in order to pass in this map
       val workflowOutputsMap: (Map[String, OutputPort], Set[GraphNode]) = in.foldLeft((Map.empty[String, OutputPort], knownNodes)) {
@@ -164,7 +165,7 @@ case class WorkflowStep(
 
       val td = taskDefinition(typeMap, cwlMap)
 
-      knownNodes ++ CallNode.callWithInputs(id, td, workflowInputs ++ workflowOutputsMap._1).nodes
+      CallNode.callWithInputs(id, td, workflowInputs ++ workflowOutputsMap._1).nodes ++ workflowOutputsMap._2
     }
   }
 }
@@ -194,5 +195,4 @@ object WorkflowStep {
     Array[String] :+:
       Array[WorkflowStepOutput] :+:
       CNil
-
 }
