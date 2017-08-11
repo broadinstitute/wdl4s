@@ -47,7 +47,7 @@ object CwlCodecs {
     }
   }
 
-  private def decodeSingleFileCwl: Yaml => EitherA[CwlFile] = {
+  private def decodeSingleFileCwl: String => EitherA[CwlFile] = {
     import wdl4s.cwl.Implicits._
 
     YamlParser.
@@ -84,6 +84,6 @@ object CwlCodecs {
 
   def cwlToJson(cwl: CwlFile): String = jsonPrettyPrinter.pretty(encodeCwl(cwl))
 
-  def cwlToYaml(cwl: CwlFile): Yaml = yamlPrettyPrinter.pretty(encodeCwl(cwl))
+  def cwlToYaml(cwl: CwlFile): String = yamlPrettyPrinter.pretty(encodeCwl(cwl))
 
 }

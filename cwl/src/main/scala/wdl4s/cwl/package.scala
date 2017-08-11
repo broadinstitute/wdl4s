@@ -67,8 +67,6 @@ package object cwl extends TypeAliases {
     */
   type ECMAScriptExpression = String Refined MatchesRegex[W.`"$([^)]*)"`.T]
 
-  type Yaml = String
-
   type WdlTypeMap = Map[String, WdlType]
 
 }
