@@ -26,7 +26,7 @@ object CwlCodecs {
     * very simplistic logic that assumes only one level of depth max.
     * @return a `Map[String, CwlFile]` of filenames to `CwlFile`s.
     */
-  def decodeCwl(yaml: Yaml): ErrorOr[(CwlFile, Map[String, CwlFile])] = {
+  def decodeCwl(yaml: String): ErrorOr[(CwlFile, Map[String, CwlFile])] = {
     decodeSingleFileCwl(yaml) match {
       case Right(clt: CommandLineTool) => (clt, Map.empty[String, CwlFile]).validNel
       case Right(wf: Workflow) =>
