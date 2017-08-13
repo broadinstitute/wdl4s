@@ -2,7 +2,7 @@ package wdl4s.cwl
 
 import shapeless.Poly1
 import wdl4s.wom.callable.Callable.OutputDefinition
-import wdl4s.wom.expression.PlaceholderExpression
+import wdl4s.wom.expression.PlaceholderWomExpression
 
 object WorkflowOutputsToOutputDefinition extends Poly1 {
 
@@ -14,7 +14,7 @@ object WorkflowOutputsToOutputDefinition extends Poly1 {
     //we want to only look at the id, not the filename
     val lookupId = WorkflowStepOutputId(fullyQualifiedName).outputId
 
-    OutputDefinition(fullyQualifiedName, typeMap(lookupId), PlaceholderExpression(typeMap(lookupId)))
+    OutputDefinition(fullyQualifiedName, typeMap(lookupId), PlaceholderWomExpression(typeMap(lookupId)))
   }
 
   implicit def a = at[Array[WorkflowStepOutput]] { outputs =>

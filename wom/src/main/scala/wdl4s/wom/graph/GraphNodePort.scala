@@ -30,13 +30,12 @@ object GraphNodePort {
     * after the GraphNode is constructed, using the [[wdl4s.wom.graph.GraphNode.GraphNodeSetter]]
     */
   sealed trait DelayedGraphNodePort { this: GraphNodePort =>
-    def g(): GraphNode
-    override lazy val graphNode = g()
+    def g: Unit => GraphNode
+    override lazy val graphNode = g.apply(())
   }
 
-  final case class ConnectedInputPort(name: String, womType: WdlType, upstream: OutputPort, setter: Unit => GraphNode) extends InputPort with DelayedGraphNodePort {
-    override def g(): GraphNode = setter.apply(())
-  }
+  final case class ConnectedInputPort(name: String, womType: WdlType, upstream: OutputPort, g: Unit => GraphNode) extends InputPort with DelayedGraphNodePort
+
 
   /**
     * For any graph node that uses a declarations to produce outputs (e.g. call, declaration):
@@ -47,9 +46,6 @@ object GraphNodePort {
   /**
     * Represents the gathered output from a call/declaration in a scatter.
     */
-  final case class ScatterGathererPort(name: String, womType: WdlArrayType, outputToGather: GraphOutputNode)(setter: Unit => GraphNode) extends OutputPort with DelayedGraphNodePort {
-    override def g(): GraphNode = setter(())
-  }
-
+  final case class ScatterGathererPort(name: String, womType: WdlArrayType, outputToGather: PortBasedGraphOutputNode, g: Unit => GraphNode) extends OutputPort with DelayedGraphNodePort
   final case class ConditionalOutputPort(name: String, womType: WdlOptionalType, outputToExpose: OutputPort, graphNode: GraphNode) extends OutputPort
 }

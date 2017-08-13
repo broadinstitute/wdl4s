@@ -19,7 +19,7 @@ import wdl4s.wdl.types._
 import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.executable.Executable
-import wdl4s.wom.expression.{Expression, PlaceholderExpression}
+import wdl4s.wom.expression.{WomExpression, PlaceholderWomExpression}
 import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 import wdl4s.wom.graph._
 
@@ -98,7 +98,7 @@ case class Workflow(
               toValidNel(s"unable to find upstream port corresponding to $source")
 
           lookupOutputSource(output.outputSource.flatMap(_.select[String]).get).
-            map(GraphOutputNode(output.id, tpe, _))
+            map(PortBasedGraphOutputNode(output.id, tpe, _))
       }.map(_.toSet)
     graphFromOutputs.flatMap(outputs => Graph.validateAndConstruct(graphFromSteps ++ graphFromInputs ++ outputs))
   }
@@ -107,7 +107,7 @@ case class Workflow(
     val name: String = "workflow Id"
     val meta: Map[String, String] = Map.empty
     val paramMeta: Map[String, String] = Map.empty
-    val declarations: List[(String, Expression)] = List.empty
+    val declarations: List[(String, WomExpression)] = List.empty
 
     womGraph(cwlFileMap).map(graph =>
       WorkflowDefinition(
@@ -218,7 +218,7 @@ case class CommandLineTool(
     val outputs: Set[Callable.OutputDefinition] = this.outputs.map {
       output =>
         val tpe = output.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get //<-- here be `get` dragons
-        OutputDefinition(output.id, tpe, PlaceholderExpression(tpe))
+        OutputDefinition(output.id, tpe, PlaceholderWomExpression(tpe))
     }.toSet
 
     val inputs: Set[_ <: Callable.InputDefinition] =
@@ -231,7 +231,7 @@ case class CommandLineTool(
         RequiredInputDefinition(inputId, tpe)
       }.toSet
 
-    val declarations: List[(String, Expression)] = List.empty
+    val declarations: List[(String, WomExpression)] = List.empty
 
     TaskDefinition(
       id,

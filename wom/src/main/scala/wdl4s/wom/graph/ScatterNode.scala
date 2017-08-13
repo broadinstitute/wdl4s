@@ -60,8 +60,8 @@ object ScatterNode {
     val linkedInputPorts = linkedInputPortsAndGraphInputNodes.map(_.newInputPort)
     val graphInputNodes = linkedInputPortsAndGraphInputNodes collect { case LinkedInputPort(_, Some(gin)) => gin }
 
-    val outputPorts: Set[ScatterGathererPort] = innerGraph.nodes.collect { case gon: GraphOutputNode =>
-      ScatterGathererPort(gon.name, WdlArrayType(gon.womType), gon)(graphNodeSetter.get)
+    val outputPorts: Set[ScatterGathererPort] = innerGraph.nodes.collect { case gon: PortBasedGraphOutputNode =>
+      ScatterGathererPort(gon.name, WdlArrayType(gon.womType), gon, graphNodeSetter.get)
     }
 
     val scatterNode: ScatterNode = ScatterNode(innerGraph, scatterVariableMapping, linkedInputPorts, outputPorts)

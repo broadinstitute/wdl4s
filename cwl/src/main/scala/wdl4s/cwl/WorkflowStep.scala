@@ -7,7 +7,7 @@ import wdl4s.wdl.command.CommandPart
 import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
 import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{Callable, TaskDefinition}
-import wdl4s.wom.expression.Expression
+import wdl4s.wom.expression.WomExpression
 import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 import wdl4s.wom.graph.{CallNode, GraphNode, TaskCallNode}
 
@@ -76,7 +76,7 @@ case class WorkflowStep(
     val meta: Map[String, String] = Map.empty
     val parameterMeta: Map[String, String] = Map.empty
 
-    val declarations: List[(String, Expression)] = List.empty
+    val declarations: List[(String, WomExpression)] = List.empty
 
     TaskDefinition(
       id,
