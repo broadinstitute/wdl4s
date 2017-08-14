@@ -30,7 +30,7 @@ object GraphNodePort {
     * after the GraphNode is constructed, using the [[wdl4s.wom.graph.GraphNode.GraphNodeSetter]]
     */
   sealed trait DelayedGraphNodePort { this: GraphNodePort =>
-    def g: Unit => GraphNode
+    val g: Unit => GraphNode
     override lazy val graphNode = g.apply(())
   }
 
