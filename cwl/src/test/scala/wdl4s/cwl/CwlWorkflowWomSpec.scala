@@ -46,7 +46,7 @@ inputs:
     position: 1
   id: message
 outputs: []
-""".stripMargin
+"""
 
     CwlCodecs.decodeCwl(firstTool) map {
       case (clt: CommandLineTool, _) =>
@@ -111,7 +111,7 @@ steps:
 id: "file:///home/dan/wdl4s/r.cwl"
 name: "file:///home/dan/wdl4s/r.cwl"
 
-""".stripMargin
+"""
 
     import CwlCodecs._
 
@@ -262,7 +262,7 @@ steps:
     stdout: wc-stdOut.txt
     id: file:///Users/danb/wdl4s/r.cwl#wc/45d98851-7bfe-473e-ab24-aac922553f3e
 id: file:///Users/danb/wdl4s/r.cwl
-      """.stripMargin
+"""
 
     val workflow = CwlCodecs.decodeCwl(threeStep) match {
       case Valid((wf: Workflow, _)) => wf

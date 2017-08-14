@@ -36,7 +36,6 @@ object GraphNodePort {
 
   final case class ConnectedInputPort(name: String, womType: WdlType, upstream: OutputPort, g: Unit => GraphNode) extends InputPort with DelayedGraphNodePort
 
-
   /**
     * For any graph node that uses a declarations to produce outputs (e.g. call, declaration):
     */

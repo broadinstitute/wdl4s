@@ -60,8 +60,6 @@ object WdlWorkflow {
     }
   }
 
-
-
   /**
     * Convert this WdlWorkflow into a wom.components.Workflow
     */
