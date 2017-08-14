@@ -1,5 +1,6 @@
 package wdl4s.wdl
 
+import cats.data.Validated.{Invalid, Valid}
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.wdl.AstTools.EnhancedAstNode
 import wdl4s.wdl.exception.{ValidationException, VariableLookupException, VariableNotFoundException}
@@ -46,7 +47,8 @@ object WdlCall {
       (key, expression)
     } toMap
   }
-  
+
+
   private def buildWomNodeAndInputs(wdlCall: WdlCall): CallWithInputs = {
     val inputToOutputPort: Map[String, GraphNodeOutputPort] = for {
       (inputName, expr) <- wdlCall.inputMappings
@@ -56,7 +58,11 @@ object WdlCall {
       outputPort = outputPortFromNode(node, variable.terminalSubIdentifier)
     } yield inputName -> outputPort
 
-    CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), wdlCall.callable.womDefinition, inputToOutputPort)
+    // TODO: When WdlExpressions wrap WomExpressions, we can use them directly and remove the 'inputToOutputPort' thing above:
+    CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), wdlCall.callable.womDefinition, inputToOutputPort, Set.empty) match {
+      case Valid(callWithInputs) => callWithInputs
+      case Invalid(errors) => throw new Exception(s"Unable to construct WOM CallWithInputs: ${errors.toList.mkString(", ")}")
+    }
   }
 
   private def outputPortFromNode(node: WdlGraphNode, terminal: Option[Terminal]): GraphNodeOutputPort = {
