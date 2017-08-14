@@ -213,7 +213,7 @@ case class CommandLineTool(
     val outputs: Set[Callable.OutputDefinition] = this.outputs.map {
       output =>
         val tpe = output.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get //<-- here be `get` dragons
-        OutputDefinition(output.id, tpe, PlaceholderWomExpression(tpe))
+        OutputDefinition(output.id, tpe, PlaceholderWomExpression(Set.empty, tpe))
     }.toSet
 
     val inputs: Set[_ <: Callable.InputDefinition] =

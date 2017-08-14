@@ -11,7 +11,7 @@ object WorkflowOutputsToOutputDefinition extends Poly1 {
     //we want to only look at the id, not the filename
     val lookupId = WorkflowStepOutputId(fullyQualifiedName).outputId
 
-    OutputDefinition(fullyQualifiedName, typeMap(lookupId), PlaceholderWomExpression(typeMap(lookupId)))
+    OutputDefinition(fullyQualifiedName, typeMap(lookupId), PlaceholderWomExpression(Set.empty, typeMap(lookupId)))
   }
 
   implicit def a = at[Array[WorkflowStepOutput]] { outputs =>
