@@ -1,5 +1,7 @@
 package wdl4s.wdl
 
+import cats.syntax.validated._
+import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.parser.WdlParser
 import wdl4s.parser.WdlParser.{Ast, AstList, AstNode, Terminal}
 import wdl4s.wdl.AstTools.{EnhancedAstNode, VariableReference}
@@ -8,10 +10,13 @@ import wdl4s.wdl.expression._
 import wdl4s.wdl.formatter.{NullSyntaxHighlighter, SyntaxHighlighter}
 import wdl4s.wdl.types._
 import wdl4s.wdl.values._
+import wdl4s.wom.expression.{IoFunctionSet, WomExpression}
 
 import scala.collection.JavaConverters._
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.language.postfixOps
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class WdlExpressionException(message: String = null, cause: Throwable = null) extends RuntimeException(message, cause)
 
@@ -184,6 +189,33 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
   }
   def topLevelMemberAccesses: Set[MemberAccess] = AstTools.findTopLevelMemberAccesses(ast) map { MemberAccess(_) } toSet
   def variableReferences: Iterable[VariableReference] = AstTools.findVariableReferences(ast)
+}
+
+final case class WdlWomExpression(wdlExpression: WdlExpression) extends WomExpression {
+
+  override def inputs: Set[String] = wdlExpression.variableReferences map { _.terminal.getSourceString } toSet
+
+  override def evaluateValue(variableValues: Map[String, WdlValue], ioFunctionSet: IoFunctionSet): ErrorOr[WdlValue] = {
+    lazy val wdlFunctions = new WdlStandardLibraryFunctions {
+      override def readFile(path: String): String = Await.result(ioFunctionSet.read_file(path), Duration.Inf)
+
+      override def writeFile(path: String, content: String): Try[WdlFile] = Try(Await.result(ioFunctionSet.write_file(path, content), Duration.Inf))
+
+      override def stdout(params: Seq[Try[WdlValue]]): Try[WdlFile] = ???
+
+      override def stderr(params: Seq[Try[WdlValue]]): Try[WdlFile] = ???
+
+      override def glob(path: String, pattern: String): Seq[String] = ???
+
+      override def size(params: Seq[Try[WdlValue]]): Try[WdlFloat] = ???
+    }
+    wdlExpression.evaluate(variableValues.apply, wdlFunctions) match {
+      case Success(v) => v.validNel
+      case Failure(e) => e.getMessage.invalidNel
+    }
+  }
+
+  override def evaluateType(inputTypes: Map[String, WdlType]): ErrorOr[WdlType] = ???
 }
 
 object TernaryIf {
