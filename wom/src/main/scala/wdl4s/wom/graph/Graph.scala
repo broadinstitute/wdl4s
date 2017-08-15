@@ -26,7 +26,7 @@ object Graph {
     def goodLink(port: InputPort): ErrorOr[Unit] = {
       val upstreamOutputPort = port.upstream
 
-      if (nodes.contains(upstreamOutputPort.graphNode)) {
+      if (nodes.exists(_ eq upstreamOutputPort.graphNode)) {
         ().validNel
       } else {
         s"The input link ${port.name} is linked to a node outside the graph set (${upstreamOutputPort.name})".invalidNel
