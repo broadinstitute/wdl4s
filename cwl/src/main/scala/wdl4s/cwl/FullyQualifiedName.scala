@@ -1,5 +1,13 @@
 package wdl4s.cwl
 
+/**
+  * All of these classes decompose a "fully qualified" id into its constitutent parts.  They have unique types as
+  * they are seen in different parts of a CWL document and they differ in content.
+  *
+  * The fully qualified names are created by the Schema salad preprocessing step.
+  *
+  * @see <a href="http://www.commonwl.org/v1.0/SchemaSalad.html#Identifier_resolution">Schema salad Identifier Resolution</a>
+  */
 trait FullyQualifiedName {
   val fileName: String
 }

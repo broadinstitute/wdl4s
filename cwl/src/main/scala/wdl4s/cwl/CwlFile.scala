@@ -83,7 +83,7 @@ case class Workflow(
       outputs.toList.traverse[ErrorOr, GraphNode] {
         output =>
 
-          val tpe = cwlTypeToWdlType(output.`type`.flatMap(_.select[CwlType]).get)
+          val wdlType = cwlTypeToWdlType(output.`type`.flatMap(_.select[CwlType]).get)
 
           def lookupOutputSource(source: String): ErrorOr[OutputPort] =
             graphFromSteps.
@@ -92,7 +92,7 @@ case class Workflow(
               toValidNel(s"unable to find upstream port corresponding to $source")
 
           lookupOutputSource(output.outputSource.flatMap(_.select[String]).get).
-            map(PortBasedGraphOutputNode(output.id, tpe, _))
+            map(PortBasedGraphOutputNode(output.id, wdlType, _))
       }.map(_.toSet)
 
     graphFromOutputs.flatMap(outputs => Graph.validateAndConstruct(graphFromSteps ++ graphFromInputs ++ outputs))
@@ -212,8 +212,8 @@ case class CommandLineTool(
     //http://www.commonwl.org/v1.0/CommandLineTool.html#CommandOutputBinding
     val outputs: Set[Callable.OutputDefinition] = this.outputs.map {
       output =>
-        val tpe = output.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get //<-- here be `get` dragons
-        OutputDefinition(output.id, tpe, PlaceholderWomExpression(Set.empty, tpe))
+        val wdlType = output.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get //<-- here be `get` dragons
+        OutputDefinition(output.id, wdlType, PlaceholderWomExpression(Set.empty, wdlType))
     }.toSet
 
     val inputs: Set[_ <: Callable.InputDefinition] =
