@@ -1,17 +1,20 @@
 package wdl4s.cwl
 
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.cwl.CromwomificationWIPPlaceholders.AstNodeForLiteralWdlExpression
+import wdl4s.parser.WdlParser.Terminal
 import wdl4s.wdl.command.{CommandPart, ParameterCommandPart, StringCommandPart}
 import wdl4s.wdl.expression.PureStandardLibraryFunctionsLike
 import wdl4s.wdl.values.WdlValue
-import wdl4s.wdl.{Declaration, EvaluatedTaskInputs, RuntimeAttributes, WdlExpression}
+import wdl4s.wdl.{Declaration, RuntimeAttributes, WdlExpression}
 import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.expression.WomExpression
 
 class ConvertCromWomToCwlSpec extends FlatSpec with Matchers {
 
   it should "convert CromWOM TaskDefinition to CWL CommandLineTool" in {
+    val mockAstId = 42
+    val mockLine = 0
+    val mockCol = 0
     val taskDef = TaskDefinition(
       name = "message",
       commandTemplate = Seq(
@@ -19,7 +22,7 @@ class ConvertCromWomToCwlSpec extends FlatSpec with Matchers {
         ParameterCommandPart(
           attributes = Map.empty[String, String],
           expression = WdlExpression(
-            ast = AstNodeForLiteralWdlExpression("Hello")
+            ast = new Terminal(mockAstId, "string", "Hello", "Yo", mockLine, mockCol)
           )
         )
       ): Seq[CommandPart],
@@ -30,12 +33,12 @@ class ConvertCromWomToCwlSpec extends FlatSpec with Matchers {
       inputs = Set.empty[Callable.InputDefinition],
       declarations = List.empty[(String, WomExpression)]
     )
-    val taskInputs: EvaluatedTaskInputs = Map.empty[Declaration, WdlValue]
+    val taskInputs = Map.empty[Declaration, WdlValue]
     val functions = new PureStandardLibraryFunctionsLike {}
-    val valueMapper: WdlValue => WdlValue = (value: WdlValue) => value
+    val valueMapper = (value: WdlValue) => value
     val taskString = taskDef.instantiateCommand(taskInputs, functions, valueMapper).get
     println(taskString)
-    taskString.contains("echo") shouldBe true
+    taskString shouldBe "echo Hello"
   }
 
 }
