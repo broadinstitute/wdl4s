@@ -25,7 +25,7 @@ class ConvertCromWomToCwlSpec extends FlatSpec with Matchers {
             ast = new Terminal(mockAstId, "string", "Hello", "Yo", mockLine, mockCol)
           )
         )
-      ): Seq[CommandPart],
+      ),
       runtimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression]),
       meta = Map.empty[String, String],
       parameterMeta = Map.empty[String, String],
