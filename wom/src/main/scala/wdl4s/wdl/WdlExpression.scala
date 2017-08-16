@@ -215,7 +215,13 @@ final case class WdlWomExpression(wdlExpression: WdlExpression) extends WomExpre
     }
   }
 
-  override def evaluateType(inputTypes: Map[String, WdlType]): ErrorOr[WdlType] = ???
+  override def evaluateType(inputTypes: Map[String, WdlType]): ErrorOr[WdlType] = {
+    // All usages of WdlExpression#evaluateType trace back to WdlNamespace
+    wdlExpression.evaluateType(inputTypes.apply, new WdlStandardLibraryFunctionsType, from = None) match {
+      case Success(v) => v.validNel
+      case Failure(e) => e.getMessage.invalidNel
+    }
+  }
 }
 
 object TernaryIf {
