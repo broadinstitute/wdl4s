@@ -1,15 +1,34 @@
 package wdl4s.cwl
 
 import org.scalatest.{FlatSpec, Matchers}
+import wdl4s.cwl.WomToCwl.{NonWhitespaceToken, WhitespaceToken}
 import wdl4s.parser.WdlParser.Terminal
-import wdl4s.wdl.command.{CommandPart, ParameterCommandPart, StringCommandPart}
+import wdl4s.wdl.{Declaration, RuntimeAttributes, WdlExpression}
+import wdl4s.wdl.command.{ParameterCommandPart, StringCommandPart}
 import wdl4s.wdl.expression.PureStandardLibraryFunctionsLike
 import wdl4s.wdl.values.WdlValue
-import wdl4s.wdl.{Declaration, RuntimeAttributes, WdlExpression}
 import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.expression.WomExpression
 
-class ConvertCromWomToCwlSpec extends FlatSpec with Matchers {
+class WomToCwlSpec extends FlatSpec with Matchers {
+
+  it should "tokenize strings" in {
+    val string = "The jar  goes to the well   till it breaks."
+    val stringCommandPart = StringCommandPart(string)
+    val tokens = WomToCwl.toStringTokens(stringCommandPart)
+    val tokenStrings = Seq("The", " ", "jar", "  ", "goes", " ", "to", " ", "the", " ", "well", "   ",
+      "till", " ", "it", " ", "breaks.")
+    val tokensExpected =
+      tokenStrings.map{ tokenString =>
+        if(tokenString.charAt(0).isWhitespace) {
+          WhitespaceToken(stringCommandPart, tokenString)
+        } else {
+          NonWhitespaceToken(stringCommandPart, tokenString)
+        }
+      }
+    string shouldBe tokenStrings.mkString("")
+    tokens shouldBe tokensExpected
+  }
 
   it should "convert CromWOM TaskDefinition to CWL CommandLineTool" in {
     val mockAstId = 42
