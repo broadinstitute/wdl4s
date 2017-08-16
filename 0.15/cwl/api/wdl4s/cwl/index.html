@@ -1,0 +1,1730 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <title></title>
+          <meta name="description" content="" />
+          <meta name="keywords" content="" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../lib/jquery.panzoom.min.js"></script>
+      <script type="text/javascript" src="../../lib/jquery.mousewheel.min.js"></script>
+      <script type="text/javascript" src="../../lib/index.js"></script>
+      <script type="text/javascript" src="../../index.js"></script>
+      <script type="text/javascript" src="../../lib/scheduler.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+        /* this variable can be used by the JS to determine the path to the root document */
+        var toRoot = '../../';
+      </script>
+    
+        </head>
+        <body>
+      <div id="search">
+        <span id="doc-title"><span id="doc-version"></span></span>
+        <span class="close-results"><span class="left">&lt;</span> Back</span>
+        <div id="textfilter">
+          <span class="input">
+            <input autocapitalize="none" placeholder="Search" id="index-input" type="text" accesskey="/" />
+            <i class="clear material-icons"></i>
+            <i id="search-icon" class="material-icons"></i>
+          </span>
+        </div>
+    </div>
+      <div id="search-results">
+        <div id="search-progress">
+          <div id="progress-fill"></div>
+        </div>
+        <div id="results-content">
+          <div id="entity-results"></div>
+          <div id="member-results"></div>
+        </div>
+      </div>
+      <div id="content-scroll-container" style="-webkit-overflow-scrolling: touch;">
+        <div id="content-container" style="-webkit-overflow-scrolling: touch;">
+          <div id="subpackage-spacer">
+            <div id="packages">
+              <h1>Packages</h1>
+              <ul>
+                <li name="_root_.root" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="_root_"></a><a id="root:_root_"></a>
+      <span class="permalink">
+      <a href="index.html#_root_" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../index.html">
+              <span class="name">root</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="_root_.wdl4s" visbl="pub" class="indented1 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wdl4s"></a><a id="wdl4s:wdl4s"></a>
+      <span class="permalink">
+      <a href="index.html#wdl4s" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../index.html">
+              <span class="name">wdl4s</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="wdl4s.cwl" visbl="pub" class="indented2 current" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="cwl"></a><a id="cwl:cwl"></a>
+      <span class="permalink">
+      <a href="../wdl4s/index.html#cwl" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cwl</span>
+      </span>
+      
+      <p class="shortcomment cmt">This package is intended to parse all CWL files.</p><div class="fullcomment"><div class="comment cmt"><p>This package is intended to parse all CWL files.</p><h3>Usage</h3><pre><span class="kw">import</span> wdl4s.cwl._
+
+<span class="kw">val</span> firstTool = <span class="lit">""</span><span class="lit">"
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: echo
+inputs:
+  message:
+    type: string
+    inputBinding:
+      position: 1
+outputs: []
+"</span><span class="lit">""</span>
+decodeCwl(firstTool) <span class="cmt">//returns Either[Error, Cwl]</span></pre><p>It makes heavy use of Circe YAML/Json auto derivation feature and
+Circe modules that support the Scala libraries shapeless and Refined.</p><p>The <a href="https://oss.sonatype.org/service/local/repositories/releases/archive/com/chuusai/shapeless_2.12/2.3.2/shapeless_2.12-2.3.2-javadoc.jar/!/shapeless/Coproduct.html" target="_blank">shapeless.coproduct</a> feature allows us to specify a large
+number of potential types to be parsed.  A.k.a. a &quot;disjunction&quot; or &quot;OR&quot; relationship amongst these types.</p><p>The <a href="https://github.com/fthomas/refined/blob/master/modules/core/shared/src/main/scala/eu/timepit/refined/string.scala" target="_blank">MatchesRegex</a> &quot;refined type&quot; is used
+to enforce structure upon String values in the CWL Yaml.  Shapeless' Witness type
+is used to declare a type containing a String literal.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="wdl4s">wdl4s</a></dd><dt>See also</dt><dd><span class="cmt"><p><a href="https://github.com/milessabin/shapeless">Shapeless</a></p></span><span class="cmt"><p><a href="https://github.com/fthomas/refined">Refined</a></p></span><span class="cmt"><p><a href="https://github.com/circe/circe-yaml">circe-yaml</a></p></span><span class="cmt"><p><a href="https://github.com/circe/circe">circe</a></p></span><span class="cmt"><p><a href="http://www.commonwl.org/v1.0/">CWL Specification</a></p></span></dd></dl></div>
+    </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="CommandInputArraySchema.html" title=""></a>
+                        <a href="CommandInputArraySchema.html" title="">
+                          CommandInputArraySchema
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="CommandInputEnumSchema.html" title=""></a>
+                        <a href="CommandInputEnumSchema.html" title="">
+                          CommandInputEnumSchema
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="CommandInputParameter.html" title=""></a>
+                        <a href="CommandInputParameter.html" title="">
+                          CommandInputParameter
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="CommandInputRecordField.html" title=""></a>
+                        <a href="CommandInputRecordField.html" title="">
+                          CommandInputRecordField
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="CommandInputRecordSchema.html" title=""></a>
+                        <a href="CommandInputRecordSchema.html" title="">
+                          CommandInputRecordSchema
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="CommandLineBinding.html" title=""></a>
+                        <a href="CommandLineBinding.html" title="">
+                          CommandLineBinding
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="CommandLineTool$.html" title=""></a>
+                        <a class="class" href="CommandLineTool.html" title=""></a>
+                        <a href="CommandLineTool.html" title="">
+                          CommandLineTool
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="CommandOutputBinding$.html" title=""></a>
+                        <a class="class" href="CommandOutputBinding.html" title=""></a>
+                        <a href="CommandOutputBinding.html" title="">
+                          CommandOutputBinding
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="CommandOutputParameter.html" title=""></a>
+                        <a href="CommandOutputParameter.html" title="">
+                          CommandOutputParameter
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Cwl.html" title=""></a>
+                        <a href="Cwl.html" title="">
+                          Cwl
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="CwlCodecs$.html" title=""></a>
+                        <a href="CwlCodecs$.html" title="">
+                          CwlCodecs
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="CwlType$.html" title=""></a>
+                        <a href="CwlType$.html" title="">
+                          CwlType
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="CwlVersion$.html" title=""></a>
+                        <a href="CwlVersion$.html" title="">
+                          CwlVersion
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="Directory.html" title=""></a>
+                        <a href="Directory.html" title="">
+                          Directory
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="Dirent.html" title=" Short for &quot;Directory Entry&quot;"></a>
+                        <a href="Dirent.html" title=" Short for &quot;Directory Entry&quot;">
+                          Dirent
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="DockerRequirement.html" title=""></a>
+                        <a href="DockerRequirement.html" title="">
+                          DockerRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="EnvVarRequirement$.html" title=""></a>
+                        <a class="class" href="EnvVarRequirement.html" title=""></a>
+                        <a href="EnvVarRequirement.html" title="">
+                          EnvVarRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="EnvironmentDef.html" title=""></a>
+                        <a href="EnvironmentDef.html" title="">
+                          EnvironmentDef
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="ExpressionTool.html" title=""></a>
+                        <a href="ExpressionTool.html" title="">
+                          ExpressionTool
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="ExpressionToolOutputParameter.html" title=""></a>
+                        <a href="ExpressionToolOutputParameter.html" title="">
+                          ExpressionToolOutputParameter
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="File.html" title=""></a>
+                        <a href="File.html" title="">
+                          File
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="Implicits$.html" title=""></a>
+                        <a href="Implicits$.html" title="">
+                          Implicits
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="InitialWorkDirRequirement.html" title=""></a>
+                        <a href="InitialWorkDirRequirement.html" title="">
+                          InitialWorkDirRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="InlineJavascriptRequirement.html" title=""></a>
+                        <a href="InlineJavascriptRequirement.html" title="">
+                          InlineJavascriptRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="InputArraySchema.html" title=""></a>
+                        <a href="InputArraySchema.html" title="">
+                          InputArraySchema
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="InputBinding.html" title=""></a>
+                        <a href="InputBinding.html" title="">
+                          InputBinding
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="InputEnumSchema.html" title=""></a>
+                        <a href="InputEnumSchema.html" title="">
+                          InputEnumSchema
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="InputParameter.html" title=""></a>
+                        <a href="InputParameter.html" title="">
+                          InputParameter
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="InputRecordField.html" title=""></a>
+                        <a href="InputRecordField.html" title="">
+                          InputRecordField
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="InputRecordSchema.html" title=""></a>
+                        <a href="InputRecordSchema.html" title="">
+                          InputRecordSchema
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="LinkMergeMethod$.html" title=""></a>
+                        <a href="LinkMergeMethod$.html" title="">
+                          LinkMergeMethod
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="MultipleInputFeatureRequirement.html" title=""></a>
+                        <a href="MultipleInputFeatureRequirement.html" title="">
+                          MultipleInputFeatureRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="OutputArraySchema.html" title=""></a>
+                        <a href="OutputArraySchema.html" title="">
+                          OutputArraySchema
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="OutputEnumSchema.html" title=""></a>
+                        <a href="OutputEnumSchema.html" title="">
+                          OutputEnumSchema
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="OutputRecordField.html" title=""></a>
+                        <a href="OutputRecordField.html" title="">
+                          OutputRecordField
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="OutputRecordSchema.html" title=""></a>
+                        <a href="OutputRecordSchema.html" title="">
+                          OutputRecordSchema
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="ResourceRequirement.html" title=""></a>
+                        <a href="ResourceRequirement.html" title="">
+                          ResourceRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="ScatterFeatureRequirement.html" title=""></a>
+                        <a href="ScatterFeatureRequirement.html" title="">
+                          ScatterFeatureRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="ScatterMethod$.html" title=""></a>
+                        <a href="ScatterMethod$.html" title="">
+                          ScatterMethod
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="SchemaDefRequirement.html" title=""></a>
+                        <a href="SchemaDefRequirement.html" title="">
+                          SchemaDefRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="ShellCommandRequirement.html" title=""></a>
+                        <a href="ShellCommandRequirement.html" title="">
+                          ShellCommandRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="SoftwarePackage.html" title=""></a>
+                        <a href="SoftwarePackage.html" title="">
+                          SoftwarePackage
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="SoftwareRequirement.html" title=""></a>
+                        <a href="SoftwareRequirement.html" title="">
+                          SoftwareRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="StepInputExpressionRequirement.html" title=""></a>
+                        <a href="StepInputExpressionRequirement.html" title="">
+                          StepInputExpressionRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="SubworkflowFeatureRequirement.html" title=""></a>
+                        <a href="SubworkflowFeatureRequirement.html" title="">
+                          SubworkflowFeatureRequirement
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="TypeAliases.html" title=""></a>
+                        <a href="TypeAliases.html" title="">
+                          TypeAliases
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="Workflow$.html" title=""></a>
+                        <a class="class" href="Workflow.html" title=""></a>
+                        <a href="Workflow.html" title="">
+                          Workflow
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="WorkflowOutputParameter.html" title=""></a>
+                        <a href="WorkflowOutputParameter.html" title="">
+                          WorkflowOutputParameter
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="WorkflowStep$.html" title=""></a>
+                        <a class="class" href="WorkflowStep.html" title="An individual job to run."></a>
+                        <a href="WorkflowStep.html" title="An individual job to run.">
+                          WorkflowStep
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="WorkflowStepInput.html" title=""></a>
+                        <a href="WorkflowStepInput.html" title="">
+                          WorkflowStepInput
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="WorkflowStepOutput.html" title=""></a>
+                        <a href="WorkflowStepOutput.html" title="">
+                          WorkflowStepOutput
+                        </a>
+                      </li>
+              </ul>
+            </div>
+          </div>
+          <div id="content">
+            <body class="package value">
+      <div id="definition">
+        <div class="big-circle package">p</div>
+        <p id="owner"><a href="../index.html" class="extype" name="wdl4s">wdl4s</a></p>
+        <h1>cwl<span class="permalink">
+      <a href="../../wdl4s/cwl/index.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span></h1>
+        
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cwl</span>
+      </span>
+      </h4>
+
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This package is intended to parse all CWL files.</p><h3>Usage</h3><pre><span class="kw">import</span> wdl4s.cwl._
+
+<span class="kw">val</span> firstTool = <span class="lit">""</span><span class="lit">"
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: echo
+inputs:
+  message:
+    type: string
+    inputBinding:
+      position: 1
+outputs: []
+"</span><span class="lit">""</span>
+decodeCwl(firstTool) <span class="cmt">//returns Either[Error, Cwl]</span></pre><p>It makes heavy use of Circe YAML/Json auto derivation feature and
+Circe modules that support the Scala libraries shapeless and Refined.</p><p>The <a href="https://oss.sonatype.org/service/local/repositories/releases/archive/com/chuusai/shapeless_2.12/2.3.2/shapeless_2.12-2.3.2-javadoc.jar/!/shapeless/Coproduct.html" target="_blank">shapeless.coproduct</a> feature allows us to specify a large
+number of potential types to be parsed.  A.k.a. a &quot;disjunction&quot; or &quot;OR&quot; relationship amongst these types.</p><p>The <a href="https://github.com/fthomas/refined/blob/master/modules/core/shared/src/main/scala/eu/timepit/refined/string.scala" target="_blank">MatchesRegex</a> &quot;refined type&quot; is used
+to enforce structure upon String values in the CWL Yaml.  Shapeless' Witness type
+is used to declare a type containing a String literal.
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="https://github.com/milessabin/shapeless">Shapeless</a></p></span><span class="cmt"><p><a href="https://github.com/fthomas/refined">Refined</a></p></span><span class="cmt"><p><a href="https://github.com/circe/circe-yaml">circe-yaml</a></p></span><span class="cmt"><p><a href="https://github.com/circe/circe">circe</a></p></span><span class="cmt"><p><a href="http://www.commonwl.org/v1.0/">CWL Specification</a></p></span></dd></dl><div class="toggleContainer block">
+          <span class="toggle">
+            Linear Supertypes
+          </span>
+          <div class="superTypes hiddenContent"><a href="TypeAliases.html" class="extype" name="wdl4s.cwl.TypeAliases">TypeAliases</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div class="toggle"></div>
+        <div id="memberfilter">
+          <i class="material-icons arrow"></i>
+          <span class="input">
+            <input id="mbrsel-input" placeholder="Filter all members" type="text" accesskey="/" />
+          </span>
+          <i class="clear material-icons"></i>
+        </div>
+        <div id="filterby">
+          <div id="order">
+            <span class="filtertype">Ordering</span>
+            <ol>
+              
+              <li class="alpha in"><span>Alphabetic</span></li>
+              <li class="inherit out"><span>By Inheritance</span></li>
+            </ol>
+          </div>
+          <div class="ancestors">
+                  <span class="filtertype">Inherited<br />
+                  </span>
+                  <ol id="linearization">
+                    <li class="in" name="wdl4s.cwl"><span>cwl</span></li><li class="in" name="wdl4s.cwl.TypeAliases"><span>TypeAliases</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  </ol>
+                </div><div class="ancestors">
+              <span class="filtertype"></span>
+              <ol>
+                <li class="hideall out"><span>Hide All</span></li>
+                <li class="showall in"><span>Show All</span></li>
+              </ol>
+            </div>
+          <div id="visbl">
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+            </div>
+        </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="wdl4s.cwl.CommandInputArraySchema" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandInputArraySchemaextendsProductwithSerializable"></a><a id="CommandInputArraySchema:CommandInputArraySchema"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandInputArraySchemaextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandInputArraySchema.html">
+              <span class="name">CommandInputArraySchema</span>
+            </a><span class="params">(<span name="items">items: <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CwlType$.html#CwlType=wdl4s.cwl.CwlType.Value" class="extmbr" name="wdl4s.cwl.CwlType.CwlType">CwlType</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputRecordSchema.html" class="extype" name="wdl4s.cwl.CommandInputRecordSchema">CommandInputRecordSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputEnumSchema.html" class="extype" name="wdl4s.cwl.CommandInputEnumSchema">CommandInputEnumSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputArraySchema.html" class="extype" name="wdl4s.cwl.CommandInputArraySchema">CommandInputArraySchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="CwlType$.html#CwlType=wdl4s.cwl.CwlType.Value" class="extmbr" name="wdl4s.cwl.CwlType.CwlType">CwlType</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputRecordSchema.html" class="extype" name="wdl4s.cwl.CommandInputRecordSchema">CommandInputRecordSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputEnumSchema.html" class="extype" name="wdl4s.cwl.CommandInputEnumSchema">CommandInputEnumSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputArraySchema.html" class="extype" name="wdl4s.cwl.CommandInputArraySchema">CommandInputArraySchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]]]], <span class="extype" name="shapeless.CNil">CNil</span>]]]]]]</span>, <span name="type">type: String(&quot;array&quot;)</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="inputBinding">inputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineBinding.html" class="extype" name="wdl4s.cwl.CommandLineBinding">CommandLineBinding</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CommandInputEnumSchema" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandInputEnumSchemaextendsProductwithSerializable"></a><a id="CommandInputEnumSchema:CommandInputEnumSchema"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandInputEnumSchemaextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandInputEnumSchema.html">
+              <span class="name">CommandInputEnumSchema</span>
+            </a><span class="params">(<span name="symbols">symbols: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="type">type: String(&quot;enum&quot;)</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="inputBinding">inputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineBinding.html" class="extype" name="wdl4s.cwl.CommandLineBinding">CommandLineBinding</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CommandInputParameter" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandInputParameterextendsProductwithSerializable"></a><a id="CommandInputParameter:CommandInputParameter"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandInputParameterextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandInputParameter.html">
+              <span class="name">CommandInputParameter</span>
+            </a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="secondaryFiles">secondaryFiles: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="format">format: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="streamable">streamable: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Boolean">Boolean</span>] = <span class="symbol">None</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>, <span name="inputBinding">inputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineBinding.html" class="extype" name="wdl4s.cwl.CommandLineBinding">CommandLineBinding</a>] = <span class="symbol">None</span></span>, <span name="default">default: <span class="extype" name="scala.Option">Option</span>[<a href="#CwlAny=String" class="extmbr" name="wdl4s.cwl.CwlAny">cwl.CwlAny</a>] = <span class="symbol">None</span></span>, <span name="type">type: <span class="extype" name="scala.Option">Option</span>[<a href="#MyriadInputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadInputType">cwl.MyriadInputType</a>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CommandInputRecordField" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandInputRecordFieldextendsProductwithSerializable"></a><a id="CommandInputRecordField:CommandInputRecordField"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandInputRecordFieldextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandInputRecordField.html">
+              <span class="name">CommandInputRecordField</span>
+            </a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="type">type: <a href="#MyriadInputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadInputType">cwl.MyriadInputType</a></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="inputBinding">inputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineBinding.html" class="extype" name="wdl4s.cwl.CommandLineBinding">CommandLineBinding</a>]</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CommandInputRecordSchema" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandInputRecordSchemaextendsProductwithSerializable"></a><a id="CommandInputRecordSchema:CommandInputRecordSchema"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandInputRecordSchemaextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandInputRecordSchema.html">
+              <span class="name">CommandInputRecordSchema</span>
+            </a><span class="params">(<span name="type">type: String(&quot;record&quot;)</span>, <span name="fields">fields: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<a href="CommandInputRecordField.html" class="extype" name="wdl4s.cwl.CommandInputRecordField">CommandInputRecordField</a>]]</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CommandLineBinding" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandLineBindingextendsProductwithSerializable"></a><a id="CommandLineBinding:CommandLineBinding"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandLineBindingextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandLineBinding.html">
+              <span class="name">CommandLineBinding</span>
+            </a><span class="params">(<span name="loadContents">loadContents: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Boolean">Boolean</span>] = <span class="symbol">None</span></span>, <span name="position">position: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Int">Int</span>] = <span class="symbol">None</span></span>, <span name="prefix">prefix: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="separate">separate: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="itemSeparator">itemSeparator: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="valueFrom">valueFrom: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineTool$.html#StringOrExpression=wdl4s.cwl.ECMAScriptExpression:+:String:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.CommandLineTool.StringOrExpression">StringOrExpression</a>] = <span class="symbol">None</span></span>, <span name="shellQuote">shellQuote: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Boolean">Boolean</span>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CommandLineTool" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandLineToolextendsCwlwithProductwithSerializable"></a><a id="CommandLineTool:CommandLineTool"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandLineToolextendsCwlwithProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandLineTool.html">
+              <span class="name">CommandLineTool</span>
+            </a><span class="params">(<span name="inputs">inputs: <span class="extype" name="scala.Array">Array</span>[<a href="CommandInputParameter.html" class="extype" name="wdl4s.cwl.CommandInputParameter">CommandInputParameter</a>] = <span class="symbol">Array.empty</span></span>, <span name="outputs">outputs: <span class="extype" name="scala.Array">Array</span>[<a href="CommandOutputParameter.html" class="extype" name="wdl4s.cwl.CommandOutputParameter">CommandOutputParameter</a>] = <span class="symbol">Array.empty</span></span>, <span name="class">class: <span class="extype" name="java.lang.String">String</span> = <span class="symbol"><span class="name"><a href="CommandLineTool$.html">CommandLineTool.`class`</a></span></span></span>, <span name="id">id: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="requirements">requirements: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<a href="#Requirement=wdl4s.cwl.InlineJavascriptRequirement:+:wdl4s.cwl.SchemaDefRequirement:+:wdl4s.cwl.DockerRequirement:+:wdl4s.cwl.SoftwareRequirement:+:wdl4s.cwl.InitialWorkDirRequirement:+:wdl4s.cwl.EnvVarRequirement:+:wdl4s.cwl.ShellCommandRequirement:+:wdl4s.cwl.ResourceRequirement:+:wdl4s.cwl.SubworkflowFeatureRequirement:+:wdl4s.cwl.ScatterFeatureRequirement:+:wdl4s.cwl.MultipleInputFeatureRequirement:+:wdl4s.cwl.StepInputExpressionRequirement:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.Requirement">cwl.Requirement</a>]] = <span class="symbol">None</span></span>, <span name="hints">hints: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">None</span></span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="cwlVersion">cwlVersion: <span class="extype" name="scala.Option">Option</span>[<a href="CwlVersion$.html#CwlVersion=wdl4s.cwl.CwlVersion.Value" class="extmbr" name="wdl4s.cwl.CwlVersion.CwlVersion">CwlVersion</a>] = <span class="symbol"><span class="name"><a href="CwlVersion$.html">Option(CwlVersion.Version1)</a></span></span></span>, <span name="baseCommand">baseCommand: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineTool$.html#BaseCommand=String:+:Array[String]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.CommandLineTool.BaseCommand">BaseCommand</a>] = <span class="symbol">None</span></span>, <span name="arguments">arguments: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<a href="CommandLineTool$.html#Argument=wdl4s.cwl.ECMAScriptExpression:+:wdl4s.cwl.CommandLineBinding:+:String:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.CommandLineTool.Argument">Argument</a>]] = <span class="symbol">None</span></span>, <span name="stdin">stdin: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineTool$.html#StringOrExpression=wdl4s.cwl.ECMAScriptExpression:+:String:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.CommandLineTool.StringOrExpression">StringOrExpression</a>] = <span class="symbol">None</span></span>, <span name="stderr">stderr: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineTool$.html#StringOrExpression=wdl4s.cwl.ECMAScriptExpression:+:String:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.CommandLineTool.StringOrExpression">StringOrExpression</a>] = <span class="symbol">None</span></span>, <span name="stdout">stdout: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineTool$.html#StringOrExpression=wdl4s.cwl.ECMAScriptExpression:+:String:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.CommandLineTool.StringOrExpression">StringOrExpression</a>] = <span class="symbol">None</span></span>, <span name="successCodes">successCodes: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]] = <span class="symbol">None</span></span>, <span name="temporaryFailCodes">temporaryFailCodes: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]] = <span class="symbol">None</span></span>, <span name="permanentFailCodes">permanentFailCodes: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]] = <span class="symbol">None</span></span>)</span><span class="result"> extends <a href="Cwl.html" class="extype" name="wdl4s.cwl.Cwl">Cwl</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt"></p>
+    </li><li name="wdl4s.cwl.CommandOutputBinding" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="CommandOutputBindingextendsProductwithSerializable"></a><a id="CommandOutputBinding:CommandOutputBinding"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandOutputBindingextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandOutputBinding.html">
+              <span class="name">CommandOutputBinding</span>
+            </a><span class="params">(<span name="glob">glob: <span class="extype" name="scala.Option">Option</span>[<a href="CommandOutputBinding$.html#Glob=wdl4s.cwl.ECMAScriptExpression:+:String:+:Array[String]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.CommandOutputBinding.Glob">Glob</a>] = <span class="symbol">None</span></span>, <span name="loadContents">loadContents: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Boolean">Boolean</span>] = <span class="symbol">None</span></span>, <span name="outputEval">outputEval: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://www.commonwl.org/v1.0/Workflow.html#CommandOutputBinding">CommandOutputBinding</a></p></span></dd></dl></div>
+    </li><li name="wdl4s.cwl.CommandOutputParameter" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandOutputParameterextendsProductwithSerializable"></a><a id="CommandOutputParameter:CommandOutputParameter"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandOutputParameterextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandOutputParameter.html">
+              <span class="name">CommandOutputParameter</span>
+            </a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="secondaryFiles">secondaryFiles: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]], <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="format">format: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="streamable">streamable: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Boolean">Boolean</span>] = <span class="symbol">None</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>, <span name="outputBinding">outputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandOutputBinding.html" class="extype" name="wdl4s.cwl.CommandOutputBinding">CommandOutputBinding</a>] = <span class="symbol">None</span></span>, <span name="type">type: <span class="extype" name="scala.Option">Option</span>[<a href="#MyriadOutputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadOutputType">cwl.MyriadOutputType</a>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.Cwl" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="CwlextendsAnyRef"></a><a id="Cwl:Cwl"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CwlextendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Cwl.html">
+              <span class="name">Cwl</span>
+            </a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.TypeAliases.CwlAny" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="CwlAny=String"></a><a id="CwlAny:CwlAny"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CwlAny=String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">CwlAny</span><span class="result alias"> = <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="TypeAliases.html" class="extype" name="wdl4s.cwl.TypeAliases">TypeAliases</a></dd></dl></div>
+    </li><li name="wdl4s.cwl.Directory" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DirectoryextendsProductwithSerializable"></a><a id="Directory:Directory"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#DirectoryextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Directory.html">
+              <span class="name">Directory</span>
+            </a><span class="params">(<span name="class">class: <span class="extype" name="eu.timepit.refined.api.Refined">Refined</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="eu.timepit.refined.string.MatchesRegex">MatchesRegex</span>[String(&quot;Directory&quot;)]]</span>, <span name="location">location: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="path">path: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="basename">basename: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="listing">listing: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="File.html" class="extype" name="wdl4s.cwl.File">File</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="Directory.html" class="extype" name="wdl4s.cwl.Directory">Directory</a>, <span class="extype" name="shapeless.CNil">CNil</span>]]]]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.Dirent" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="DirentextendsProductwithSerializable"></a><a id="Dirent:Dirent"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#DirentextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title=" Short for &quot;Directory Entry&quot;" href="Dirent.html">
+              <span class="name">Dirent</span>
+            </a><span class="params">(<span name="entry">entry: <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]</span>, <span name="entryName">entryName: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>, <span name="writable">writable: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Boolean">Boolean</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt"> Short for &quot;Directory Entry&quot;</p><div class="fullcomment"><div class="comment cmt"><p> Short for &quot;Directory Entry&quot;</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://www.commonwl.org/v1.0/CommandLineTool.html#Dirent">Dirent Specification</a></p></span></dd></dl></div>
+    </li><li name="wdl4s.cwl.DockerRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DockerRequirementextendsProductwithSerializable"></a><a id="DockerRequirement:DockerRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#DockerRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DockerRequirement.html">
+              <span class="name">DockerRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;DockerRequirement&quot;)</span>, <span name="dockerPull">dockerPull: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="dockerLoad">dockerLoad: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="dockerFile">dockerFile: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="dockerImport">dockerImport: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="dockerImageId">dockerImageId: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="dockerOutputDirectory">dockerOutputDirectory: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.ECMAScriptExpression" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]"></a><a id="ECMAScriptExpression:ECMAScriptExpression"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ECMAScriptExpression</span><span class="result alias"> = <span class="extype" name="eu.timepit.refined.api.Refined">Refined</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="eu.timepit.refined.string.MatchesRegex">MatchesRegex</span>[String(&quot;$([^)]*)&quot;)]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">These are supposed to be valid ECMAScript Expressions.</p><div class="fullcomment"><div class="comment cmt"><p>These are supposed to be valid ECMAScript Expressions.
+See http://www.commonwl.org/v1.0/Workflow.html#Expressions
+</p></div></div>
+    </li><li name="wdl4s.cwl.EnvVarRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="EnvVarRequirementextendsProductwithSerializable"></a><a id="EnvVarRequirement:EnvVarRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#EnvVarRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="EnvVarRequirement.html">
+              <span class="name">EnvVarRequirement</span>
+            </a><span class="params">(<span name="class">class: <span class="extype" name="java.lang.String">String</span> = <span class="symbol"><span class="name"><a href="EnvVarRequirement$.html">EnvVarRequirement.`class`</a></span></span></span>, <span name="envDef">envDef: <span class="extype" name="scala.Array">Array</span>[<a href="EnvironmentDef.html" class="extype" name="wdl4s.cwl.EnvironmentDef">EnvironmentDef</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.EnvironmentDef" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="EnvironmentDefextendsProductwithSerializable"></a><a id="EnvironmentDef:EnvironmentDef"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#EnvironmentDefextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="EnvironmentDef.html">
+              <span class="name">EnvironmentDef</span>
+            </a><span class="params">(<span name="envName">envName: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="envValue">envValue: <a href="CommandLineTool$.html#StringOrExpression=wdl4s.cwl.ECMAScriptExpression:+:String:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.CommandLineTool.StringOrExpression">StringOrExpression</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.ExpressionTool" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ExpressionToolextendsProductwithSerializable"></a><a id="ExpressionTool:ExpressionTool"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#ExpressionToolextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ExpressionTool.html">
+              <span class="name">ExpressionTool</span>
+            </a><span class="params">(<span name="inputs">inputs: <span class="extype" name="scala.Array">Array</span>[<a href="InputParameter.html" class="extype" name="wdl4s.cwl.InputParameter">InputParameter</a>] = <span class="symbol">Array.empty</span></span>, <span name="outputs">outputs: <span class="extype" name="scala.Array">Array</span>[<a href="ExpressionToolOutputParameter.html" class="extype" name="wdl4s.cwl.ExpressionToolOutputParameter">ExpressionToolOutputParameter</a>] = <span class="symbol">Array.empty</span></span>, <span name="class">class: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="expression">expression: <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]</span>, <span name="id">id: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="requirements">requirements: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<a href="#Requirement=wdl4s.cwl.InlineJavascriptRequirement:+:wdl4s.cwl.SchemaDefRequirement:+:wdl4s.cwl.DockerRequirement:+:wdl4s.cwl.SoftwareRequirement:+:wdl4s.cwl.InitialWorkDirRequirement:+:wdl4s.cwl.EnvVarRequirement:+:wdl4s.cwl.ShellCommandRequirement:+:wdl4s.cwl.ResourceRequirement:+:wdl4s.cwl.SubworkflowFeatureRequirement:+:wdl4s.cwl.ScatterFeatureRequirement:+:wdl4s.cwl.MultipleInputFeatureRequirement:+:wdl4s.cwl.StepInputExpressionRequirement:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.Requirement">cwl.Requirement</a>]] = <span class="symbol">None</span></span>, <span name="hints">hints: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<a href="#CwlAny=String" class="extmbr" name="wdl4s.cwl.CwlAny">cwl.CwlAny</a>]] = <span class="symbol">None</span></span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="cwlVersion">cwlVersion: <span class="extype" name="scala.Option">Option</span>[<a href="CwlVersion$.html#CwlVersion=wdl4s.cwl.CwlVersion.Value" class="extmbr" name="wdl4s.cwl.CwlVersion.CwlVersion">CwlVersion</a>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.ExpressionToolOutputParameter" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ExpressionToolOutputParameterextendsProductwithSerializable"></a><a id="ExpressionToolOutputParameter:ExpressionToolOutputParameter"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#ExpressionToolOutputParameterextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ExpressionToolOutputParameter.html">
+              <span class="name">ExpressionToolOutputParameter</span>
+            </a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="secondaryFiles">secondaryFiles: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]], <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="format">format: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="streamable">streamable: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Boolean">Boolean</span>]</span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>, <span name="outputBinding">outputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandOutputBinding.html" class="extype" name="wdl4s.cwl.CommandOutputBinding">CommandOutputBinding</a>] = <span class="symbol">None</span></span>, <span name="type">type: <a href="#MyriadOutputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadOutputType">cwl.MyriadOutputType</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.File" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="FileextendsProductwithSerializable"></a><a id="File:File"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#FileextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="File.html">
+              <span class="name">File</span>
+            </a><span class="params">(<span name="class">class: <span class="extype" name="eu.timepit.refined.api.Refined">Refined</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="eu.timepit.refined.string.MatchesRegex">MatchesRegex</span>[String(&quot;File&quot;)]]</span>, <span name="location">location: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="path">path: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="basename">basename: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="dirname">dirname: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="nameroot">nameroot: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="nameext">nameext: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="checksum">checksum: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="size">size: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Long">Long</span>]</span>, <span name="secondaryFiles">secondaryFiles: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="File.html" class="extype" name="wdl4s.cwl.File">File</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="Directory.html" class="extype" name="wdl4s.cwl.Directory">Directory</a>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>, <span name="format">format: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="contents">contents: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.InitialWorkDirRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InitialWorkDirRequirementextendsProductwithSerializable"></a><a id="InitialWorkDirRequirement:InitialWorkDirRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#InitialWorkDirRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="InitialWorkDirRequirement.html">
+              <span class="name">InitialWorkDirRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;InitialWorkDirRequirement&quot;)</span>, <span name="listing">listing: <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="File.html" class="extype" name="wdl4s.cwl.File">File</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="Directory.html" class="extype" name="wdl4s.cwl.Directory">Directory</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="Dirent.html" class="extype" name="wdl4s.cwl.Dirent">Dirent</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]]]], <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.InlineJavascriptRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InlineJavascriptRequirementextendsProductwithSerializable"></a><a id="InlineJavascriptRequirement:InlineJavascriptRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#InlineJavascriptRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="InlineJavascriptRequirement.html">
+              <span class="name">InlineJavascriptRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;InlineJavascriptRequirement&quot;) = <span class="defval" name="&quot;InlineJavascriptRequirement&quot;.narrow">...</span></span>, <span name="expressionLib">expressionLib: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.InputArraySchema" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InputArraySchemaextendsProductwithSerializable"></a><a id="InputArraySchema:InputArraySchema"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#InputArraySchemaextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="InputArraySchema.html">
+              <span class="name">InputArraySchema</span>
+            </a><span class="params">(<span name="items">items: <a href="#MyriadInputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadInputType">cwl.MyriadInputType</a></span>, <span name="type">type: String(&quot;array&quot;)</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="inputBinding">inputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineBinding.html" class="extype" name="wdl4s.cwl.CommandLineBinding">CommandLineBinding</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.InputBinding" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InputBindingextendsProductwithSerializable"></a><a id="InputBinding:InputBinding"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#InputBindingextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="InputBinding.html">
+              <span class="name">InputBinding</span>
+            </a><span class="params">(<span name="position">position: <span class="extype" name="scala.Int">Int</span></span>, <span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.InputEnumSchema" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InputEnumSchemaextendsProductwithSerializable"></a><a id="InputEnumSchema:InputEnumSchema"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#InputEnumSchemaextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="InputEnumSchema.html">
+              <span class="name">InputEnumSchema</span>
+            </a><span class="params">(<span name="symbols">symbols: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="type">type: String(&quot;enum&quot;)</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="inputBinding">inputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineBinding.html" class="extype" name="wdl4s.cwl.CommandLineBinding">CommandLineBinding</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.InputParameter" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InputParameterextendsProductwithSerializable"></a><a id="InputParameter:InputParameter"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#InputParameterextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="InputParameter.html">
+              <span class="name">InputParameter</span>
+            </a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="secondaryFiles">secondaryFiles: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]], <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="format">format: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="streamable">streamable: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Boolean">Boolean</span>] = <span class="symbol">None</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>, <span name="inputBinding">inputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineBinding.html" class="extype" name="wdl4s.cwl.CommandLineBinding">CommandLineBinding</a>] = <span class="symbol">None</span></span>, <span name="default">default: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="type">type: <span class="extype" name="scala.Option">Option</span>[<a href="#MyriadInputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadInputType">cwl.MyriadInputType</a>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.InputRecordField" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InputRecordFieldextendsProductwithSerializable"></a><a id="InputRecordField:InputRecordField"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#InputRecordFieldextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="InputRecordField.html">
+              <span class="name">InputRecordField</span>
+            </a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="type">type: <a href="#MyriadInputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadInputType">cwl.MyriadInputType</a></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="inputBinding">inputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandLineBinding.html" class="extype" name="wdl4s.cwl.CommandLineBinding">CommandLineBinding</a>]</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.InputRecordSchema" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="InputRecordSchemaextendsProductwithSerializable"></a><a id="InputRecordSchema:InputRecordSchema"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#InputRecordSchemaextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="InputRecordSchema.html">
+              <span class="name">InputRecordSchema</span>
+            </a><span class="params">(<span name="type">type: String(&quot;record&quot;)</span>, <span name="fields">fields: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<a href="InputRecordField.html" class="extype" name="wdl4s.cwl.InputRecordField">InputRecordField</a>]]</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.MultipleInputFeatureRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MultipleInputFeatureRequirementextendsProductwithSerializable"></a><a id="MultipleInputFeatureRequirement:MultipleInputFeatureRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#MultipleInputFeatureRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="MultipleInputFeatureRequirement.html">
+              <span class="name">MultipleInputFeatureRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;MultipleInputFeatureRequirement&quot;)</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.TypeAliases.MyriadCommandInputType" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MyriadCommandInputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.CommandInputRecordSchema:+:wdl4s.cwl.CommandInputEnumSchema:+:wdl4s.cwl.CommandInputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.CommandInputRecordSchema:+:wdl4s.cwl.CommandInputEnumSchema:+:wdl4s.cwl.CommandInputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil"></a><a id="MyriadCommandInputType:MyriadCommandInputType"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#MyriadCommandInputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.CommandInputRecordSchema:+:wdl4s.cwl.CommandInputEnumSchema:+:wdl4s.cwl.CommandInputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.CommandInputRecordSchema:+:wdl4s.cwl.CommandInputEnumSchema:+:wdl4s.cwl.CommandInputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">MyriadCommandInputType</span><span class="result alias"> = <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CwlType$.html#CwlType=wdl4s.cwl.CwlType.Value" class="extmbr" name="wdl4s.cwl.CwlType.CwlType">CwlType</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputRecordSchema.html" class="extype" name="wdl4s.cwl.CommandInputRecordSchema">CommandInputRecordSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputEnumSchema.html" class="extype" name="wdl4s.cwl.CommandInputEnumSchema">CommandInputEnumSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputArraySchema.html" class="extype" name="wdl4s.cwl.CommandInputArraySchema">CommandInputArraySchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="CwlType$.html#CwlType=wdl4s.cwl.CwlType.Value" class="extmbr" name="wdl4s.cwl.CwlType.CwlType">CwlType</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputRecordSchema.html" class="extype" name="wdl4s.cwl.CommandInputRecordSchema">CommandInputRecordSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputEnumSchema.html" class="extype" name="wdl4s.cwl.CommandInputEnumSchema">CommandInputEnumSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CommandInputArraySchema.html" class="extype" name="wdl4s.cwl.CommandInputArraySchema">CommandInputArraySchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]]]], <span class="extype" name="shapeless.CNil">CNil</span>]]]]]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="TypeAliases.html" class="extype" name="wdl4s.cwl.TypeAliases">TypeAliases</a></dd></dl></div>
+    </li><li name="wdl4s.cwl.TypeAliases.MyriadInputType" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MyriadInputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil"></a><a id="MyriadInputType:MyriadInputType"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#MyriadInputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.InputRecordSchema:+:wdl4s.cwl.InputEnumSchema:+:wdl4s.cwl.InputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">MyriadInputType</span><span class="result alias"> = <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CwlType$.html#CwlType=wdl4s.cwl.CwlType.Value" class="extmbr" name="wdl4s.cwl.CwlType.CwlType">CwlType</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InputRecordSchema.html" class="extype" name="wdl4s.cwl.InputRecordSchema">InputRecordSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InputEnumSchema.html" class="extype" name="wdl4s.cwl.InputEnumSchema">InputEnumSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InputArraySchema.html" class="extype" name="wdl4s.cwl.InputArraySchema">InputArraySchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="CwlType$.html#CwlType=wdl4s.cwl.CwlType.Value" class="extmbr" name="wdl4s.cwl.CwlType.CwlType">CwlType</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InputRecordSchema.html" class="extype" name="wdl4s.cwl.InputRecordSchema">InputRecordSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InputEnumSchema.html" class="extype" name="wdl4s.cwl.InputEnumSchema">InputEnumSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InputArraySchema.html" class="extype" name="wdl4s.cwl.InputArraySchema">InputArraySchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]]]], <span class="extype" name="shapeless.CNil">CNil</span>]]]]]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="TypeAliases.html" class="extype" name="wdl4s.cwl.TypeAliases">TypeAliases</a></dd></dl></div>
+    </li><li name="wdl4s.cwl.TypeAliases.MyriadOutputType" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MyriadOutputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil"></a><a id="MyriadOutputType:MyriadOutputType"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#MyriadOutputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">MyriadOutputType</span><span class="result alias"> = <span class="extype" name="shapeless.:+:">:+:</span>[<a href="CwlType$.html#CwlType=wdl4s.cwl.CwlType.Value" class="extmbr" name="wdl4s.cwl.CwlType.CwlType">CwlType</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="OutputRecordSchema.html" class="extype" name="wdl4s.cwl.OutputRecordSchema">OutputRecordSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="OutputEnumSchema.html" class="extype" name="wdl4s.cwl.OutputEnumSchema">OutputEnumSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="OutputArraySchema.html" class="extype" name="wdl4s.cwl.OutputArraySchema">OutputArraySchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="CwlType$.html#CwlType=wdl4s.cwl.CwlType.Value" class="extmbr" name="wdl4s.cwl.CwlType.CwlType">CwlType</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="OutputRecordSchema.html" class="extype" name="wdl4s.cwl.OutputRecordSchema">OutputRecordSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="OutputEnumSchema.html" class="extype" name="wdl4s.cwl.OutputEnumSchema">OutputEnumSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="OutputArraySchema.html" class="extype" name="wdl4s.cwl.OutputArraySchema">OutputArraySchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]]]], <span class="extype" name="shapeless.CNil">CNil</span>]]]]]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="TypeAliases.html" class="extype" name="wdl4s.cwl.TypeAliases">TypeAliases</a></dd></dl></div>
+    </li><li name="wdl4s.cwl.OutputArraySchema" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OutputArraySchemaextendsProductwithSerializable"></a><a id="OutputArraySchema:OutputArraySchema"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#OutputArraySchemaextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="OutputArraySchema.html">
+              <span class="name">OutputArraySchema</span>
+            </a><span class="params">(<span name="items">items: <a href="#MyriadOutputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadOutputType">cwl.MyriadOutputType</a></span>, <span name="type">type: String(&quot;array&quot;)</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="outputBinding">outputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandOutputBinding.html" class="extype" name="wdl4s.cwl.CommandOutputBinding">CommandOutputBinding</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.OutputEnumSchema" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OutputEnumSchemaextendsProductwithSerializable"></a><a id="OutputEnumSchema:OutputEnumSchema"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#OutputEnumSchemaextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="OutputEnumSchema.html">
+              <span class="name">OutputEnumSchema</span>
+            </a><span class="params">(<span name="symbols">symbols: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="type">type: String(&quot;enum&quot;)</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="outputBinding">outputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandOutputBinding.html" class="extype" name="wdl4s.cwl.CommandOutputBinding">CommandOutputBinding</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.OutputRecordField" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OutputRecordFieldextendsProductwithSerializable"></a><a id="OutputRecordField:OutputRecordField"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#OutputRecordFieldextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="OutputRecordField.html">
+              <span class="name">OutputRecordField</span>
+            </a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="type">type: <a href="#MyriadOutputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadOutputType">cwl.MyriadOutputType</a></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="outputBinding">outputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandOutputBinding.html" class="extype" name="wdl4s.cwl.CommandOutputBinding">CommandOutputBinding</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.OutputRecordSchema" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OutputRecordSchemaextendsProductwithSerializable"></a><a id="OutputRecordSchema:OutputRecordSchema"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#OutputRecordSchemaextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="OutputRecordSchema.html">
+              <span class="name">OutputRecordSchema</span>
+            </a><span class="params">(<span name="type">type: String(&quot;record&quot;)</span>, <span name="fields">fields: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<a href="OutputRecordField.html" class="extype" name="wdl4s.cwl.OutputRecordField">OutputRecordField</a>]]</span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.TypeAliases.Requirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Requirement=wdl4s.cwl.InlineJavascriptRequirement:+:wdl4s.cwl.SchemaDefRequirement:+:wdl4s.cwl.DockerRequirement:+:wdl4s.cwl.SoftwareRequirement:+:wdl4s.cwl.InitialWorkDirRequirement:+:wdl4s.cwl.EnvVarRequirement:+:wdl4s.cwl.ShellCommandRequirement:+:wdl4s.cwl.ResourceRequirement:+:wdl4s.cwl.SubworkflowFeatureRequirement:+:wdl4s.cwl.ScatterFeatureRequirement:+:wdl4s.cwl.MultipleInputFeatureRequirement:+:wdl4s.cwl.StepInputExpressionRequirement:+:shapeless.CNil"></a><a id="Requirement:Requirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#Requirement=wdl4s.cwl.InlineJavascriptRequirement:+:wdl4s.cwl.SchemaDefRequirement:+:wdl4s.cwl.DockerRequirement:+:wdl4s.cwl.SoftwareRequirement:+:wdl4s.cwl.InitialWorkDirRequirement:+:wdl4s.cwl.EnvVarRequirement:+:wdl4s.cwl.ShellCommandRequirement:+:wdl4s.cwl.ResourceRequirement:+:wdl4s.cwl.SubworkflowFeatureRequirement:+:wdl4s.cwl.ScatterFeatureRequirement:+:wdl4s.cwl.MultipleInputFeatureRequirement:+:wdl4s.cwl.StepInputExpressionRequirement:+:shapeless.CNil" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Requirement</span><span class="result alias"> = <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InlineJavascriptRequirement.html" class="extype" name="wdl4s.cwl.InlineJavascriptRequirement">InlineJavascriptRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="SchemaDefRequirement.html" class="extype" name="wdl4s.cwl.SchemaDefRequirement">SchemaDefRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="DockerRequirement.html" class="extype" name="wdl4s.cwl.DockerRequirement">DockerRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="SoftwareRequirement.html" class="extype" name="wdl4s.cwl.SoftwareRequirement">SoftwareRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InitialWorkDirRequirement.html" class="extype" name="wdl4s.cwl.InitialWorkDirRequirement">InitialWorkDirRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="EnvVarRequirement.html" class="extype" name="wdl4s.cwl.EnvVarRequirement">EnvVarRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="ShellCommandRequirement.html" class="extype" name="wdl4s.cwl.ShellCommandRequirement">ShellCommandRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="ResourceRequirement.html" class="extype" name="wdl4s.cwl.ResourceRequirement">ResourceRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="SubworkflowFeatureRequirement.html" class="extype" name="wdl4s.cwl.SubworkflowFeatureRequirement">SubworkflowFeatureRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="ScatterFeatureRequirement.html" class="extype" name="wdl4s.cwl.ScatterFeatureRequirement">ScatterFeatureRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="MultipleInputFeatureRequirement.html" class="extype" name="wdl4s.cwl.MultipleInputFeatureRequirement">MultipleInputFeatureRequirement</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="StepInputExpressionRequirement.html" class="extype" name="wdl4s.cwl.StepInputExpressionRequirement">StepInputExpressionRequirement</a>, <span class="extype" name="shapeless.CNil">CNil</span>]]]]]]]]]]]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="TypeAliases.html" class="extype" name="wdl4s.cwl.TypeAliases">TypeAliases</a></dd></dl></div>
+    </li><li name="wdl4s.cwl.ResourceRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ResourceRequirementextendsProductwithSerializable"></a><a id="ResourceRequirement:ResourceRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#ResourceRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ResourceRequirement.html">
+              <span class="name">ResourceRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;ResourceRequirement&quot;)</span>, <span name="coresMin">coresMin: <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Long">Long</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>, <span name="coresMax">coresMax: <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Int">Int</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>, <span name="ramMin">ramMin: <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Long">Long</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>, <span name="ramMax">ramMax: <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Long">Long</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>, <span name="tmpdirMin">tmpdirMin: <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Long">Long</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>, <span name="tmpdirMax">tmpdirMax: <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Long">Long</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>, <span name="outdirMin">outdirMin: <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Long">Long</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>, <span name="outdirMax">outdirMax: <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Long">Long</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.ScatterFeatureRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ScatterFeatureRequirementextendsProductwithSerializable"></a><a id="ScatterFeatureRequirement:ScatterFeatureRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#ScatterFeatureRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ScatterFeatureRequirement.html">
+              <span class="name">ScatterFeatureRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;ScatterFeatureRequirement&quot;)</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.SchemaDefRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SchemaDefRequirementextendsProductwithSerializable"></a><a id="SchemaDefRequirement:SchemaDefRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#SchemaDefRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="SchemaDefRequirement.html">
+              <span class="name">SchemaDefRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;SchemaDefRequirement&quot;)</span>, <span name="types">types: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="InputRecordSchema.html" class="extype" name="wdl4s.cwl.InputRecordSchema">InputRecordSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InputEnumSchema.html" class="extype" name="wdl4s.cwl.InputEnumSchema">InputEnumSchema</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<a href="InputArraySchema.html" class="extype" name="wdl4s.cwl.InputArraySchema">InputArraySchema</a>, <span class="extype" name="shapeless.CNil">CNil</span>]]]]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.ShellCommandRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ShellCommandRequirementextendsProductwithSerializable"></a><a id="ShellCommandRequirement:ShellCommandRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#ShellCommandRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ShellCommandRequirement.html">
+              <span class="name">ShellCommandRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;ShellCommandRequirement&quot;) = <span class="symbol">&quot;ShellCommandRequirement&quot;.narrow</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.SoftwarePackage" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SoftwarePackageextendsProductwithSerializable"></a><a id="SoftwarePackage:SoftwarePackage"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#SoftwarePackageextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="SoftwarePackage.html">
+              <span class="name">SoftwarePackage</span>
+            </a><span class="params">(<span name="package">package: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]]</span>, <span name="specs">specs: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.SoftwareRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SoftwareRequirementextendsProductwithSerializable"></a><a id="SoftwareRequirement:SoftwareRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#SoftwareRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="SoftwareRequirement.html">
+              <span class="name">SoftwareRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;SoftwareRequirement&quot;)</span>, <span name="packages">packages: <span class="extype" name="scala.Array">Array</span>[<a href="SoftwarePackage.html" class="extype" name="wdl4s.cwl.SoftwarePackage">SoftwarePackage</a>] = <span class="symbol">Array.empty</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.StepInputExpressionRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="StepInputExpressionRequirementextendsProductwithSerializable"></a><a id="StepInputExpressionRequirement:StepInputExpressionRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#StepInputExpressionRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="StepInputExpressionRequirement.html">
+              <span class="name">StepInputExpressionRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;StepInputExpressionRequirement&quot;)</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.SubworkflowFeatureRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SubworkflowFeatureRequirementextendsProductwithSerializable"></a><a id="SubworkflowFeatureRequirement:SubworkflowFeatureRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#SubworkflowFeatureRequirementextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="SubworkflowFeatureRequirement.html">
+              <span class="name">SubworkflowFeatureRequirement</span>
+            </a><span class="params">(<span name="class">class: String(&quot;SubworkflowFeatureRequirement&quot;)</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.TypeAliases" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TypeAliasesextendsAnyRef"></a><a id="TypeAliases:TypeAliases"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#TypeAliasesextendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="TypeAliases.html">
+              <span class="name">TypeAliases</span>
+            </a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.Workflow" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowextendsCwlwithProductwithSerializable"></a><a id="Workflow:Workflow"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#WorkflowextendsCwlwithProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Workflow.html">
+              <span class="name">Workflow</span>
+            </a><span class="params">(<span name="cwlVersion">cwlVersion: <span class="extype" name="scala.Option">Option</span>[<a href="CwlVersion$.html#CwlVersion=wdl4s.cwl.CwlVersion.Value" class="extmbr" name="wdl4s.cwl.CwlVersion.CwlVersion">CwlVersion</a>] = <span class="symbol"><span class="name"><a href="CwlVersion$.html">Option(CwlVersion.Version1)</a></span></span></span>, <span name="class">class: <span class="extype" name="java.lang.String">String</span> = <span class="symbol"><span class="name"><a href="Workflow$.html">Workflow.`class`</a></span></span></span>, <span name="inputs">inputs: <span class="extype" name="scala.Array">Array</span>[<a href="InputParameter.html" class="extype" name="wdl4s.cwl.InputParameter">InputParameter</a>] = <span class="symbol">Array.empty</span></span>, <span name="outputs">outputs: <span class="extype" name="scala.Array">Array</span>[<a href="WorkflowOutputParameter.html" class="extype" name="wdl4s.cwl.WorkflowOutputParameter">WorkflowOutputParameter</a>] = <span class="symbol">Array.empty</span></span>, <span name="steps">steps: <span class="extype" name="scala.Array">Array</span>[<a href="WorkflowStep.html" class="extype" name="wdl4s.cwl.WorkflowStep">WorkflowStep</a>]</span>)</span><span class="result"> extends <a href="Cwl.html" class="extype" name="wdl4s.cwl.Cwl">Cwl</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.WorkflowOutputParameter" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowOutputParameterextendsProductwithSerializable"></a><a id="WorkflowOutputParameter:WorkflowOutputParameter"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#WorkflowOutputParameterextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="WorkflowOutputParameter.html">
+              <span class="name">WorkflowOutputParameter</span>
+            </a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="secondaryFiles">secondaryFiles: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]], <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="format">format: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]]] = <span class="symbol">None</span></span>, <span name="streamable">streamable: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Boolean">Boolean</span>] = <span class="symbol">None</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>, <span name="outputBinding">outputBinding: <span class="extype" name="scala.Option">Option</span>[<a href="CommandOutputBinding.html" class="extype" name="wdl4s.cwl.CommandOutputBinding">CommandOutputBinding</a>] = <span class="symbol">None</span></span>, <span name="outputSource">outputSource: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="java.lang.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="java.lang.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>, <span name="linkMerge">linkMerge: <span class="extype" name="scala.Option">Option</span>[<a href="LinkMergeMethod$.html#LinkMergeMethod=wdl4s.cwl.LinkMergeMethod.Value" class="extmbr" name="wdl4s.cwl.LinkMergeMethod.LinkMergeMethod">LinkMergeMethod</a>] = <span class="symbol">None</span></span>, <span name="type">type: <span class="extype" name="scala.Option">Option</span>[<a href="#MyriadOutputType=wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:Array[wdl4s.cwl.CwlType.CwlType:+:wdl4s.cwl.OutputRecordSchema:+:wdl4s.cwl.OutputEnumSchema:+:wdl4s.cwl.OutputArraySchema:+:String:+:shapeless.CNil]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.MyriadOutputType">cwl.MyriadOutputType</a>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.WorkflowStep" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="WorkflowStepextendsProductwithSerializable"></a><a id="WorkflowStep:WorkflowStep"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#WorkflowStepextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="An individual job to run." href="WorkflowStep.html">
+              <span class="name">WorkflowStep</span>
+            </a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="in">in: <span class="extype" name="scala.Array">Array</span>[<a href="WorkflowStepInput.html" class="extype" name="wdl4s.cwl.WorkflowStepInput">WorkflowStepInput</a>] = <span class="symbol">Array.empty</span></span>, <span name="out">out: <a href="WorkflowStep$.html#Outputs=Array[String]:+:Array[wdl4s.cwl.WorkflowStepOutput]:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.WorkflowStep.Outputs">Outputs</a></span>, <span name="run">run: <a href="WorkflowStep$.html#Run=String:+:wdl4s.cwl.CommandLineTool:+:wdl4s.cwl.ExpressionTool:+:wdl4s.cwl.Workflow:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.WorkflowStep.Run">Run</a></span>, <span name="requirements">requirements: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<a href="#Requirement=wdl4s.cwl.InlineJavascriptRequirement:+:wdl4s.cwl.SchemaDefRequirement:+:wdl4s.cwl.DockerRequirement:+:wdl4s.cwl.SoftwareRequirement:+:wdl4s.cwl.InitialWorkDirRequirement:+:wdl4s.cwl.EnvVarRequirement:+:wdl4s.cwl.ShellCommandRequirement:+:wdl4s.cwl.ResourceRequirement:+:wdl4s.cwl.SubworkflowFeatureRequirement:+:wdl4s.cwl.ScatterFeatureRequirement:+:wdl4s.cwl.MultipleInputFeatureRequirement:+:wdl4s.cwl.StepInputExpressionRequirement:+:shapeless.CNil" class="extmbr" name="wdl4s.cwl.Requirement">cwl.Requirement</a>]] = <span class="symbol">None</span></span>, <span name="hints">hints: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">None</span></span>, <span name="label">label: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="doc">doc: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="scatter">scatter: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>, <span name="scatterMethod">scatterMethod: <span class="extype" name="scala.Option">Option</span>[<a href="ScatterMethod$.html#ScatterMethod=wdl4s.cwl.ScatterMethod.Value" class="extmbr" name="wdl4s.cwl.ScatterMethod.ScatterMethod">ScatterMethod</a>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">An individual job to run.</p><div class="fullcomment"><div class="comment cmt"><p>An individual job to run.
+</p></div><dl class="paramcmts block"><dt class="param">run</dt><dd class="cmt"><p>Purposefully not defaulted as it's required and it is unreasonable to not have something to run.</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://www.commonwl.org/v1.0/Workflow.html#WorkflowStep">CWL Spec | Workflow Step</a></p></span></dd></dl></div>
+    </li><li name="wdl4s.cwl.WorkflowStepInput" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowStepInputextendsProductwithSerializable"></a><a id="WorkflowStepInput:WorkflowStepInput"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#WorkflowStepInputextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="WorkflowStepInput.html">
+              <span class="name">WorkflowStepInput</span>
+            </a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="source">source: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>, <span name="linkMerge">linkMerge: <span class="extype" name="scala.Option">Option</span>[<a href="LinkMergeMethod$.html#LinkMergeMethod=wdl4s.cwl.LinkMergeMethod.Value" class="extmbr" name="wdl4s.cwl.LinkMergeMethod.LinkMergeMethod">LinkMergeMethod</a>] = <span class="symbol">None</span></span>, <span name="default">default: <span class="extype" name="scala.Option">Option</span>[<a href="#CwlAny=String" class="extmbr" name="wdl4s.cwl.CwlAny">cwl.CwlAny</a>] = <span class="symbol">None</span></span>, <span name="valueFrom">valueFrom: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="shapeless.:+:">:+:</span>[<a href="#ECMAScriptExpression=eu.timepit.refined.api.Refined[String,eu.timepit.refined.string.MatchesRegex[String(&quot;$([^)]*)&quot;)]]" class="extmbr" name="wdl4s.cwl.ECMAScriptExpression">ECMAScriptExpression</a>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.CNil">CNil</span>]]] = <span class="symbol">None</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.TypeAliases.WorkflowStepInputId" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="WorkflowStepInputId=String"></a><a id="WorkflowStepInputId:WorkflowStepInputId"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#WorkflowStepInputId=String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">WorkflowStepInputId</span><span class="result alias"> = <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="TypeAliases.html" class="extype" name="wdl4s.cwl.TypeAliases">TypeAliases</a></dd></dl></div>
+    </li><li name="wdl4s.cwl.TypeAliases.WorkflowStepInputSource" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="WorkflowStepInputSource=String:+:Array[String]:+:shapeless.CNil"></a><a id="WorkflowStepInputSource:WorkflowStepInputSource"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#WorkflowStepInputSource=String:+:Array[String]:+:shapeless.CNil" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">WorkflowStepInputSource</span><span class="result alias"> = <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="shapeless.CNil">CNil</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="TypeAliases.html" class="extype" name="wdl4s.cwl.TypeAliases">TypeAliases</a></dd></dl></div>
+    </li><li name="wdl4s.cwl.WorkflowStepOutput" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="WorkflowStepOutputextendsProductwithSerializable"></a><a id="WorkflowStepOutput:WorkflowStepOutput"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#WorkflowStepOutputextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="WorkflowStepOutput.html">
+              <span class="name">WorkflowStepOutput</span>
+            </a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="http://www.commonwl.org/v1.0/Workflow.html#WorkflowStepOutput">WorkflowstepOutput</a></p></span></dd></dl></div>
+    </li><li name="wdl4s.cwl.Yaml" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Yaml=String"></a><a id="Yaml:Yaml"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#Yaml=String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Yaml</span><span class="result alias"> = <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div class="values members">
+              <h3>Value Members</h3>
+              <ol>
+                <li name="wdl4s.cwl.CommandLineTool" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandLineTool"></a><a id="CommandLineTool:CommandLineTool"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandLineTool" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandLineTool$.html">
+              <span class="name">CommandLineTool</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CommandOutputBinding" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandOutputBinding"></a><a id="CommandOutputBinding:CommandOutputBinding"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CommandOutputBinding" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandOutputBinding$.html">
+              <span class="name">CommandOutputBinding</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CwlCodecs" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CwlCodecs"></a><a id="CwlCodecs:CwlCodecs"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CwlCodecs" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CwlCodecs$.html">
+              <span class="name">CwlCodecs</span>
+            </a>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CwlType" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CwlType"></a><a id="CwlType:CwlType"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CwlType" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CwlType$.html">
+              <span class="name">CwlType</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Enumeration">Enumeration</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.CwlVersion" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CwlVersion"></a><a id="CwlVersion:CwlVersion"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#CwlVersion" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CwlVersion$.html">
+              <span class="name">CwlVersion</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Enumeration">Enumeration</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.EnvVarRequirement" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="EnvVarRequirement"></a><a id="EnvVarRequirement:EnvVarRequirement"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#EnvVarRequirement" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="EnvVarRequirement$.html">
+              <span class="name">EnvVarRequirement</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.Implicits" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Implicits"></a><a id="Implicits:Implicits"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#Implicits" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Implicits$.html">
+              <span class="name">Implicits</span>
+            </a>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.LinkMergeMethod" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LinkMergeMethod"></a><a id="LinkMergeMethod:LinkMergeMethod"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#LinkMergeMethod" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="LinkMergeMethod$.html">
+              <span class="name">LinkMergeMethod</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Enumeration">Enumeration</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.ScatterMethod" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ScatterMethod"></a><a id="ScatterMethod:ScatterMethod"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#ScatterMethod" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ScatterMethod$.html">
+              <span class="name">ScatterMethod</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Enumeration">Enumeration</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.Workflow" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Workflow"></a><a id="Workflow:Workflow"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#Workflow" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Workflow$.html">
+              <span class="name">Workflow</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="wdl4s.cwl.WorkflowStep" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WorkflowStep"></a><a id="WorkflowStep:WorkflowStep"></a>
+      <span class="permalink">
+      <a href="../../wdl4s/cwl/index.html#WorkflowStep" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="WorkflowStep$.html">
+              <span class="name">WorkflowStep</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li>
+              </ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="wdl4s.cwl.TypeAliases">
+              <h3>Inherited from <a href="TypeAliases.html" class="extype" name="wdl4s.cwl.TypeAliases">TypeAliases</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+    </body>
+          </div>
+        </div>
+      </div>
+    </body>
+      </html>
