@@ -45,7 +45,7 @@ class PartialBashTemplateParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP =>
         case stringToken: StringRawPartToken => stringTokenQueue :+= stringToken
         case expressionToken: ExpressionRawPartToken =>
           flushStringTokenQueue()
-          tokens :+= ExpressionRawPartToken
+          tokens :+= expressionToken
       }
     }
     flushStringTokenQueue()
