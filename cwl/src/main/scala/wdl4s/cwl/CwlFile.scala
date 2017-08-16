@@ -35,7 +35,12 @@ case class Workflow(
                      outputs: Array[WorkflowOutputParameter] = Array.empty,
                      steps: Array[WorkflowStep]) extends CwlFile {
 
+
+
+
   def womExecutable(cwlFileMap: Map[String, CwlFile]): ErrorOr[Executable] = womDefinition(cwlFileMap) map Executable.apply
+
+  val embeddedFileNames = wf.steps.toList.flatMap(_.run.select[String].toList)
 
   def outputsTypeMap(cwlFileMap: Map[String, CwlFile]): WdlTypeMap = steps.foldLeft(Map.empty[String, WdlType]) {
     // Not implemented as a `foldMap` because there is no semigroup instance for `WdlType`s.  `foldMap` doesn't know that

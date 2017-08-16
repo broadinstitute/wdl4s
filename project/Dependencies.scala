@@ -11,7 +11,8 @@ object Dependencies {
 
   private val catsDependencies = List(
     "org.typelevel" %% "cats" % catsV,
-    "com.github.benhutchison" %% "mouse" % "0.9"
+    "com.github.benhutchison" %% "mouse" % "0.9",
+    "org.typelevel" %% "cats-effect" % "0.4"
   ) map (_
     /*
     Exclude test framework cats-laws and its transitive dependency scalacheck.
@@ -50,7 +51,7 @@ object Dependencies {
   val cwlDependencies = List(
     "io.circe" %% "circe-yaml" % "0.6.1",
     "eu.timepit" %% "refined"            % "0.8.2",
-    "com.lihaoyi" %% "ammonite-ops" % "1.0.0-RC7" % "test",
+    "com.lihaoyi" %% "ammonite-ops" % "1.0.1",
     "org.pegdown" % "pegdown" % "1.6.0" % Test
   ) ++ circeDependencies ++ womDependencies
 
