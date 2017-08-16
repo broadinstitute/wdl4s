@@ -1,5 +1,8 @@
 package wdl4s.wdl
 
+import cats.syntax.traverse._
+import cats.instances.list._
+import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.wdl.AstTools.EnhancedAstNode
 import wdl4s.wdl.exception.{ValidationException, VariableLookupException, VariableNotFoundException}
@@ -7,8 +10,8 @@ import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.values.{WdlOptionalValue, WdlValue}
 import wdl4s.wom.graph.CallNode.CallWithInputs
-import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
-import wdl4s.wom.graph.{CallNode, GraphInputNode}
+import wdl4s.wom.graph.{CallNode, GraphInputNode, GraphNodePort}
+import cats.syntax.validated._
 
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
@@ -46,28 +49,36 @@ object WdlCall {
       (key, expression)
     } toMap
   }
-  
-  private def buildWomNodeAndInputs(wdlCall: WdlCall): CallWithInputs = {
-    val inputToOutputPort: Map[String, GraphNodeOutputPort] = for {
+
+
+  private def buildWomNodeAndInputs(wdlCall: WdlCall): ErrorOr[CallWithInputs] = {
+
+    val inputToOutputPortValidations: Iterable[ErrorOr[(String, GraphNodePort.OutputPort)]] = for {
       (inputName, expr) <- wdlCall.inputMappings
       variable <- expr.variableReferences
       parent <- wdlCall.parent
       node <- parent.resolveVariable(variable.terminal.sourceString)
       outputPort = outputPortFromNode(node, variable.terminalSubIdentifier)
-    } yield inputName -> outputPort
+    } yield outputPort map { op => inputName -> op }
 
-    CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), wdlCall.callable.womDefinition, inputToOutputPort)
+    val inputToOutputPortValidation: ErrorOr[List[(String, GraphNodePort.OutputPort)]] = inputToOutputPortValidations.toList.sequence
+
+    // TODO: When WomExpressions wrap WdlExpressions, we can switch this to use expressionBasedInputs instead of portBasedInputs:
+    import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
+    inputToOutputPortValidation flatMap { inputToOutputPort =>
+      CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), wdlCall.callable.womDefinition, inputToOutputPort.toMap, Set.empty)
+    }
   }
 
-  private def outputPortFromNode(node: WdlGraphNode, terminal: Option[Terminal]): GraphNodeOutputPort = {
+  private def outputPortFromNode(node: WdlGraphNode, terminal: Option[Terminal]): ErrorOr[GraphNodePort.OutputPort] = {
     (node, terminal) match {
       case (wdlCall: WdlCall, Some(subTerminal)) =>
-        wdlCall.womGraphOutputPorts.find(_.name == subTerminal.sourceString) getOrElse {
+        wdlCall.womGraphOutputPorts.map(_.find(_.name == subTerminal.sourceString) getOrElse {
           throw new Exception(s"Cannot find referenced variable ${subTerminal.sourceString} in call ${wdlCall.unqualifiedName}")
-        }
+        })
         // TODO implement when declarations are in WOM
-      case (_: Declaration, None) => throw new Exception("Declaration not yet supported in WOM")
-      case _ => throw new Exception(s"Unsupported node $node and terminal $terminal")
+      case (_: Declaration, None) => "Declaration not yet supported in WOM".invalidNel
+      case _ => s"Unsupported node $node and terminal $terminal".invalidNel
     }
   }
 }
@@ -92,13 +103,13 @@ sealed abstract class WdlCall(val alias: Option[String],
 
   def callType: String
 
-  private lazy val CallWithInputs(womNode, womInputs) = WdlCall.buildWomNodeAndInputs(this)
+  private lazy val womCallNodeWithInputs = WdlCall.buildWomNodeAndInputs(this)
 
-  lazy val womCallNode: CallNode = womNode
+  lazy val womCallNode: ErrorOr[CallNode] = womCallNodeWithInputs.map(_.call)
 
-  lazy val womGraphInputNodes: Set[GraphInputNode] = womInputs
+  lazy val womGraphInputNodes: ErrorOr[Set[GraphInputNode]] = womCallNodeWithInputs.map(_.inputs)
 
-  lazy val womGraphOutputPorts: Seq[GraphNodeOutputPort] = outputs.map(_.toWomOutputPort)
+  lazy val womGraphOutputPorts: ErrorOr[Set[GraphNodePort.OutputPort]] = womCallNode.map(_.outputPorts)
 
   def toCallOutput(output: Output) = output match {
     case taskOutput: TaskOutput => CallOutput(this, taskOutput.copy(parent = Option(this)))
