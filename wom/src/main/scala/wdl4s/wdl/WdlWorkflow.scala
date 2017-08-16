@@ -51,7 +51,7 @@ object WdlWorkflow {
 
   def buildWomGraph(wdlWorkflow: WdlWorkflow): Graph = {
     val graphNodes = wdlWorkflow.calls.foldLeft(Set.empty[GraphNode])({
-      case (currentNodes, call) => currentNodes ++ call.womGraphInputNodes + call.womCallNode
+      case (currentNodes, call) => currentNodes ++ call.womGraphInputNodes.getOrElse(throw new Exception()) + call.womCallNode.getOrElse(throw new Exception())
     })
 
     Graph.validateAndConstruct(graphNodes) match {
