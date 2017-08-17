@@ -191,6 +191,12 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
   def variableReferences: Iterable[VariableReference] = AstTools.findVariableReferences(ast)
 }
 
+/**
+  *
+  * @param wdlExpression The wrapped WdlExpression.
+  * @param from The Scope in which the WdlExpression is found, needed to adjust member access expressions located in
+  *             conditionals (wrapped in optionals) or scatters (wrapped in arrays).
+  */
 final case class WdlWomExpression(wdlExpression: WdlExpression, from: Option[Scope]) extends WomExpression {
 
   override def inputs: Set[String] = wdlExpression.variableReferences map { _.terminal.getSourceString } toSet
