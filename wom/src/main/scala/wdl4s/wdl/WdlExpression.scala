@@ -1,7 +1,7 @@
 package wdl4s.wdl
 
-import cats.syntax.validated._
 import lenthall.validation.ErrorOr.ErrorOr
+import lenthall.validation.Validation._
 import wdl4s.parser.WdlParser
 import wdl4s.parser.WdlParser.{Ast, AstList, AstNode, Terminal}
 import wdl4s.wdl.AstTools.{EnhancedAstNode, VariableReference}
@@ -16,7 +16,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 class WdlExpressionException(message: String = null, cause: Throwable = null) extends RuntimeException(message, cause)
 
@@ -197,9 +197,9 @@ final case class WdlWomExpression(wdlExpression: WdlExpression) extends WomExpre
 
   override def evaluateValue(variableValues: Map[String, WdlValue], ioFunctionSet: IoFunctionSet): ErrorOr[WdlValue] = {
     lazy val wdlFunctions = new WdlStandardLibraryFunctions {
-      override def readFile(path: String): String = Await.result(ioFunctionSet.read_file(path), Duration.Inf)
+      override def readFile(path: String): String = Await.result(ioFunctionSet.readFile(path), Duration.Inf)
 
-      override def writeFile(path: String, content: String): Try[WdlFile] = Try(Await.result(ioFunctionSet.write_file(path, content), Duration.Inf))
+      override def writeFile(path: String, content: String): Try[WdlFile] = Try(Await.result(ioFunctionSet.writeFile(path, content), Duration.Inf))
 
       override def stdout(params: Seq[Try[WdlValue]]): Try[WdlFile] = ???
 
@@ -209,18 +209,13 @@ final case class WdlWomExpression(wdlExpression: WdlExpression) extends WomExpre
 
       override def size(params: Seq[Try[WdlValue]]): Try[WdlFloat] = ???
     }
-    wdlExpression.evaluate(variableValues.apply, wdlFunctions) match {
-      case Success(v) => v.validNel
-      case Failure(e) => e.getMessage.invalidNel
-    }
+    wdlExpression.evaluate(variableValues.apply, wdlFunctions).toErrorOr
   }
 
   override def evaluateType(inputTypes: Map[String, WdlType]): ErrorOr[WdlType] = {
-    // All usages of WdlExpression#evaluateType trace back to WdlNamespace
-    wdlExpression.evaluateType(inputTypes.apply, new WdlStandardLibraryFunctionsType, from = None) match {
-      case Success(v) => v.validNel
-      case Failure(e) => e.getMessage.invalidNel
-    }
+    // All current usages of WdlExpression#evaluateType trace back to WdlNamespace, but this is not necessarily the
+    // case in the brave new WOM-world.
+    wdlExpression.evaluateType(inputTypes.apply, new WdlStandardLibraryFunctionsType, from = None).toErrorOr
   }
 }
 
