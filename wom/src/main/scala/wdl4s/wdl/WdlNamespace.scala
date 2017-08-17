@@ -415,7 +415,7 @@ object WdlNamespace {
   /**
     * Determine the list of references in this expression to values which were never declared
     */
-  def referencesToAbsentValues(container: Scope, expression: WdlExpression): Iterable[Terminal] =
+  private def referencesToAbsentValues(container: Scope, expression: WdlExpression): Iterable[Terminal] =
     expression.variableReferences collect { case variable if container.resolveVariable(variable.terminal.sourceString).isEmpty => variable.terminal }
 
   private def validateDeclaration(declaration: DeclarationInterface, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter): Seq[SyntaxError] = {

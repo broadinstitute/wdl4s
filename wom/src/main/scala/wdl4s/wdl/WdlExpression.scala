@@ -191,7 +191,7 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
   def variableReferences: Iterable[VariableReference] = AstTools.findVariableReferences(ast)
 }
 
-final case class WdlWomExpression(wdlExpression: WdlExpression) extends WomExpression {
+final case class WdlWomExpression(wdlExpression: WdlExpression, from: Option[Scope]) extends WomExpression {
 
   override def inputs: Set[String] = wdlExpression.variableReferences map { _.terminal.getSourceString } toSet
 
@@ -215,7 +215,7 @@ final case class WdlWomExpression(wdlExpression: WdlExpression) extends WomExpre
   override def evaluateType(inputTypes: Map[String, WdlType]): ErrorOr[WdlType] = {
     // All current usages of WdlExpression#evaluateType trace back to WdlNamespace, but this is not necessarily the
     // case in the brave new WOM-world.
-    wdlExpression.evaluateType(inputTypes.apply, new WdlStandardLibraryFunctionsType, from = None).toErrorOr
+    wdlExpression.evaluateType(inputTypes.apply, new WdlStandardLibraryFunctionsType, from).toErrorOr
   }
 }
 
