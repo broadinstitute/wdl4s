@@ -1,7 +1,6 @@
 package wdl4s.cwl
 
 import io.circe._
-import io.circe.generic.auto._
 import io.circe.yaml.{parser => YamlParser}
 import io.circe.parser._
 import io.circe.shapes._
@@ -15,28 +14,39 @@ import cats.instances.list._
 import cats.instances.either._
 import cats.syntax.validated._
 
-import lenthall.validation.ErrorOr.ErrorOr
+//import lenthall.validation.ErrorOr.ErrorOr
 
 object CwlCodecs {
+  import Implicits._
 
-  type EitherA[A] = Either[Error, A]
+  //According to automatic derivation, these instances should not be required.  But
+  //removing these breaks decodeCwl, so...
+  implicit val wfD = implicitly[Decoder[Workflow]]
+  implicit val cltD = implicitly[Decoder[CommandLineTool]]
+
+  def decodeCwl(in: String) = decode[Cwl](_)
 
   /**
     * Parse a possibly top-level CWL file and return representations of this file and any referenced files.  This is
     * very simplistic logic that assumes only one level of depth max.
-    * @return a `Map[String, CwlFile]` of filenames to `CwlFile`s.
+    * @return a `Map[String, Cwl]` of filenames to `Cwl`s.
     */
-  def decodeCwl(yaml: String): ErrorOr[(CwlFile, Map[String, CwlFile])] = {
+   /*
+  def decodeCwl(yaml: String): EitherT[IO, NonEmptyList[String], Cwl] = {
     decodeSingleFileCwl(yaml) match {
-      case Right(clt: CommandLineTool) => (clt, Map.empty[String, CwlFile]).validNel
+      case Right(clt: CommandLineTool) => (clt, Map.empty[String, Cwl]).validNel
       case Right(wf: Workflow) =>
-        val fileNames: List[String] = wf.steps.toList.flatMap(_.run.select[String].toList)
 
-        val fileNameToFiles: EitherA[List[(String, CwlFile)]] = fileNames.traverse[EitherA, (String, CwlFile)] {
+        wf.steps.traverse{
+          wfStep =>
+            wfStep.filename.
+
+        }
+
+        val fileNameToFiles: EitherA[List[(String, CwlFile)]] = fileNames.traverse[ErrorOr, (String, CwlFile)] {
           fileName =>
             val yaml = scala.io.Source.fromFile(fileName).getLines.mkString("\n")
-            // TODO: This should recurse and decodeSingleFileCwl should go away.
-            decodeSingleFileCwl(yaml).map(fileName -> _)
+            decodeCwl(yaml).map(fileName -> _)
         }
 
         fileNameToFiles.map(_.toMap).map(wf -> _) match {
@@ -85,5 +95,6 @@ object CwlCodecs {
   def cwlToJson(cwl: CwlFile): String = jsonPrettyPrinter.pretty(encodeCwl(cwl))
 
   def cwlToYaml(cwl: CwlFile): String = yamlPrettyPrinter.pretty(encodeCwl(cwl))
+  */
 
 }

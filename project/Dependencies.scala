@@ -50,7 +50,8 @@ object Dependencies {
   val cwlDependencies = List(
     "io.circe" %% "circe-yaml" % "0.6.1",
     "eu.timepit" %% "refined"            % "0.8.2",
-    "com.lihaoyi" %% "ammonite-ops" % "1.0.0-RC7" % "test",
+    "com.lihaoyi" %% "ammonite-ops" % "1.0.1",
+    "org.typelevel" %% "cats-effect" % "0.4",
     "org.pegdown" % "pegdown" % "1.6.0" % Test
   ) ++ circeDependencies ++ womDependencies
 

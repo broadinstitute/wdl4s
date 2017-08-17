@@ -23,30 +23,27 @@ import wdl4s.wom.expression.{WomExpression, PlaceholderWomExpression}
 import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 import wdl4s.wom.graph._
 
-sealed trait CwlFile {
-
-  val cwlVersion: Option[CwlVersion]
-}
-
 case class Workflow(
                      cwlVersion: Option[CwlVersion] = Option(CwlVersion.Version1),
                      `class`: Workflow.`class`.type = Workflow.`class`,
                      inputs: Array[InputParameter] = Array.empty,
                      outputs: Array[WorkflowOutputParameter] = Array.empty,
-                     steps: Array[WorkflowStep]) extends CwlFile {
+                     steps: Array[WorkflowStep]) {
 
-  def womExecutable(cwlFileMap: Map[String, CwlFile]): ErrorOr[Executable] = womDefinition(cwlFileMap) map Executable.apply
+  def womExecutable: ErrorOr[Executable] = womDefinition map Executable.apply
 
-  def outputsTypeMap(cwlFileMap: Map[String, CwlFile]): WdlTypeMap = steps.foldLeft(Map.empty[String, WdlType]) {
+  val fileNames: List[String] = steps.toList.flatMap(_.run.select[String].toList)
+
+  def outputsTypeMap: WdlTypeMap = steps.foldLeft(Map.empty[String, WdlType]) {
     // Not implemented as a `foldMap` because there is no semigroup instance for `WdlType`s.  `foldMap` doesn't know that
     // we don't need a semigroup instance since the map keys should be unique and therefore map values would never need
     // to be combined under the same key.
-    (acc, s) => acc ++ s.typedOutputs(cwlFileMap)
+    (acc, s) => acc ++ s.typedOutputs
   }
 
   lazy val stepById: Map[String, WorkflowStep] = steps.map(ws => ws.id -> ws).toMap
 
-  def womGraph(cwlFileMap: Map[String, CwlFile]): ErrorOr[Graph] = {
+  def womGraph: ErrorOr[Graph] = {
 
     def cwlTypeForInputParameter(input: InputParameter): Option[CwlType] = input.`type`.flatMap(_.select[CwlType])
 
@@ -55,7 +52,7 @@ case class Workflow(
     }
 
     val typeMap: WdlTypeMap =
-      outputsTypeMap(cwlFileMap) ++
+      outputsTypeMap ++
         // Note this is only looking at the workflow inputs and not recursing into steps, because our current thinking
         // is that in CWL graph inputs can only be defined at the workflow level.  It's possible that's not actually
         // correct, but that's the assumption being made here.
@@ -77,7 +74,7 @@ case class Workflow(
       steps.
         toList.
         foldLeft(Set.empty[GraphNode])(
-          (nodes, step) => step.callWithInputs(typeMap, cwlFileMap, this, nodes, workflowInputs))
+          (nodes, step) => step.callWithInputs(typeMap,  this, nodes, workflowInputs))
 
     val graphFromOutputs: ErrorOr[Set[GraphNode]] =
       outputs.toList.traverse[ErrorOr, GraphNode] {
@@ -98,13 +95,13 @@ case class Workflow(
     graphFromOutputs.flatMap(outputs => Graph.validateAndConstruct(graphFromSteps ++ graphFromInputs ++ outputs))
   }
 
-  def womDefinition(cwlFileMap: Map[String, CwlFile]): ErrorOr[WorkflowDefinition] = {
+  def womDefinition: ErrorOr[WorkflowDefinition] = {
     val name: String = "workflow Id"
     val meta: Map[String, String] = Map.empty
     val paramMeta: Map[String, String] = Map.empty
     val declarations: List[(String, WomExpression)] = List.empty
 
-    womGraph(cwlFileMap).map(graph =>
+    womGraph.map(graph =>
       WorkflowDefinition(
         name,
         graph,
@@ -159,7 +156,7 @@ case class CommandLineTool(
                             stdout: Option[StringOrExpression] = None,
                             successCodes: Option[Array[Int]] = None,
                             temporaryFailCodes: Option[Array[Int]] = None,
-                            permanentFailCodes: Option[Array[Int]] = None) extends CwlFile {
+                            permanentFailCodes: Option[Array[Int]] = None) {
 
   def womExecutable: ErrorOr[Executable] =
     Valid(Executable(taskDefinition))
