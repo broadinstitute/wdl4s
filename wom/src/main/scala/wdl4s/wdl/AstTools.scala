@@ -344,8 +344,7 @@ object AstTools {
      * 
      * There also might be other types of nodes in trail than MemberAccess depending the expression.
      */
-    val trail1 = expr.findTerminalsWithTrail("identifier")
-    trail1.collect({
+    expr.findTerminalsWithTrail("identifier").collect({
       case (terminal, trail) if !isMemberAccessRhs(terminal, trail) && !isFunctionName(terminal, trail) => VariableReference(terminal, trail)
     })
   }
