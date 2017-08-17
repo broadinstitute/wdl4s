@@ -1,10 +1,12 @@
 package wdl4s.wdl
 
-import cats.data.Validated.{Invalid, Valid}
+import cats.syntax.cartesian._
+import cats.syntax.traverse._
+import cats.instances.list._
 import lenthall.util.TryUtil
+import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.parser.WdlParser._
 import wdl4s.wdl.AstTools._
-import wdl4s.wdl.exception.ValidationException
 import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlType
 import wdl4s.wdl.values.WdlValue
@@ -49,24 +51,29 @@ object WdlWorkflow {
     new WdlWorkflow(name, workflowOutputsWildcards, wdlSyntaxErrorFormatter, meta, parameterMeta, ast)
   }
 
-  def buildWomGraph(wdlWorkflow: WdlWorkflow): Graph = {
-    val graphNodes = wdlWorkflow.calls.foldLeft(Set.empty[GraphNode])({
-      case (currentNodes, call) => currentNodes ++ call.womGraphInputNodes + call.womCallNode
-    })
-
-    Graph.validateAndConstruct(graphNodes) match {
-      case Valid(wg) => wg.withDefaultOutputs
-      case Invalid(errors) => throw ValidationException("Unable to validate graph", errors.map(new Exception(_)).toList)
+  def buildWomGraph(wdlWorkflow: WdlWorkflow): ErrorOr[Graph] = {
+    val graphNodesValidation = wdlWorkflow.calls.toList.traverse[ErrorOr, Set[GraphNode]] { call =>
+        (call.womGraphInputNodes |@| call.womCallNode) map { (womGraphInputsNodes, womCallNode) =>
+          womGraphInputsNodes.toSet[GraphNode] + womCallNode
+        }
     }
+
+    import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
+    for {
+      graphNodeSets <- graphNodesValidation
+      graphNodes = graphNodeSets.flatten.toSet
+      g <- Graph.validateAndConstruct(graphNodes)
+      withOutputs = g.withDefaultOutputs
+    } yield withOutputs
   }
 
   /**
     * Convert this WdlWorkflow into a wom.components.Workflow
     */
-  def womWorkflowDefinition(wdlWorkflow: WdlWorkflow): WorkflowDefinition = {
+  def womWorkflowDefinition(wdlWorkflow: WdlWorkflow): ErrorOr[WorkflowDefinition] = buildWomGraph(wdlWorkflow) map { wg =>
     WorkflowDefinition(
       wdlWorkflow.unqualifiedName,
-      buildWomGraph(wdlWorkflow),
+      wg,
       wdlWorkflow.meta,
       wdlWorkflow.parameterMeta,
       List.empty)
@@ -83,7 +90,7 @@ case class WdlWorkflow(unqualifiedName: String,
   /**
     * Convert this WdlWorkflow into a wom.components.Workflow
     */
-  override lazy val womDefinition: WorkflowDefinition = WdlWorkflow.womWorkflowDefinition(this)
+  override lazy val womDefinition: ErrorOr[WorkflowDefinition] = WdlWorkflow.womWorkflowDefinition(this)
 
   /**
    * FQNs for all inputs to this workflow and their associated types and possible postfix quantifiers.
@@ -141,23 +148,23 @@ case class WdlWorkflow(unqualifiedName: String,
         case _ => false
       }
     }
-    
+
     descendants collect {
       case declaration: Declaration if isValid(declaration) => declaration
     }
   }
-  
+
   def findDeclarationByName(name: String): Option[Declaration] = {
     transitiveDeclarations.find(_.unqualifiedName == name)
   }
-  
+
   def findWorkflowOutputByName(name: String, relativeTo: Scope) = {
     val leftOutputs = if (outputs.contains(relativeTo))
       outputs.dropRight(outputs.size - outputs.indexOf(relativeTo))
     else outputs
     leftOutputs.find(_.unqualifiedName == name)
   }
-  
+
   lazy val hasEmptyOutputSection = workflowOutputWildcards.isEmpty && children.collect({ case o: WorkflowOutput => o }).isEmpty
 
   /**
@@ -169,10 +176,10 @@ case class WdlWorkflow(unqualifiedName: String,
   lazy val expandedWildcardOutputs: Seq[WorkflowOutput] = {
 
     def toWorkflowOutput(output: DeclarationInterface, wdlType: WdlType) = {
-      val locallyQualifiedName = output.parent map { parent => output.locallyQualifiedName(parent) } getOrElse { 
-        throw new RuntimeException(s"output ${output.fullyQualifiedName} has no parent Scope") 
+      val locallyQualifiedName = output.parent map { parent => output.locallyQualifiedName(parent) } getOrElse {
+        throw new RuntimeException(s"output ${output.fullyQualifiedName} has no parent Scope")
       }
-      
+
       new WorkflowOutput(locallyQualifiedName, wdlType, WdlExpression.fromString(locallyQualifiedName), output.ast, Option(this))
     }
 
@@ -185,10 +192,10 @@ case class WdlWorkflow(unqualifiedName: String,
         case otherDeclaration: DeclarationInterface => Seq(otherDeclaration)
         case _ => Seq.empty
       }
-      
+
       outputs map { output => toWorkflowOutput(output, output.relativeWdlType(this)) }
     }
-    
+
     // No outputs means all outputs
     val effectiveOutputWildcards = if (hasEmptyOutputSection) {
       calls map { call => WorkflowOutputWildcard(unqualifiedName + "." + call.unqualifiedName, wildcard = true, call.ast) } toSeq
@@ -207,16 +214,16 @@ case class WdlWorkflow(unqualifiedName: String,
       }
     }
   }
-  
+
   override lazy val outputs: Seq[WorkflowOutput] = expandedWildcardOutputs ++ children collect { case o: WorkflowOutput => o }
-  
+
   override def toString = s"[Workflow $fullyQualifiedName]"
 
   def evaluateOutputs(knownInputs: WorkflowCoercedInputs,
                       wdlFunctions: WdlFunctions[WdlValue],
                       outputResolver: OutputResolver = NoOutputResolver,
                       shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): Try[Map[WorkflowOutput, WdlValue]] = {
-    
+
     val evaluatedOutputs = outputs.foldLeft(Map.empty[WorkflowOutput, Try[WdlValue]])((outputMap, output) => {
       val currentOutputs = outputMap collect {
         case (outputName, value) if value.isSuccess => outputName.fullyQualifiedName -> value.get
