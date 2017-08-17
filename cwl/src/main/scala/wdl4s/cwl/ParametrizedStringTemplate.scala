@@ -29,7 +29,7 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
   def length: Int = lengthSums.lastOption.getOrElse(0)
 
   def partOffset(iPart: Int) = {
-    if(iPart == 0) {
+    if (iPart == 0) {
       0
     } else {
       lengthSums(iPart - 1)
@@ -43,12 +43,37 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
 
   def charAt(pos: Int): Element[P] = {
     val iPart = lengthSums.indexWhere(pos < _)
-    if(iPart < 0) throw new IndexOutOfBoundsException(s"Pos $pos too large for length $length")
+    if (iPart < 0) throw new IndexOutOfBoundsException(s"Pos $pos too large for length $length")
     parts(iPart) match {
       case parameterPart: ParameterPart[P] => parameterPart
       case StringPart(string) => CharElement(string.charAt(pos - partOffset(iPart)))
     }
   }
+
+  def indexOf(ch: Int, fromIndex: Int = 0): Int = {
+    var indexOpt: Option[Int] = None
+    var iPart = 0
+    while (indexOpt.isEmpty && iPart < parts.size) {
+      parts(iPart) match {
+        case StringPart(string) =>
+          if (fromIndex < lengthSums(iPart)) {
+            val partOffset = partOffset(iPart)
+            val partFromIndex = if (fromIndex > partOffset) fromIndex - partOffset else 0
+            val partIndexOf = string.indexOf(ch, partFromIndex)
+            if (partIndexOf > -1) {
+              indexOpt = Option(partIndexOf + partOffset)
+            }
+          }
+        case _ => ()
+      }
+      iPart += 1
+    }
+    indexOpt match {
+      case Some(index) => index
+      case None => -1
+    }
+  }
+
 }
 
 object ParametrizedStringTemplate {
