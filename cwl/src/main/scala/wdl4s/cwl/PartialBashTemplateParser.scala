@@ -8,8 +8,8 @@ class PartialBashTemplateParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP =>
 
   def partsToStringTemplate(parts: Seq[RP]): ParametrizedStringTemplate[XRP] = {
     var stringTemplate = ParametrizedStringTemplate.empty[XRP]
-    for(part <- parts) {
-      if(isRawStringPart(part)) {
+    for (part <- parts) {
+      if (isRawStringPart(part)) {
         stringTemplate += rawPartToString(part.asInstanceOf[SRP])
       } else {
         stringTemplate += part.asInstanceOf[XRP]
@@ -18,83 +18,42 @@ class PartialBashTemplateParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP =>
     stringTemplate
   }
 
-  def scanStep(previousMark: PosMark, element: Element[XRP]): PosMark = {
-    element match {
-      case ParameterPart(parameter) => ???
-      case CharElement(char) => ???
-    }
-  }
-
   def parse(parts: Seq[RP]): ParseResult[XRP] = {
     val stringTemplate = partsToStringTemplate(parts)
-    var posMarks : Seq[PosMark] = Seq.empty
-    for(pos <- 0 until stringTemplate.length) {
-
+    var posMarks: Seq[PosMark[XRP]] = Seq.empty
+    if (stringTemplate.length > 0) {
+      var posMark = PosMark.startFor[XRP](stringTemplate.charAt(0))
+      posMarks :+= posMark
+      for (pos <- 1 until stringTemplate.length) {
+        posMark = posMark.nextFor(stringTemplate.charAt(pos))
+        posMarks :+= posMark
+      }
     }
-    ???
     ParseResult(stringTemplate, posMarks)
   }
-
-  sealed trait RawToken
-
-  sealed trait RawPartToken extends RawToken {
-    def raw: RP
-  }
-
-  case class ExpressionRawPartToken(raw: XRP) extends RawPartToken
-
-  sealed trait StringToken extends RawToken {
-    def string: String
-  }
-
-  case class StringRawPartToken(raw: SRP) extends RawPartToken with StringToken {
-    override def string: String = rawPartToString(raw)
-  }
-
-  case class CombinedStringToken(children: Seq[StringToken]) extends StringToken {
-    override def string: String = children.map(_.string).mkString("")
-  }
-
-  def rawPartsToTokens(rawParts: Seq[RP]): Seq[RawPartToken] =
-    rawParts.map { rawPart: RP =>
-      if (isRawStringPart(rawPart)) {
-        StringRawPartToken(rawPart.asInstanceOf[SRP])
-      } else {
-        ExpressionRawPartToken(rawPart.asInstanceOf[XRP])
-      }
-    }
-
-  def mergeStrings(rawPartTokens: Seq[RawPartToken]): Seq[RawToken] = {
-    var tokens: Seq[RawToken] = Seq.empty
-    var stringTokenQueue: Seq[StringRawPartToken] = Seq.empty
-
-    def flushStringTokenQueue(): Unit = {
-      if (stringTokenQueue.nonEmpty) {
-        tokens :+= CombinedStringToken(stringTokenQueue)
-        stringTokenQueue = Seq.empty
-      }
-    }
-
-    for (rawPartToken <- rawPartTokens) {
-      rawPartToken match {
-        case stringToken: StringRawPartToken => stringTokenQueue :+= stringToken
-        case expressionToken: ExpressionRawPartToken =>
-          flushStringTokenQueue()
-          tokens :+= expressionToken
-      }
-    }
-    flushStringTokenQueue()
-    tokens
-  }
-
 }
 
 object PartialBashTemplateParser {
 
-  sealed trait PosMark
+  case class PosMark[P](element: Element[P], isComment: Boolean, isSingleQuotedString: Boolean,
+                        isDoubleQuotedString: Boolean, isEscapingNext: Boolean, isEscaped: Boolean) {
+    def nextFor(element: Element[P]): PosMark[P] = {
+      element match {
+        case parameterPart: ParameterPart[P] => ???
+        case CharElement(char) => ???
+      }
+    }
+  }
 
-  case class ExpressionMark(index: Int) extends PosMark
+  object PosMark {
+    def startFor[P](element: Element[P]): PosMark[P] = {
+      element match {
+        case parameterPart: ParameterPart[P] => ???
+        case CharElement(char) => ???
+      }
+    }
+  }
 
-  case class ParseResult[P](stringTemplate: ParametrizedStringTemplate[P], posMarks: Seq[PosMark])
+  case class ParseResult[P](stringTemplate: ParametrizedStringTemplate[P], posMarks: Seq[PosMark[P]])
 
 }
