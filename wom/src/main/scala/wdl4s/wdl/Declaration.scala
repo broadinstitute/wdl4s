@@ -1,8 +1,12 @@
 package wdl4s.wdl
 
+import cats.data.Validated.Valid
+import cats.syntax.validated._
+import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
 import wdl4s.parser.WdlParser.{Ast, AstNode}
 import wdl4s.wdl.AstTools.EnhancedAstNode
 import wdl4s.wdl.types.{WdlArrayType, WdlOptionalType, WdlType}
+import wdl4s.wom.graph.ExpressionNode
 
 object DeclarationInterface {
   /**
@@ -76,6 +80,8 @@ trait DeclarationInterface extends WdlGraphNodeWithUpstreamReferences {
   override def toString: String = {
     s"[Declaration type=${wdlType.toWdlString} name=$unqualifiedName expr=${expression.map(_.toWdlString)}]"
   }
+
+  private[wdl] lazy val womExpressionNode: ErrorOr[ExpressionNode] = Declaration.buildWomNodeAndInputs(this)
 }
 
 object Declaration {
@@ -91,6 +97,22 @@ object Declaration {
       parent,
       ast
     )
+  }
+
+  def buildWomNodeAndInputs(decl: DeclarationInterface): ErrorOr[ExpressionNode] = {
+
+    val inputName = decl.unqualifiedName
+    val requiredExpression: ErrorOr[WdlExpression] = decl.expression match {
+      case Some(expr) => Valid(expr)
+      case None => s"Tried to make an ExpressionNode out of a declaration with no expression ($inputName)".invalidNel
+    }
+
+    for {
+      wdlExpression <- requiredExpression
+      womExpression = WdlWomExpression(wdlExpression, None)
+      uninstantiatedExpression <- WdlWomExpression.graphNodeInputExpression(inputName, womExpression, decl)
+      expressionNode <- ExpressionNode.linkWithInputs(inputName, womExpression, uninstantiatedExpression.inputMapping)
+    } yield expressionNode
   }
 }
 
