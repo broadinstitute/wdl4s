@@ -2,7 +2,7 @@ package wdl4s.cwl
 
 import org.scalatest.{FlatSpec, Matchers}
 
-class PartialBashTemplateParserSpec extends FlatSpec with Matchers {
+class ParametrizedBashParserSpec extends FlatSpec with Matchers {
 
   sealed trait MockPart
 
@@ -16,7 +16,7 @@ class PartialBashTemplateParserSpec extends FlatSpec with Matchers {
     def mep(expr: String): MockExpressionPart = MockExpressionPart(expr)
 
     val parser =
-      new PartialBashTemplateParser[MockPart, MockStringPart,
+      new ParametrizedBashParser[MockPart, MockStringPart,
         MockExpressionPart](_.isInstanceOf[MockStringPart], _.string)
     val parts = Seq(msp("The"), msp(" "), msp("answer"), msp(" "), msp("is"), msp(" "), mep("42"), msp("."),
       msp("he said after "), mep("7"), mep(" "), mep("years"), msp("."))
