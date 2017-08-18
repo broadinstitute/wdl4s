@@ -144,7 +144,7 @@ object Workflow {
 case class CommandLineTool(
                             inputs: Array[CommandInputParameter] = Array.empty,
                             outputs: Array[CommandOutputParameter] = Array.empty,
-                            `class`: Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow,
+                            `class`: CommandLineTool.`class`.type = CommandLineTool.`class`,
                             id: Option[String] = None,
                             requirements: Option[Array[Requirement]] = None,
                             //hints: Option[Array[CwlAny]] = None,
@@ -242,6 +242,8 @@ case class CommandLineTool(
 }
 
 object CommandLineTool {
+
+  val `class` : Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow
 
   type StringOrExpression = ECMAScriptExpression :+: String :+: CNil
 

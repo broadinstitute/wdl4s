@@ -57,11 +57,11 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
       parts(iPart) match {
         case StringPart(string) =>
           if (fromIndex < lengthSums(iPart)) {
-            val partOffset = partOffset(iPart)
-            val partFromIndex = if (fromIndex > partOffset) fromIndex - partOffset else 0
+            val offset = partOffset(iPart)
+            val partFromIndex = if (fromIndex > offset) fromIndex - offset else 0
             val partIndexOf = string.indexOf(ch, partFromIndex)
             if (partIndexOf > -1) {
-              indexOpt = Option(partIndexOf + partOffset)
+              indexOpt = Option(partIndexOf + offset)
             }
           }
         case _ => ()

@@ -26,22 +26,14 @@ class ParametrizedStringTemplateSpec extends FlatSpec with Matchers {
     pst2.lengthSums shouldBe Seq(2, 3, 4, 24)
   }
 
-  it should "query for chars and substrings" in {
-    pst1.charAt(0) shouldBe ParameterPart(ps(0))
-    pst1.charAt(1) shouldBe CharElement('H')
-    pst1.charAt(2) shouldBe CharElement('e')
-    pst1.charAt(6) shouldBe CharElement(' ')
-    pst1.charAt(7) shouldBe CharElement('W')
-    pst1.charAt(13) shouldBe ParameterPart(ps(1))
-    pst1.charAt(14) shouldBe ParameterPart(ps(2))
-    pst1.charAt(25) shouldBe CharElement('!')
-    pst1.charAt(26) shouldBe ParameterPart(ps(3))
-    pst2.charAt(0) shouldBe CharElement('Y')
-    pst2.charAt(1) shouldBe CharElement('o')
-    pst2.charAt(2) shouldBe ParameterPart(ps(5))
-    pst2.charAt(3) shouldBe ParameterPart(ps(6))
-    pst2.charAt(4) shouldBe CharElement(' ')
-    pst2.charAt(23) shouldBe CharElement('!')
+  it should "do charAt, indexOf" in {
+    Seq(1, 2, 6, 7, 25).map(pst1.charAt) shouldBe Seq('H', 'e', ' ', 'W', '!').map(CharElement)
+    Seq(0, 13, 14, 26).map(pst1.charAt) shouldBe (0 to 3).map(i => ParameterPart(ps(i)))
+    Seq(0, 1, 4, 23).map(pst2.charAt) shouldBe Seq('Y', 'o', ' ', '!').map(CharElement)
+    Seq(2, 3).map(pst2.charAt) shouldBe Seq(5, 6).map(i => ParameterPart(ps(i)))
+    Seq(0, 1, 2, 100).map(pst1.indexOf('H', _)) shouldBe Seq(1, 1, -1, -1)
+    Seq(0, 20, 24, 25, 26).map(pst1.indexOf('y', _)) shouldBe Seq(24, 24, 24, -1, -1)
+    Seq(0, 9, 10, 18, 19, 20, 100).map(pst2.indexOf('g', _)) shouldBe Seq(9, 9, 18, 18, -1, -1, -1)
   }
 
 }
