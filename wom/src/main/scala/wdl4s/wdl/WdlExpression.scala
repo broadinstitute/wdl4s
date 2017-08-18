@@ -1,5 +1,6 @@
 package wdl4s.wdl
 
+import cats.data.Validated.Valid
 import lenthall.validation.ErrorOr.ErrorOr
 import lenthall.validation.Validation._
 import wdl4s.parser.WdlParser
@@ -16,7 +17,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class WdlExpressionException(message: String = null, cause: Throwable = null) extends RuntimeException(message, cause)
 
@@ -221,7 +222,10 @@ final case class WdlWomExpression(wdlExpression: WdlExpression, from: Option[Sco
   override def evaluateType(inputTypes: Map[String, WdlType]): ErrorOr[WdlType] = {
     // All current usages of WdlExpression#evaluateType trace back to WdlNamespace, but this is not necessarily the
     // case in the brave new WOM-world.
-    wdlExpression.evaluateType(inputTypes.apply, new WdlStandardLibraryFunctionsType, from).toErrorOr
+    wdlExpression.evaluateType(inputTypes.apply, new WdlStandardLibraryFunctionsType, from) match {
+      case Success(t) => Valid(t)
+      case Failure(e) => throw e
+    }
   }
 }
 

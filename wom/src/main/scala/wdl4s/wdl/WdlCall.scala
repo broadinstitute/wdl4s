@@ -74,7 +74,7 @@ object WdlCall {
 
     val graphNodeInputExpressionValidations: Iterable[ErrorOr[GraphNodeInputExpression]] = for {
       (inputName, expr) <- wdlCall.inputMappings
-      womExpression = WdlWomExpression(expr, Option(wdlCall))
+      womExpression = WdlWomExpression(expr, None)
       uninstantiatedExpression = graphNodeInputExpression(inputName, womExpression)
     } yield uninstantiatedExpression
 
