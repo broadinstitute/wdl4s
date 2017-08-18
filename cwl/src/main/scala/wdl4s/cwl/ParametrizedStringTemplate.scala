@@ -42,6 +42,7 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
   }.mkString("")
 
   def charAt(pos: Int): Element[P] = {
+    if (pos < 0) throw new IndexOutOfBoundsException(s"Pos $pos must not be negative.")
     val iPart = lengthSums.indexWhere(pos < _)
     if (iPart < 0) throw new IndexOutOfBoundsException(s"Pos $pos too large for length $length")
     parts(iPart) match {
@@ -50,7 +51,7 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
     }
   }
 
-  def indexOf(ch: Int, fromIndex: Int = 0): Int = {
+  def indexOf[S](sub: S, fromIndex: Int = 0)(subIndex: (String, S, Int) => Int): Int = {
     var indexOpt: Option[Int] = None
     var iPart = 0
     while (indexOpt.isEmpty && iPart < parts.size) {
@@ -59,7 +60,7 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
           if (fromIndex < lengthSums(iPart)) {
             val offset = partOffset(iPart)
             val partFromIndex = if (fromIndex > offset) fromIndex - offset else 0
-            val partIndexOf = string.indexOf(ch, partFromIndex)
+            val partIndexOf = subIndex(string, sub, partFromIndex)
             if (partIndexOf > -1) {
               indexOpt = Option(partIndexOf + offset)
             }
@@ -73,6 +74,13 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
       case None => -1
     }
   }
+
+  def indexOfChar(ch: Int, fromIndex: Int = 0): Int =
+    indexOf[Int](ch, fromIndex)((string: String, ch: Int, fromIndex: Int) => string.indexOf(ch, fromIndex))
+
+  def indexOfStr(str: String, fromIndex: Int = 0): Int =
+    indexOf[String](str, fromIndex)(
+      (string: String, str: String, fromIndex: Int) => string.indexOf(str, fromIndex))
 
 }
 

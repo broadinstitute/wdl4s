@@ -26,14 +26,20 @@ class ParametrizedStringTemplateSpec extends FlatSpec with Matchers {
     pst2.lengthSums shouldBe Seq(2, 3, 4, 24)
   }
 
-  it should "do charAt, indexOf" in {
+  it should "do charAt(pos), indexOf(ch, fromIndex), indexOf(str, fromIndex)" in {
+    Seq((pst1, -1), (pst1, 27), (pst1, 28), (pst2, -1), (pst2, 24), (pst2, 25)).foreach{
+      case (pst, index) => assertThrows[IndexOutOfBoundsException](pst.charAt(index))
+    }
     Seq(1, 2, 6, 7, 25).map(pst1.charAt) shouldBe Seq('H', 'e', ' ', 'W', '!').map(CharElement)
     Seq(0, 13, 14, 26).map(pst1.charAt) shouldBe (0 to 3).map(i => ParameterPart(ps(i)))
     Seq(0, 1, 4, 23).map(pst2.charAt) shouldBe Seq('Y', 'o', ' ', '!').map(CharElement)
     Seq(2, 3).map(pst2.charAt) shouldBe Seq(5, 6).map(i => ParameterPart(ps(i)))
-    Seq(0, 1, 2, 100).map(pst1.indexOf('H', _)) shouldBe Seq(1, 1, -1, -1)
-    Seq(0, 20, 24, 25, 26).map(pst1.indexOf('y', _)) shouldBe Seq(24, 24, 24, -1, -1)
-    Seq(0, 9, 10, 18, 19, 20, 100).map(pst2.indexOf('g', _)) shouldBe Seq(9, 9, 18, 18, -1, -1, -1)
+    Seq(0, 1, 2, 100).map(pst1.indexOfChar('H', _)) shouldBe Seq(1, 1, -1, -1)
+    Seq(0, 20, 24, 25, 26).map(pst1.indexOfChar('y', _)) shouldBe Seq(24, 24, 24, -1, -1)
+    Seq(0, 9, 10, 18, 19, 20, 100).map(pst2.indexOfChar('g', _)) shouldBe Seq(9, 9, 18, 18, -1, -1, -1)
+    Seq(0, 1, 2, 100).map(pst1.indexOfStr("Hello", _)) shouldBe Seq(1, 1, -1, -1)
+    Seq(0, 20, 21, 22, 23, 24, 25).map(pst1.indexOfStr("day", _)) shouldBe Seq(22, 22, 22, 22, -1, -1, -1)
+    Seq(0, 9, 10, 18, 19, 20, 100).map(pst2.indexOfStr("g", _)) shouldBe Seq(9, 9, 18, 18, -1, -1, -1)
   }
 
 }
