@@ -46,14 +46,23 @@ object AstTools {
                                                   trail: Seq[AstNode],
                                                   parentTerminal: Option[Terminal],
                                                   columnOffset: Int) = {
-      // Find all interpolations in the string terminal
-      InterpolationTagPattern.findAllMatchIn(t.getSourceString).foldLeft(List.empty[(AstNode, Int)])((nodes, exprValue) => {
-        // This is the interpolated expression e.g ${my_var}
-        val v = exprValue.group(0)
-        // Create an expression from the content and remember the position of the match in the overall terminal string
-        // so we can point to it in the error message if needed
-        (WdlExpression.fromString(v.substring(2, v.length - 1)).ast, exprValue.start) +: nodes
-      }) match {
+      /*
+        * Find all interpolations in the string terminal.
+        * e.g: String a = "hello ${you}"
+        * We'll create an expression from "you" and remember the position in the string 
+        * "hello ${you}" at which we found "${you}".
+       */
+      val interpolatedExpressionAstNodesAndTheirMatchPosition = InterpolationTagPattern
+        .findAllMatchIn(t.getSourceString)
+        .foldLeft(List.empty[(AstNode, Int)])((nodes, exprValue) => {
+          // This is the interpolated expression e.g ${my_var}
+          val v = exprValue.group(0)
+          // Create an expression from the content and remember the position of the match in the overall terminal string
+          // so we can point to it in the error message if needed
+          (WdlExpression.fromString(v.substring(2, v.length - 1)).ast, exprValue.start) +: nodes
+        })
+
+      interpolatedExpressionAstNodesAndTheirMatchPosition match {
         // If there's no interpolated expression and the parent terminal is of the right type,
         // create an interpolated terminal and we're done
         case Nil if t.getTerminalStr == terminalType =>
