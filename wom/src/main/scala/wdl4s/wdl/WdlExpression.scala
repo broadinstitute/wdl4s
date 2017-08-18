@@ -199,7 +199,7 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
   */
 final case class WdlWomExpression(wdlExpression: WdlExpression, from: Option[Scope]) extends WomExpression {
 
-  override def inputs: Set[String] = wdlExpression.variableReferences map { _.terminal.getSourceString } toSet
+  override def inputs: Set[String] = wdlExpression.variableReferences map { _.fullVariableReferenceString } toSet
 
   override def evaluateValue(variableValues: Map[String, WdlValue], ioFunctionSet: IoFunctionSet): ErrorOr[WdlValue] = {
     lazy val wdlFunctions = new WdlStandardLibraryFunctions {

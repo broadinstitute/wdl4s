@@ -12,7 +12,6 @@ import wdl4s.wdl.exception.{ValidationException, VariableLookupException, Variab
 import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.values.{WdlOptionalValue, WdlValue}
-import wdl4s.wom.expression.WomExpression
 import wdl4s.wom.graph.CallNode.CallWithInputs
 import wdl4s.wom.graph._
 
@@ -60,16 +59,17 @@ object WdlCall {
       case None => s"Failed to resolve variable $name".invalidNel
     }
 
-    def resolveVariable(v: String): ErrorOr[(String, GraphNodePort.OutputPort)] = {
+    def resolveVariable(v: AstTools.VariableReference): ErrorOr[(String, GraphNodePort.OutputPort)] = {
       val parent = wdlCall.parent.get
+      val name =  v.fullVariableReferenceString
       for {
-        node <- resolvedVariableToErrorOr(v, parent.resolveVariable(v))
-        outputPort <- outputPortFromNode(node, None)
-      } yield v -> outputPort
+        node <- resolvedVariableToErrorOr(name, parent.resolveVariable(v.terminal.sourceString))
+        outputPort <- outputPortFromNode(node, v.terminalSubIdentifier)
+      } yield name -> outputPort
     }
 
-    def graphNodeInputExpression(name: String, expression: WomExpression): ErrorOr[GraphNodeInputExpression] = for {
-      resolvedVariables <- expression.inputs.toList traverse resolveVariable
+    def graphNodeInputExpression(name: String, expression: WdlWomExpression): ErrorOr[GraphNodeInputExpression] = for {
+      resolvedVariables <- expression.wdlExpression.variableReferences.toList traverse resolveVariable
     } yield GraphNodeInputExpression(name, expression, resolvedVariables.toMap)
 
     val graphNodeInputExpressionValidations: Iterable[ErrorOr[GraphNodeInputExpression]] = for {
