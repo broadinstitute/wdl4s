@@ -21,7 +21,8 @@ class ParametrizedBashParserSpec extends FlatSpec with Matchers {
     val parts = Seq(msp("The"), msp(" "), msp("answer"), msp(" "), msp("is"), msp(" "), mep("42"), msp("."),
       msp("he said after "), mep("7"), mep(" "), mep("years"), msp("."))
     val stringTemplate = parser.partsToStringTemplate(parts)
-    stringTemplate.length shouldBe 20
+    stringTemplate.length shouldBe 34
+
   }
 
 }
