@@ -40,6 +40,7 @@ object ParametrizedBashParser {
     val singleQuote: Char = '\''
     val doubleQuote: Char = '"'
     val backslash: Char = '\\'
+    val lineFeed: Char = '\n'
   }
 
   sealed trait ScanMark[P] {
@@ -61,7 +62,7 @@ object ParametrizedBashParser {
   }
 
   case class Blank[P](char: Char) extends CharScanMark[P] {
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
+    override def nextFor(element: Element[P]): ScanMark[P] = ScanMark.startFor[P](element)
   }
 
   sealed trait EscapeStart[P] extends CharScanMark[P]
@@ -73,11 +74,26 @@ object ParametrizedBashParser {
   case class WordStartChar[P](char: Char) extends WordStart[P] {
     override def element: Element[P] = CharElement(char: Char)
 
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
+    override def nextFor(element: Element[P]): ScanMark[P] = element match {
+      case ParameterPart(parameter) => ParameterWord[P](parameter)
+      case CharElement(elemChar) => elemChar match {
+        case SpecialChars.singleQuote => SingleQuoteStringStart[P](elemChar)
+        case SpecialChars.doubleQuote => DoubleQuoteStringStart[P](elemChar)
+        case SpecialChars.backslash => WordContinuationEscapeStart(elemChar)
+        case _ if elemChar.isWhitespace => Blank[P](elemChar)
+        case _ => WordContinuationChar(elemChar)
+      }
+    }
   }
 
   case class WordStartEscapeStart[P](char: Char) extends EscapeStart[P] with WordStart[P] {
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
+    override def nextFor(element: Element[P]): ScanMark[P] = element match {
+      case ParameterPart(parameter) => ParameterWord[P](parameter)
+      case CharElement(elemChar) => elemChar match {
+        case SpecialChars.lineFeed => Blank[P](elemChar)
+        case _ => ???
+      }
+    }
   }
 
   sealed trait WordContinuation[P] extends CharScanMark[P]
