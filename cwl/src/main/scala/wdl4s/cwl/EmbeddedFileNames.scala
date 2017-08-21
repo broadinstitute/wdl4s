@@ -1,4 +1,5 @@
 
+/*
 object EmbeddedFileNames extends Poly1 {
   val workflowStepLens = lens[Workflow].steps
   val workflowStepRunLens = lens[WorkflowStep].run
@@ -25,3 +26,4 @@ object EmbeddedFileNames extends Poly1 {
 
     }
 }
+*/

@@ -113,6 +113,8 @@ case class Workflow(
       )
     )
   }
+
+  def asCwl = Coproduct[Cwl](this)
 }
 object Workflow {
 
