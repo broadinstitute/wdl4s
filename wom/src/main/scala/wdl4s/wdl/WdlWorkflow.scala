@@ -11,7 +11,7 @@ import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlType
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.callable.WorkflowDefinition
-import wdl4s.wom.graph.{Graph, GraphNode}
+import wdl4s.wom.graph.{ExpressionNode, Graph, GraphNode}
 
 import scala.language.postfixOps
 import scala.util.Try
@@ -52,16 +52,19 @@ object WdlWorkflow {
   }
 
   def buildWomGraph(wdlWorkflow: WdlWorkflow): ErrorOr[Graph] = {
-    val graphNodesValidation = wdlWorkflow.calls.toList.traverse[ErrorOr, Set[GraphNode]] { call =>
+    val callNodesValidation = wdlWorkflow.calls.toList.traverse[ErrorOr, Set[GraphNode]] { call =>
         (call.womGraphInputNodes |@| call.womCallNode) map { (womGraphInputsNodes, womCallNode) =>
           womGraphInputsNodes.toSet[GraphNode] + womCallNode
         }
     }
 
+    val declarationsValidation: ErrorOr[List[ExpressionNode]] = wdlWorkflow.declarations.toList.map(decl => decl.womExpressionNode).sequence[ErrorOr, ExpressionNode]
+
+    val callsAndDeclarationValidation = callNodesValidation |@| declarationsValidation map { (callNodes, declarationNodes) => callNodes.flatten.toSet ++ declarationNodes }
+
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
     for {
-      graphNodeSets <- graphNodesValidation
-      graphNodes = graphNodeSets.flatten.toSet
+      graphNodes <- callsAndDeclarationValidation
       g <- Graph.validateAndConstruct(graphNodes)
       withOutputs = g.withDefaultOutputs
     } yield withOutputs

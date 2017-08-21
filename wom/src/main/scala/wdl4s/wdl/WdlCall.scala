@@ -1,10 +1,8 @@
 package wdl4s.wdl
 
-import cats.data.Validated.Valid
 import cats.instances.list._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
-import cats.syntax.validated._
 import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.wdl.AstTools.EnhancedAstNode
@@ -54,28 +52,10 @@ object WdlCall {
 
   private def buildWomNodeAndInputs(wdlCall: WdlCall): ErrorOr[CallWithInputs] = {
 
-    def resolvedVariableToErrorOr(name: String, v: Option[WdlGraphNode]): ErrorOr[WdlGraphNode] = v match {
-      case Some(wgn) => Valid(wgn)
-      case None => s"Failed to resolve variable $name".invalidNel
-    }
-
-    def resolveVariable(v: AstTools.VariableReference): ErrorOr[(String, GraphNodePort.OutputPort)] = {
-      val parent = wdlCall.parent.get
-      val name =  v.fullVariableReferenceString
-      for {
-        node <- resolvedVariableToErrorOr(name, parent.resolveVariable(v.terminal.sourceString))
-        outputPort <- outputPortFromNode(node, v.terminalSubIdentifier)
-      } yield name -> outputPort
-    }
-
-    def graphNodeInputExpression(name: String, expression: WdlWomExpression): ErrorOr[GraphNodeInputExpression] = for {
-      resolvedVariables <- expression.wdlExpression.variableReferences.toList traverse resolveVariable
-    } yield GraphNodeInputExpression(name, expression, resolvedVariables.toMap)
-
     val graphNodeInputExpressionValidations: Iterable[ErrorOr[GraphNodeInputExpression]] = for {
       (inputName, expr) <- wdlCall.inputMappings
       womExpression = WdlWomExpression(expr, None)
-      uninstantiatedExpression = graphNodeInputExpression(inputName, womExpression)
+      uninstantiatedExpression = WdlWomExpression.graphNodeInputExpression(inputName, womExpression, wdlCall)
     } yield uninstantiatedExpression
 
     val graphNodeInputExpressionValidation: ErrorOr[List[GraphNodeInputExpression]] = graphNodeInputExpressionValidations.toList.sequence
@@ -87,28 +67,6 @@ object WdlCall {
       (inputToOutputPort, callable) = combined
       callWithInputs <- CallNode.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), callable, Map.empty, inputToOutputPort.toSet)
     } yield callWithInputs
-  }
-
-  private def outputPortFromNode(node: WdlGraphNode, terminal: Option[Terminal]): ErrorOr[GraphNodePort.OutputPort] = {
-
-    def findNamedOutputPort(name: String, graphOutputPorts: Set[GraphNodePort.OutputPort], terminalName: String): ErrorOr[GraphNodePort.OutputPort] = {
-      graphOutputPorts.find(_.name == name) match {
-        case Some(gop) => Valid(gop)
-        case None => s"Cannot find an output port $name in $terminalName".invalidNel
-      }
-    }
-
-    (node, terminal) match {
-      case (wdlCall: WdlCall, Some(subTerminal)) =>
-        for {
-          graphOutputPorts <- wdlCall.womGraphOutputPorts
-          namedPort <- findNamedOutputPort(subTerminal.sourceString, graphOutputPorts, "call " + wdlCall.unqualifiedName) // = graphOutputPorts.find(_.name == subTerminal.sourceString)
-        } yield namedPort
-
-        // TODO implement when declarations are in WOM
-      case (_: Declaration, None) => "Declaration not yet supported in WOM".invalidNel
-      case _ => s"Unsupported node $node and terminal $terminal".invalidNel
-    }
   }
 }
 

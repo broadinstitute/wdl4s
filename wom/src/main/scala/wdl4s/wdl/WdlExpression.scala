@@ -1,6 +1,10 @@
 package wdl4s.wdl
 
 import cats.data.Validated.Valid
+import cats.syntax.validated._
+import cats.instances.list._
+import cats.syntax.traverse._
+
 import lenthall.validation.ErrorOr.ErrorOr
 import lenthall.validation.Validation._
 import wdl4s.parser.WdlParser
@@ -12,6 +16,7 @@ import wdl4s.wdl.formatter.{NullSyntaxHighlighter, SyntaxHighlighter}
 import wdl4s.wdl.types._
 import wdl4s.wdl.values._
 import wdl4s.wom.expression.{IoFunctionSet, WomExpression}
+import wdl4s.wom.graph.{GraphNodeInputExpression, GraphNodePort}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Await
@@ -226,6 +231,30 @@ final case class WdlWomExpression(wdlExpression: WdlExpression, from: Option[Sco
       case Success(t) => Valid(t)
       case Failure(e) => throw e
     }
+  }
+}
+
+object WdlWomExpression {
+  def graphNodeInputExpression(name: String, expression: WdlWomExpression, expressionOwner: WdlGraphNode): ErrorOr[GraphNodeInputExpression] = {
+    import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
+
+    def resolvedVariableToErrorOr(name: String, v: Option[WdlGraphNode]): ErrorOr[WdlGraphNode] = v match {
+      case Some(wgn) => Valid(wgn)
+      case None => s"Failed to resolve variable $name".invalidNel
+    }
+
+    def resolveVariable(v: AstTools.VariableReference): ErrorOr[(String, GraphNodePort.OutputPort)] = {
+      val name = v.fullVariableReferenceString
+      for {
+        node <- resolvedVariableToErrorOr(name, expressionOwner.resolveVariable(v.terminal.sourceString))
+        outputPort <- WdlGraphNode.outputPortFromNode(node, v.terminalSubIdentifier)
+      } yield name -> outputPort
+    }
+
+    for {
+      resolvedVariables
+      <- expression.wdlExpression.variableReferences.toList traverse resolveVariable
+    } yield GraphNodeInputExpression(name, expression, resolvedVariables.toMap)
   }
 }
 
