@@ -67,15 +67,9 @@ object ParametrizedBashParser {
 
   sealed trait EscapeStart[P] extends CharScanMark[P]
 
-  sealed trait Escaped[P] extends CharScanMark[P]
-
-  sealed trait WordStart[P] extends ScanMark[P]
-
-  case class WordStartChar[P](char: Char) extends WordStart[P] {
-    override def element: Element[P] = CharElement(char: Char)
-
+  sealed trait WordNotEscapeStart[P] extends ScanMark[P] {
     override def nextFor(element: Element[P]): ScanMark[P] = element match {
-      case ParameterPart(parameter) => ParameterWord[P](parameter)
+      case ParameterPart(parameter) => WordContinuationParameter[P](parameter)
       case CharElement(elemChar) => elemChar match {
         case SpecialChars.singleQuote => SingleQuoteStringStart[P](elemChar)
         case SpecialChars.doubleQuote => DoubleQuoteStringStart[P](elemChar)
@@ -86,35 +80,60 @@ object ParametrizedBashParser {
     }
   }
 
+  sealed trait Escaped[P] extends ScanMark[P]
+
+  sealed trait WordStart[P] extends ScanMark[P]
+
+  sealed trait WordStartNotEscapeStart[P] extends WordStart[P] with WordNotEscapeStart[P]
+
+  case class WordStartChar[P](char: Char) extends WordStartNotEscapeStart[P] with CharScanMark[P]
+
   case class WordStartEscapeStart[P](char: Char) extends EscapeStart[P] with WordStart[P] {
     override def nextFor(element: Element[P]): ScanMark[P] = element match {
-      case ParameterPart(parameter) => ParameterWord[P](parameter)
+      case ParameterPart(parameter) => WordContinuationEscapedParameter[P](parameter)
       case CharElement(elemChar) => elemChar match {
         case SpecialChars.lineFeed => Blank[P](elemChar)
-        case _ => ???
+        case _ => WordContinuationEscapedChar(char)
       }
     }
   }
 
-  sealed trait WordContinuation[P] extends CharScanMark[P]
+  case class WordStartParameter[P](parameter: P)
+    extends WordStartNotEscapeStart[P] with ParameterScanMark[P]
 
-  case class WordContinuationChar[P](char: Char) extends WordContinuation[P] with CharScanMark[P] {
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
-  }
+  sealed trait WordContinuation[P] extends ScanMark[P]
+
+  sealed trait WordContinuationNotEscapeStart[P] extends WordContinuation[P] with WordNotEscapeStart[P]
+
+  case class WordContinuationChar[P](char: Char)
+    extends WordContinuationNotEscapeStart[P] with CharScanMark[P]
+
+  case class WordContinuationParameter[P](parameter: P)
+    extends WordContinuationNotEscapeStart[P] with ParameterScanMark[P]
+
   case class WordContinuationEscapeStart[P](char: Char) extends WordContinuation[P] with EscapeStart[P] {
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
+    override def nextFor(element: Element[P]): ScanMark[P] = element match {
+      case ParameterPart(parameter) => WordContinuationEscapedParameter(parameter)
+      case CharElement(char) => char match {
+        case SpecialChars.lineFeed => Blank(char)
+        case _ => WordContinuationEscapedChar(char)
+      }
+    }
   }
 
-  case class WordContinuationEscapedChar[P](char: Char) extends WordContinuation[P] with Escaped[P] {
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
-  }
+  sealed trait WordContinuationEscaped[P] extends WordContinuationNotEscapeStart[P] with Escaped[P]
 
-  case class ParameterWord[P](parameter: P) extends ParameterScanMark[P] {
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
-  }
+  case class WordContinuationEscapedChar[P](char: Char)
+    extends WordContinuationEscaped[P] with CharScanMark[P]
+
+  case class WordContinuationEscapedParameter[P](parameter: P)
+    extends WordContinuationEscaped[P] with ParameterScanMark[P]
 
   sealed trait CommentMark[P] extends ScanMark[P] {
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
+    override def nextFor(element: Element[P]): ScanMark[P] = element match {
+      case ParameterPart(parameter) => CommentParameter(parameter)
+      case CharElement(char) => CommentChar(char)
+    }
   }
 
   case class CommentChar[P](char: Char) extends CharScanMark[P] with CommentMark[P]
@@ -126,23 +145,31 @@ object ParametrizedBashParser {
   }
 
   sealed trait SingleQuoteString[P] extends StringMark[P] {
-    override val quotationChar : Char = SpecialChars.singleQuote
+    override val quotationChar: Char = SpecialChars.singleQuote
   }
 
   sealed trait DoubleQuoteString[P] extends StringMark[P] {
-    override val quotationChar : Char = SpecialChars.doubleQuote
+    override val quotationChar: Char = SpecialChars.doubleQuote
   }
 
   sealed trait StringStart[P] extends CharScanMark[P] with StringMark[P]
-  sealed trait StringEnd[P] extends CharScanMark[P] with StringMark[P]
 
-  case class SingleQuoteStringStart[P](char:Char) extends StringStart[P] with SingleQuoteString[P]{
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
+  sealed trait StringEnd[P] extends CharScanMark[P] with StringMark[P] {
+    override def nextFor(element: Element[P]): ScanMark[P] = ScanMark.startFor(element)
   }
 
-  case class DoubleQuoteStringStart[P](char: Char) extends StringStart[P] with DoubleQuoteString[P]{
-    override def nextFor(element: Element[P]): ScanMark[P] = ???
+  trait SingleQuoteStringNonEnd[P] extends SingleQuoteString[P] {
+    override def nextFor(element: Element[P]): ScanMark[P] = element match {
+      case ParameterPart(parameter) => SingleQuoteStringInnerParameter(parameter)
+      case CharElement(char) => char match {
+        case SpecialChars.singleQuote => SingleQuoteStringEnd(char)
+        case _ => SingleQuoteStringInnerChar(char)
+      }
+    }
   }
+
+  case class SingleQuoteStringStart[P](char: Char)
+    extends StringStart[P] with SingleQuoteStringNonEnd[P]
 
   sealed trait SingleQuoteStringInner[P] extends SingleQuoteString[P] {
     override def nextFor(element: Element[P]): SingleQuoteString[P] = ???
@@ -154,7 +181,13 @@ object ParametrizedBashParser {
   case class SingleQuoteStringInnerParameter[P](parameter: P)
     extends SingleQuoteStringInner[P] with ParameterScanMark[P]
 
-  sealed trait DoubleQuoteStringInner[P] extends DoubleQuoteString[P]{
+  case class SingleQuoteStringEnd[P](char: Char) extends SingleQuoteString[P] with StringEnd[P]
+
+  case class DoubleQuoteStringStart[P](char: Char) extends StringStart[P] with DoubleQuoteString[P] {
+    override def nextFor(element: Element[P]): ScanMark[P] = ???
+  }
+
+  sealed trait DoubleQuoteStringInner[P] extends DoubleQuoteString[P] {
     override def nextFor(element: Element[P]): DoubleQuoteString[P] = ???
   }
 
@@ -178,7 +211,7 @@ object ParametrizedBashParser {
   object ScanMark {
     def startFor[P](element: Element[P]): ScanMark[P] = {
       element match {
-        case ParameterPart(parameter) => ParameterWord[P](parameter)
+        case ParameterPart(parameter) => WordStartParameter[P](parameter)
         case CharElement(char) => char match {
           case SpecialChars.hash => CommentChar[P](char)
           case SpecialChars.singleQuote => SingleQuoteStringStart[P](char)
