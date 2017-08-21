@@ -1,6 +1,6 @@
 package wdl4s.cwl
 
-import shapeless.{:+:, CNil}
+import shapeless._
 import wdl4s.cwl.ScatterMethod._
 import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 import wdl4s.wdl.command.CommandPart
@@ -178,6 +178,24 @@ case class WorkflowStep(
 case class WorkflowStepOutput(id: String)
 
 object WorkflowStep {
+
+  val emptyOutputs: Outputs = Coproduct[Outputs](Array.empty[String])
+
+  def validate(
+             id: String,
+             run: Run,
+             in: Array[WorkflowStepInput] = Array.empty,
+             out: Outputs = emptyOutputs,
+             requirements: Option[Array[Requirement]] = None,
+             hints: Option[Array[CwlAny]] = None,
+             label: Option[String] = None,
+             doc: Option[String] = None,
+             scatter: Option[String :+: Array[String] :+: CNil] = None,
+             scatterMethod: Option[ScatterMethod] = None) = {
+               new WorkflowStep(id, in, out, run, requirements, hints, label, doc, scatter, scatterMethod)
+
+  }
+
 
   type Run =
     String :+:

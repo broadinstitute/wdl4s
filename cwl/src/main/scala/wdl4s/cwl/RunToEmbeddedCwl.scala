@@ -1,13 +1,14 @@
 package wdl4s.cwl
 
 import shapeless._
+import WorkflowStep.Run
 
 object RunToEmbeddedCwl extends Poly1 {
   implicit def commandLineTool =
     at[CommandLineTool] {
       clt =>
         (_: Map[String, Cwl]) =>
-         Coproduct[WorkflowStep.Run](clt)
+         Coproduct[Run](clt)
     }
 
   implicit def string = at[String] {
@@ -26,7 +27,8 @@ object RunToEmbeddedCwl extends Poly1 {
   implicit def workflow = at[Workflow] {
     wf =>
       (_: Map[String, Cwl]) =>
-        Coproduct[WorkflowStep.Run](wf)
+        Coproduct[Run](wf)
   }
 }
+
 

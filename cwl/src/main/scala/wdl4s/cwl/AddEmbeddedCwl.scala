@@ -10,7 +10,6 @@ object AddEmbeddedCwl extends Poly1 {
     at[Workflow] {
       wf =>
         (map: Map[String, Cwl]) =>
-          val wf_ =
             workflowStepLens.modify(wf){
               _.map{ step =>
                 workflowStepRunLens.modify(step)(_.fold(RunToEmbeddedCwl).apply(map))
