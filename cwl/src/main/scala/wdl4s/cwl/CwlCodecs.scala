@@ -24,7 +24,7 @@ object CwlCodecs {
   implicit val wfD = implicitly[Decoder[Workflow]]
   implicit val cltD = implicitly[Decoder[CommandLineTool]]
 
-  def decodeCwl(in: String) = decode[Cwl](_)
+  def decodeCwl(in: String) = decode[Cwl](in)
 
   /**
     * Parse a possibly top-level CWL file and return representations of this file and any referenced files.  This is

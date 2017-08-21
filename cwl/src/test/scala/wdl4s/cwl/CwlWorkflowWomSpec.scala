@@ -9,6 +9,7 @@ import wdl4s.wom.executable.Executable
 import wdl4s.wom.graph._
 
 class CwlWorkflowWomSpec extends FlatSpec with Matchers {
+  /*
   "munging the runnable id" should "remove the filename" in {
     val id = "file:///home/dan/common-workflow-language/v1.0/examples/tar-param.cwl#example_out"
     val out = RunOutputsToTypeMap.mungeId(id)
@@ -290,4 +291,5 @@ id: file:///Users/danb/wdl4s/r.cwl
     wc.upstream.filter(_ eq ps).size shouldBe 1
   }
 
+  */
 }

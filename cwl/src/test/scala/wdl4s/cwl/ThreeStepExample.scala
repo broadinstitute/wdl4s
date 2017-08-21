@@ -12,6 +12,7 @@ import CwlCodecs._
  The output of the ps call is also counted via `wc`.
  */
 object ThreeStepExample extends App {
+  /*
   val namespace = "threestep"
 
   val inlineJScriptRequirements = Option(Array(
@@ -125,4 +126,5 @@ object ThreeStepExample extends App {
   val yaml = cwlToYaml(threeStepWorkflow)
 
   println(yaml)
+  */
 }

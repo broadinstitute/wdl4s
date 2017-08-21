@@ -34,7 +34,8 @@ object Dependencies {
     "commons-io" % "commons-io" % "2.5",
     "org.apache.commons" % "commons-lang3" % "3.4",
     "com.github.pathikrit" %% "better-files" % "2.17.1",
-    "org.scalatest" %% "scalatest" % "3.0.2" % "test"
+    "org.scalatest" %% "scalatest" % "3.0.2" % "test",
+    "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
   ) ++ catsDependencies
 
   val wdlDependencies = List() ++ womDependencies
@@ -54,7 +55,8 @@ object Dependencies {
     "org.typelevel" %% "cats-effect" % "0.4",
     "org.pegdown" % "pegdown" % "1.6.0" % Test,
      "org.scalactic" %% "scalactic" % "3.0.1",
- "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+ "org.scalatest" %% "scalatest" % "3.0.2" % "test",
+    "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
 
   ) ++ circeDependencies ++ womDependencies
 

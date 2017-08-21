@@ -6,6 +6,7 @@ import CwlCodecs._
 
 
 class ParseBigThreeSpec extends FlatSpec with Matchers {
+  /*
   val namespace = "cwl"
 
   it should "parse 1st tool" in {
@@ -79,4 +80,5 @@ name: file:///Users/danb/common-workflow-language/v1.0/examples/env.cwl
 
     decodeCwl(envCwl).isValid should be (true)
   }
+  */
 }
