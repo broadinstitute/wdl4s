@@ -52,7 +52,10 @@ object Dependencies {
     "eu.timepit" %% "refined"            % "0.8.2",
     "com.lihaoyi" %% "ammonite-ops" % "1.0.1",
     "org.typelevel" %% "cats-effect" % "0.4",
-    "org.pegdown" % "pegdown" % "1.6.0" % Test
+    "org.pegdown" % "pegdown" % "1.6.0" % Test,
+     "org.scalactic" %% "scalactic" % "3.0.1",
+ "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+
   ) ++ circeDependencies ++ womDependencies
 
   private val slf4jBindingDependencies = List(
