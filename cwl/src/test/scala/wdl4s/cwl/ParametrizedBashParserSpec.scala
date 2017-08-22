@@ -14,18 +14,23 @@ class ParametrizedBashParserSpec extends FlatSpec with Matchers {
 
   def mep(expr: String): MockExpressionPart = MockExpressionPart(expr)
 
+  def newParser: ParametrizedBashParser[MockPart, MockStringPart, MockExpressionPart] =
+    new ParametrizedBashParser[MockPart, MockStringPart,
+      MockExpressionPart](_.isInstanceOf[MockStringPart], _.string)
+
   it should "merge adjacent string tokens" in {
-    val parser =
-      new ParametrizedBashParser[MockPart, MockStringPart,
-        MockExpressionPart](_.isInstanceOf[MockStringPart], _.string)
+    val parser = newParser
     val parts = Seq(msp("The"), msp(" "), msp("answer"), msp(" "), msp("is"), msp(" "), mep("42"), msp("."),
       msp("he said after "), mep("7"), mep(" "), mep("years"), msp("."))
     val stringTemplate = parser.partsToStringTemplate(parts)
     stringTemplate.length shouldBe 34
   }
 
-  it should "properly scan command lines" in {
-
+  it should "properly tokenize command lines" in {
+    val parser = newParser
+    val parts = Seq(msp("echo Hello World"))
+    val tokens = parser.tokenize(parts)
+    println(tokens)
   }
 
 }

@@ -34,7 +34,7 @@ class ParametrizedBashParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP => Bo
   }
 
   private def newToken(string: ParametrizedStringTemplate[XRP], tokenType: TokenType,
-                       beginIndex: Int, endIndex: Int): Unit = {
+                       beginIndex: Int, endIndex: Int): Token[XRP] = {
     val tokenString = string.substring(beginIndex, endIndex)
     Token(tokenType, beginIndex, tokenString)
   }
@@ -50,7 +50,7 @@ class ParametrizedBashParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP => Bo
         val tokenTypeNew = scanMarks(index).tokenType
         if (tokenTypeNew != tokenType) {
           val tokenEndIndex = index
-          tokens :+= newToken(string, tokenTypeNew, tokenBeginIndex, tokenEndIndex)
+          tokens :+= newToken(string, tokenType, tokenBeginIndex, tokenEndIndex)
           tokenType = tokenTypeNew
           tokenBeginIndex = tokenEndIndex
         }
@@ -307,11 +307,11 @@ object ParametrizedBashParser {
     class TokenType
 
     object TokenType {
-      val blank = new TokenType
-      val word = new TokenType
-      val comment = new TokenType
-      val singleQuoteString = new TokenType
-      val doubleQuoteString = new TokenType
+      case object blank extends TokenType
+      case object word extends TokenType
+      case object comment extends TokenType
+      case object singleQuoteString extends TokenType
+      case object doubleQuoteString extends TokenType
     }
 
   }

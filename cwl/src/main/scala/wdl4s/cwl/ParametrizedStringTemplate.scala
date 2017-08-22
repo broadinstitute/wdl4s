@@ -35,12 +35,13 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
 
   def partOffset(iPart: Int): Int = if (iPart == 0) 0 else lengthSums(iPart - 1)
 
+
   case class Pos(index: Int, iPart: Int, partIndex: Int)
 
   object Pos {
     def fromIndex(index: Int): Pos = {
-      val iPart = lengthSums.indexWhere(index < _)
-      val partIndex = partOffset(iPart)
+      val iPart = if(index < length) lengthSums.indexWhere(index < _) else parts.size - 1
+      val partIndex = index - partOffset(iPart)
       Pos(index, iPart, partIndex)
     }
 
