@@ -10,29 +10,20 @@ import cats.syntax.either._
 
 import scala.util.Try
 
-
-
 object CwlDecoder {
 
   type Parse[A] = EitherT[IO, NonEmptyList[String], A]
   type ParseValidated[A] = IO[ValidatedNel[String, A]]
 
-  def constructPath(relativePath: RelPath, path: String): Parse[Path] =
-    EitherT {
-      IO {
-        Try(pwd/relativePath/path).toEither.leftMap(_.getMessage).leftMap(NonEmptyList.one)
-      }
-    }
-
   def salad(path: Path): Parse[String] = EitherT {
     IO {
       for {
         cwlTooLResult <- Try(%%("cwltool", "--quiet", "--print-pre", path.toString)).toEither.
-          leftMap(t => NonEmptyList.one(s"running cwltool failed with ${t.getMessage}"))
+          leftMap(t => NonEmptyList.one(s"running cwltool on file $path failed with ${t.getMessage}"))
         result <-
           cwlTooLResult.exitCode match {
             case 0 => Right(cwlTooLResult.out.string)
-            case error => Left(NonEmptyList.one(s"CwlTool on Salad resulted in exit code $error and stderr ${cwlTooLResult.err.string}"))
+            case error => Left(NonEmptyList.one(s"running CwlTool on file $path resulted in exit code $error and stderr ${cwlTooLResult.err.string}"))
           }
       } yield result
     }

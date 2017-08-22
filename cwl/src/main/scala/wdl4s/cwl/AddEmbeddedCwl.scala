@@ -26,8 +26,6 @@ object AddEmbeddedCwl extends Poly1 {
               flatMap(_.run.select[String].toList).
               traverse[ParseValidated, (String, Cwl)] {
               path =>
-                //println(s" combining relpath $relPath with $path")
-                //val ammPath =pwd/relPath/path
                 CwlDecoder.
                   decodeAllCwl(Path(path.drop(5))).
                   map(path -> _).value.map(_.toValidated)
