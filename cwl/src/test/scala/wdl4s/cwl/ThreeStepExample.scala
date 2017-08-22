@@ -4,7 +4,7 @@ import shapeless._
 import syntax.singleton._
 import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, StringOrExpression}
 import wdl4s.cwl.CommandOutputBinding.Glob
-import wdl4s.cwl.WorkflowStep.{Outputs, Run}
+//import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 import CwlCodecs._
 
 /*

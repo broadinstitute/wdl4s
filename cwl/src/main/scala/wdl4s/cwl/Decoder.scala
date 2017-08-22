@@ -17,9 +17,11 @@ object CwlDecoder {
   type Parse[A] = EitherT[IO, NonEmptyList[String], A]
   type ParseValidated[A] = IO[ValidatedNel[String, A]]
 
-  def constructPath(relativePath: RelPath, path: String): ParseValidated[Path] =
-    IO {
-      Try(pwd/relativePath/path).toEither.toValidated.leftMap(_.getMessage).leftMap(NonEmptyList.one)
+  def constructPath(relativePath: RelPath, path: String): Parse[Path] =
+    EitherT {
+      IO {
+        Try(pwd/relativePath/path).toEither.leftMap(_.getMessage).leftMap(NonEmptyList.one)
+      }
     }
 
   def salad(path: Path): Parse[String] = EitherT {
