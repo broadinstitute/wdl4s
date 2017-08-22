@@ -4,7 +4,7 @@ import shapeless._
 import syntax.singleton._
 import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, StringOrExpression}
 import wdl4s.cwl.CommandOutputBinding.Glob
-//import wdl4s.cwl.WorkflowStep.{Outputs, Run}
+import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 import CwlCodecs._
 
 /*
@@ -12,8 +12,6 @@ import CwlCodecs._
  The output of the ps call is also counted via `wc`.
  */
 object ThreeStepExample extends App {
-  /*
-  val namespace = "threestep"
 
   val inlineJScriptRequirements = Option(Array(
     Coproduct[Requirement](ShellCommandRequirement()),
@@ -123,8 +121,7 @@ object ThreeStepExample extends App {
       outputs = _outputs,
       steps = Array(psWfStep, grepWfStep, wcWorkflowStep))
 
-  val yaml = cwlToYaml(threeStepWorkflow)
+  val yaml = cwlToYaml(threeStepWorkflow.asCwl)
 
   println(yaml)
-  */
 }

@@ -3,9 +3,6 @@ package wdl4s.cwl
 import shapeless.syntax.singleton._
 import shapeless._
 import cats.syntax.foldable._
-import cats.syntax.traverse._
-import cats.instances.list._
-import cats.syntax.option._
 import shapeless.{:+:, CNil, Poly1, Witness}
 import CwlType._
 import shapeless.syntax.singleton._
@@ -16,16 +13,11 @@ import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
 import wdl4s.wdl.command.CommandPart
-import wdl4s.wdl.types._
 import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
-import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
+import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.executable.Executable
 import wdl4s.wom.expression.{WomExpression, PlaceholderWomExpression}
-import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 import wdl4s.wom.graph._
-
-
-
 
 /**
   *

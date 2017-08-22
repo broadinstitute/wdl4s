@@ -1,7 +1,7 @@
 import sbt._
 
 object Dependencies {
-  val catsV = "0.9.0"
+  val catsV = "1.0.0-MF"
 
   val sprayJsonV = "1.3.2"
   val circeVersion = "0.8.0"
@@ -10,7 +10,7 @@ object Dependencies {
   // Internal collections of dependencies
 
   private val catsDependencies = List(
-    "org.typelevel" %% "cats" % catsV,
+    "org.typelevel" %% "cats-core" % catsV,
     "com.github.benhutchison" %% "mouse" % "0.9"
   ) map (_
     /*
