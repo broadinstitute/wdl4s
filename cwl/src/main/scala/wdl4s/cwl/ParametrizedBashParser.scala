@@ -1,7 +1,8 @@
 package wdl4s.cwl
 
+import wdl4s.cwl.ParametrizedBashParser.Token.TokenType
 import wdl4s.cwl.ParametrizedStringTemplate.{CharElement, Element, ParameterPart}
-import wdl4s.cwl.ParametrizedBashParser.{ScanResult, ScanMark}
+import wdl4s.cwl.ParametrizedBashParser.{ScanMark, ScanResult, Token}
 
 class ParametrizedBashParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP => Boolean,
                                                        rawPartToString: SRP => String) {
@@ -31,6 +32,35 @@ class ParametrizedBashParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP => Bo
     }
     ScanResult(stringTemplate, scanMarks)
   }
+
+  private def newToken(string: ParametrizedStringTemplate[XRP], tokenType: TokenType,
+                       beginIndex: Int, endIndex: Int): Unit = {
+    val tokenString = string.substring(beginIndex, endIndex)
+    Token(tokenType, beginIndex, tokenString)
+  }
+
+  def tokenize(scanResult: ScanResult[XRP]): Seq[Token[XRP]] = {
+    var tokens: Seq[Token[XRP]] = Seq.empty
+    val scanMarks = scanResult.scanMarks
+    val string = scanResult.stringTemplate
+    if (scanMarks.nonEmpty) {
+      var tokenBeginIndex = 0
+      var tokenType = scanMarks.head.tokenType
+      for (index <- scanMarks.indices) {
+        val tokenTypeNew = scanMarks(index).tokenType
+        if (tokenTypeNew != tokenType) {
+          val tokenEndIndex = index
+          tokens :+= newToken(string, tokenTypeNew, tokenBeginIndex, tokenEndIndex)
+          tokenType = tokenTypeNew
+          tokenBeginIndex = tokenEndIndex
+        }
+      }
+      tokens :+= newToken(string, tokenType, tokenBeginIndex, string.length)
+    }
+    tokens
+  }
+
+  def tokenize(parts: Seq[RP]): Seq[Token[XRP]] = tokenize(scan(parts))
 }
 
 object ParametrizedBashParser {
@@ -44,6 +74,8 @@ object ParametrizedBashParser {
   }
 
   sealed trait ScanMark[P] {
+    def tokenType: TokenType
+
     def element: Element[P]
 
     def nextFor(element: Element[P]): ScanMark[P] = element match {
@@ -72,11 +104,17 @@ object ParametrizedBashParser {
     override def nextForParameter(parameter: P): ParameterScanMark[P] = ScanMark.startForParameter(parameter)
 
     override def nextForChar(char: Char): CharScanMark[P] = ScanMark.startForChar[P](char)
+
+    override def tokenType: TokenType = TokenType.blank
   }
 
   sealed trait EscapeStart[P] extends CharScanMark[P]
 
-  sealed trait WordNotEscapeStart[P] extends ScanMark[P] {
+  sealed trait Word[P] extends ScanMark[P] {
+    override def tokenType: TokenType = TokenType.word
+  }
+
+  sealed trait WordNotEscapeStart[P] extends Word[P] {
     override def nextForParameter(parameter: P): ParameterScanMark[P] =
       WordContinuationParameter[P](parameter)
 
@@ -91,7 +129,7 @@ object ParametrizedBashParser {
 
   sealed trait Escaped[P] extends ScanMark[P]
 
-  sealed trait WordStart[P] extends ScanMark[P]
+  sealed trait WordStart[P] extends Word[P]
 
   sealed trait WordStartNotEscapeStart[P] extends WordStart[P] with WordNotEscapeStart[P]
 
@@ -110,7 +148,7 @@ object ParametrizedBashParser {
   case class WordStartParameter[P](parameter: P)
     extends WordStartNotEscapeStart[P] with ParameterScanMark[P]
 
-  sealed trait WordContinuation[P] extends ScanMark[P]
+  sealed trait WordContinuation[P] extends Word[P]
 
   sealed trait WordContinuationNotEscapeStart[P] extends WordContinuation[P] with WordNotEscapeStart[P]
 
@@ -139,6 +177,8 @@ object ParametrizedBashParser {
     extends WordContinuationEscaped[P] with ParameterScanMark[P]
 
   sealed trait CommentMark[P] extends ScanMark[P] {
+    override def tokenType: TokenType = TokenType.comment
+
     override def nextForParameter(parameter: P): ParameterScanMark[P] = CommentParameter(parameter)
 
     override def nextForChar(char: Char): CharScanMark[P] = CommentChar(char)
@@ -153,10 +193,14 @@ object ParametrizedBashParser {
   }
 
   sealed trait SingleQuoteString[P] extends StringMark[P] {
+    override def tokenType: TokenType = TokenType.singleQuoteString
+
     override val quotationChar: Char = SpecialChars.singleQuote
   }
 
   sealed trait DoubleQuoteString[P] extends StringMark[P] {
+    override def tokenType: TokenType = TokenType.doubleQuoteString
+
     override val quotationChar: Char = SpecialChars.doubleQuote
   }
 
@@ -257,5 +301,23 @@ object ParametrizedBashParser {
   }
 
   case class ScanResult[P](stringTemplate: ParametrizedStringTemplate[P], scanMarks: Seq[ScanMark[P]])
+
+  object Token {
+
+    class TokenType
+
+    object TokenType {
+      val blank = new TokenType
+      val word = new TokenType
+      val comment = new TokenType
+      val singleQuoteString = new TokenType
+      val doubleQuoteString = new TokenType
+    }
+
+  }
+
+  case class Token[P](tokenType: TokenType, index: Int, string: ParametrizedStringTemplate[P]) {
+    def length: Int = string.length
+  }
 
 }
