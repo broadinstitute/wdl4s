@@ -1,8 +1,9 @@
 package wdl4s.cwl
 
-object TestSetup {
-  import ammonite.ops._
+import better.files.File.currentWorkingDirectory
 
-  val rootPath = pwd/'cwl/'src/'test/'resources
+object TestSetup {
+
+  val rootPath = currentWorkingDirectory/"cwl"/"src"/"test"/"resources"
 
 }

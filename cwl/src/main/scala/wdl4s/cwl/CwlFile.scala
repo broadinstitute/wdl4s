@@ -45,8 +45,11 @@ case class CommandLineTool(
                             `class`: Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow,
                             id: Option[String] = None,
                             requirements: Option[Array[Requirement]] = None,
+
+                            //TODO: Fix this when CwlAny parses correctly
                             //hints: Option[Array[CwlAny]] = None,
                             hints: Option[Array[Map[String, String]]] = None,
+
                             label: Option[String] = None,
                             doc: Option[String] = None,
                             cwlVersion: Option[CwlVersion] = Option(CwlVersion.Version1),
@@ -138,14 +141,10 @@ case class CommandLineTool(
     )
   }
 
-  def graphNodes: Set[GraphNode] = {
-
-    //need to gather up the step outputs and pass them into Call with inputs
-
-
-    val cwi = CallNode.callWithInputs(id.getOrElse("this is a made up call node name"), taskDefinition, Map.empty)
-
-    Set.empty[GraphNode] ++ cwi.inputs + cwi.call
+  def graphNodes: ErrorOr[Set[GraphNode]] = {
+    CallNode.
+      callWithInputs(id.getOrElse("this is a made up call node name"), taskDefinition, Map.empty, Set.empty).
+      map(cwi => Set.empty[GraphNode] ++ cwi.inputs + cwi.call)
   }
 
   def asCwl = Coproduct[Cwl](this)

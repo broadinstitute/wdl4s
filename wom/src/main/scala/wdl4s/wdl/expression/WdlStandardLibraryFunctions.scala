@@ -174,7 +174,7 @@ trait WdlStandardLibraryFunctions extends WdlFunctions[WdlValue] {
 
   def prefix(params: Seq[Try[WdlValue]]): Try[WdlArray] = {
     def extractTwoArguments: Try[(WdlValue, WdlValue)] = params.size match {
-      case 2 => (params.head, params.tail.head).mapN { (_, _) }
+      case 2 => (params.head, params.tail.head).tupled
       case n => Failure(new UnsupportedOperationException(s"prefix() expects two parameters but got $n"))
     }
 

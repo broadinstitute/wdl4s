@@ -29,16 +29,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
 
 
   "A Cwl object for 1st-tool" should "convert to WOM" in {
-    (for {
-      clt <- decodeAllCwl(rootPath/"1st-tool.cwl").
-              map(_.select[CommandLineTool].get).
-              value.
-              unsafeRunSync
-
-      wom <-  clt.womExecutable.toEither
-    } yield validateWom(wom)).leftMap(e => throw new RuntimeException(s"error! $e"))
-
-    def validateWom: Executable => Unit =
+    val validateWom: Executable => Unit =
       _.entryPoint match {
         case taskDefinition: TaskDefinition =>
           taskDefinition.inputs shouldBe Set(RequiredInputDefinition("file:///Users/danb/wdl4s/cwl/src/test/resources/1st-tool.cwl#message", WdlStringType))
@@ -52,6 +43,15 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
 
         case _ => fail("not a task definition")
       }
+
+    (for {
+      clt <- decodeAllCwl(rootPath/"1st-tool.cwl").
+              map(_.select[CommandLineTool].get).
+              value.
+              unsafeRunSync
+
+      wom <-  clt.womExecutable.toEither
+    } yield validateWom(wom)).leftMap(e => throw new RuntimeException(s"error! $e"))
   }
 
   "Cwl for 1st workflow" should "convert to WOM" in {

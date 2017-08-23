@@ -29,7 +29,7 @@ case class WorkflowStep(
                          scatter: Option[String :+: Array[String] :+: CNil] = None,
                          scatterMethod: Option[ScatterMethod] = None) {
 
-  def typedOutputs: WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(Map.empty)
+  def typedOutputs: WdlTypeMap = run.fold(RunOutputsToTypeMap)
 
   def fileName: Option[String] = run.select[String]
 
@@ -54,10 +54,8 @@ case class WorkflowStep(
 
   def taskDefinitionOutputs: Set[Callable.OutputDefinition] = {
 
-    val runnableIdToTypeMap: WdlTypeMap = run.fold(RunOutputsToTypeMap).apply(Map.empty)
-
     //this map will only match on the "id" field of the fully qualified name
-    val idMap = runnableIdToTypeMap map {
+    val idMap = typedOutputs map {
       case (id, tpe) => RunOutputId(id).outputId -> tpe
     }
 

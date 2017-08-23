@@ -1,6 +1,7 @@
 package wdl4s.cwl
 
 import org.scalacheck.Properties
+import org.scalacheck.Prop.BooleanOperators
 import CwlDecoder._
 
 class CwlDecoderSpec extends Properties("cwl decoder") {
@@ -14,7 +15,7 @@ class CwlDecoderSpec extends Properties("cwl decoder") {
         case Right(cwl) =>
           val wf = cwl.select[Workflow].get
           wf.steps.flatMap(_.run.select[String].toList).size == 0
-        case Left(other) => throw new RuntimeException(other.toList.mkString(", "))
+        case Left(other) => false :| other.toList.mkString(", ")
       }
 
   property("broken links fail the SALAD preprocessing test") =

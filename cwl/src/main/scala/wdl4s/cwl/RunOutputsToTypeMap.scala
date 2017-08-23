@@ -29,37 +29,21 @@ object RunOutputsToTypeMap extends Poly1 {
   implicit def commandLineTool =
     at[CommandLineTool] {
       clt =>
-        (_: Map[String, Cwl]) =>
           handleCommandLine(clt)
     }
 
   implicit def string = at[String] {
     fileName =>
-      (cwlMap: Map[String, Cwl]) =>
-        cwlMap(fileName) match {
-          case _ => Map.empty[String, WdlType]
-          /*
-          case clt: CommandLineTool => handleCommandLine(clt)
-          case wf: Workflow => handleWorkflow(wf)
-          */
-        }
+      Map.empty[String, WdlType]
   }
 
   implicit def expressionTool = at[ExpressionTool] {
     _ =>
-      (_: Map[String, Cwl]) =>
         Map.empty[String, WdlType]
   }
 
-  //TODO: run _.stepOutputs recursively
-  def handleWorkflow(workflow: Workflow) = {
-    Map.empty[String, WdlType]
-  }
-
   implicit def workflow = at[Workflow] {
-    wf =>
-      (_: Map[String, Cwl]) =>
-        handleWorkflow(wf)
+    wf =>  wf.steps.toList.flatMap(_.typedOutputs.toList).toMap
   }
 }
 
