@@ -22,7 +22,7 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
 
   def +(parameter: P): ParametrizedStringTemplate[P] = {
     val newParts = parts :+ ParameterPart[P](parameter)
-    val newLengths = lengthSums :+ (lengthSums.last + 1)
+    val newLengths = lengthSums :+ (lengthSums.lastOption.getOrElse(0) + 1)
     ParametrizedStringTemplate[P](newParts, newLengths)
   }
 
@@ -58,9 +58,9 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
   }.mkString("")
 
   def charAt(index: Int): Element[P] = {
-    if (index < 0) throw new IndexOutOfBoundsException(s"Pos $index must not be negative.")
+    if (index < 0) throw new IndexOutOfBoundsException(s"Index $index must not be negative.")
     val pos = Pos.fromIndex(index)
-    if (pos.iPart < 0) throw new IndexOutOfBoundsException(s"Pos $index too large for length $length")
+    if (index >= length) throw new IndexOutOfBoundsException(s"Index $index too large for length $length")
     parts(pos.iPart) match {
       case parameterPart: ParameterPart[P] => parameterPart
       case StringPart(string) => CharElement(string.charAt(pos.partIndex))
