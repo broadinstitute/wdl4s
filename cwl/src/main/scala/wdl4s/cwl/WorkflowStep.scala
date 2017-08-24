@@ -179,22 +179,6 @@ object WorkflowStep {
 
   val emptyOutputs: Outputs = Coproduct[Outputs](Array.empty[String])
 
-  def validate(
-             id: String,
-             run: Run,
-             in: Array[WorkflowStepInput] = Array.empty,
-             out: Outputs = emptyOutputs,
-             requirements: Option[Array[Requirement]] = None,
-             hints: Option[Array[CwlAny]] = None,
-             label: Option[String] = None,
-             doc: Option[String] = None,
-             scatter: Option[String :+: Array[String] :+: CNil] = None,
-             scatterMethod: Option[ScatterMethod] = None) = {
-               new WorkflowStep(id, in, out, run, requirements, hints, label, doc, scatter, scatterMethod)
-
-  }
-
-
   type Run =
     String :+:
       CommandLineTool :+:

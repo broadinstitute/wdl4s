@@ -27,6 +27,10 @@ class CwlDecoderSpec extends Properties("cwl decoder") {
   property("links fail to parse breaks the SALAD preprocessing test") =
     decodeAllCwl(rootPath/"links_dont_parse.cwl").
      value.
-     unsafeRunSync.
-     isLeft
+     unsafeRunSync match {
+       case Left(errors) =>
+         errors.filter(_.contains("bad.cwl")).size == 1 &&
+         errors.filter(_.contains("bad2.cwl")).size == 1
+       case Right(_) => false :| "should not have passed!"
+     }
 }

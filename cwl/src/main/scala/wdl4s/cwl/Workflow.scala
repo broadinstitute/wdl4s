@@ -1,6 +1,5 @@
 package wdl4s.cwl
 
-import cats.data.NonEmptyList
 import shapeless.syntax.singleton._
 import cats.syntax.foldable._
 import cats.syntax.traverse._
@@ -112,22 +111,6 @@ case class Workflow(
   def asCwl = Coproduct[Cwl](this)
 }
 object Workflow {
-
-  //run this thing and give me an output
-  def minimal(wfs: WorkflowStep) = {
-  }
-  def validate(
-    name: String,
-    steps: Set[WorkflowStep],
-    version: Option[CwlVersion] = None,
-    inputs: Array[InputParameter] = Array.empty,
-    outputs: Array[WorkflowOutputParameter] = Array.empty): Either[NonEmptyList[String], Cwl] = {
-
-
-    //does no checking at all
-    val wf = Workflow(steps = steps.toArray)
-    Right(Coproduct[Cwl](wf))
-  }
 
   val `class`: Witness.`"Workflow"`.T = "Workflow".narrow
 }

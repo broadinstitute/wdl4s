@@ -1,18 +1,18 @@
 package wdl4s.cwl
 
 import shapeless.{Path => _, _}
-import better.files.{File => BFile}
 import cats.syntax.traverse._
-import cats.syntax.either._
 import cats.instances.list._
 import cats.effect.IO
-import CwlDecoder.{Parse, ParseValidated}
-import cats.{Applicative, Monad}
+import CwlDecoder.Parse
+import cats.Monad
 import cats.data.EitherT._
-import cats.data.{EitherT, NonEmptyList}
+import cats.data.EitherT
 import lenthall.validation.ErrorOr._
 
 object AddEmbeddedCwl extends Poly1 {
+
+  import CwlDecoder._
 
   implicit def workflow =
     at[Workflow] {
@@ -26,28 +26,26 @@ object AddEmbeddedCwl extends Poly1 {
             flatMap(_.run.select[String].toList)
 
         //read the files, parse them, and put them in a Map
-        val cwlMap: IO[Either[NonEmptyList[String], Map[String, Cwl]]] =
-          fileNames.
-            traverse[ParseValidated, (String, Cwl)] {
-              path =>
-                CwlDecoder.
-                  decodeAllCwl(BFile(path)).
-                  map(path -> _).value.map(_.toValidated)
-            }(Applicative[IO] compose Applicative[ErrorOr]).
+        val cwlList: ParseValidated[List[(String, Cwl)]] =
+          fileNames.traverse[ParseValidated, (String, Cwl)](CwlDecoder.decodeCwlAsValidated)
 
-          map(_.map(_.toMap)).
-          map(_.toEither)
 
-        EitherT {
-          cwlMap
-        }.map{
+        //we have a list of tuples, what we actually want is a map
+        val cwlMap: IO[ErrorOr[Map[String, Cwl]]] =
+          //use the functor inherent in the Applicative to map over cwlList
+          composedApplicative.map(cwlList)(_.toMap)
+
+        EitherT { cwlMap.map(_.toEither) }.map{
           fileNameToCwl =>
 
-            lens[Workflow].steps.modify(workflow){
+            //Replace each step that links to another CWL file with the CWL instance
+            val newWorkflow = lens[Workflow].steps.modify(workflow){
               _.map{ step =>
                 lens[WorkflowStep].run.modify(step)(_.fold(RunToEmbeddedCwl).apply(fileNameToCwl))
               }
-            }.asCwl
+            }
+
+            newWorkflow.asCwl
         }
     }
 
