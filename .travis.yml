@@ -6,10 +6,6 @@ scala:
 jdk:
   - oraclejdk8
 script: sbt clean coverage test
-addons:
-  apt:
-    packages:
-      - cwltool
 after_success:
   - sbt coverageReport coveralls
   - src/bin/after_success.sh
