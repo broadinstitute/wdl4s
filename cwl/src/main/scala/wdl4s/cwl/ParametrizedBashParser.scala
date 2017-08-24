@@ -2,7 +2,7 @@ package wdl4s.cwl
 
 import wdl4s.cwl.ParametrizedBashParser.Token.TokenType
 import wdl4s.cwl.ParametrizedStringTemplate.{CharElement, Element, ParameterPart}
-import wdl4s.cwl.ParametrizedBashParser.{ScanMark, ScanResult, Token}
+import wdl4s.cwl.ParametrizedBashParser.{ScanMark, Token}
 
 class ParametrizedBashParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP => Boolean,
                                                        rawPartToString: SRP => String) {
@@ -19,7 +19,9 @@ class ParametrizedBashParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP => Bo
     stringTemplate
   }
 
-  def scan(parts: Seq[RP]): ScanResult[XRP] = {
+  case class ScanResult(stringTemplate: ParametrizedStringTemplate[XRP], scanMarks: Seq[ScanMark[XRP]])
+
+  def scan(parts: Seq[RP]): ScanResult = {
     val stringTemplate = partsToStringTemplate(parts)
     var scanMarks: Seq[ScanMark[XRP]] = Seq.empty
     if (stringTemplate.length > 0) {
@@ -39,7 +41,9 @@ class ParametrizedBashParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP => Bo
     Token(tokenType, beginIndex, tokenString)
   }
 
-  def tokenize(scanResult: ScanResult[XRP]): Seq[Token[XRP]] = {
+  case class TokenizeResult(tokens: Seq[Token[XRP]], nonBlankTokens: Seq[Token[XRP]])
+
+  def tokenize(scanResult: ScanResult): TokenizeResult = {
     var tokens: Seq[Token[XRP]] = Seq.empty
     val scanMarks = scanResult.scanMarks
     val string = scanResult.stringTemplate
@@ -57,10 +61,11 @@ class ParametrizedBashParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP => Bo
       }
       tokens :+= newToken(string, tokenType, tokenBeginIndex, string.length)
     }
-    tokens
+    val nonBlankTokens: Seq[Token[XRP]] = tokens.filterNot(_.tokenType == TokenType.blank)
+    TokenizeResult(tokens, nonBlankTokens)
   }
 
-  def tokenize(parts: Seq[RP]): Seq[Token[XRP]] = tokenize(scan(parts))
+  def tokenize(parts: Seq[RP]): TokenizeResult = tokenize(scan(parts))
 }
 
 object ParametrizedBashParser {
@@ -299,8 +304,6 @@ object ParametrizedBashParser {
       case _ => WordStartChar(char)
     }
   }
-
-  case class ScanResult[P](stringTemplate: ParametrizedStringTemplate[P], scanMarks: Seq[ScanMark[P]])
 
   object Token {
 

@@ -35,12 +35,11 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
 
   def partOffset(iPart: Int): Int = if (iPart == 0) 0 else lengthSums(iPart - 1)
 
-
   case class Pos(index: Int, iPart: Int, partIndex: Int)
 
   object Pos {
     def fromIndex(index: Int): Pos = {
-      val iPart = if(index < length) lengthSums.indexWhere(index < _) else parts.size - 1
+      val iPart = if (index < length) lengthSums.indexWhere(index < _) else parts.size - 1
       val partIndex = index - partOffset(iPart)
       Pos(index, iPart, partIndex)
     }
@@ -56,6 +55,16 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
     case StringPart(string) => string
     case ParameterPart(parameter) => paramToString(parameter)
   }.mkString("")
+
+  def toStringOption: Option[String] = {
+    if (parts.forall(_.isInstanceOf[StringPart])) {
+      Option(parts.collect({
+        case StringPart(string) => string
+      }).mkString(""))
+    } else {
+      None
+    }
+  }
 
   def charAt(index: Int): Element[P] = {
     if (index < 0) throw new IndexOutOfBoundsException(s"Index $index must not be negative.")
@@ -112,7 +121,7 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
         val partBeginIndex = if (iPart == beginPos.iPart) beginPos.partIndex else 0
         val partEndIndex = if (iPart == endPos.iPart) endPos.partIndex else parts(iPart).length
         val partSub = parts(iPart).subPart(partBeginIndex, partEndIndex)
-        if(partSub.nonEmpty) substring += partSub
+        if (partSub.nonEmpty) substring += partSub
       }
     }
     substring

@@ -42,4 +42,13 @@ class ParametrizedStringTemplateSpec extends FlatSpec with Matchers {
     Seq(0, 9, 10, 18, 19, 20, 100).map(pst2.indexOfStr("g", _)) shouldBe Seq(9, 9, 18, 18, -1, -1, -1)
   }
 
+  it should "do toStringOption" in {
+    pst1.toStringOption shouldBe None
+    pst2.toStringOption shouldBe None
+    val pst3 = ParametrizedStringTemplate.fromString("Hello World")
+    pst3.toStringOption shouldBe Some("Hello World")
+    val pst4 = pst3 + ", how are you?"
+    pst4.toStringOption shouldBe Some("Hello World, how are you?")
+  }
+
 }

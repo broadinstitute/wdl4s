@@ -33,7 +33,7 @@ class ParametrizedBashParserSpec extends FlatSpec with Matchers {
       (blank, word, comment, singleQuoteString, doubleQuoteString)
     }
     val parser = newParser
-    def tokenTypes(parts: Seq[MockPart]): Seq[TokenType] = parser.tokenize(parts).map(_.tokenType)
+    def tokenTypes(parts: Seq[MockPart]): Seq[TokenType] = parser.tokenize(parts).tokens.map(_.tokenType)
     tokenTypes(Seq(msp("echo Hello World"))) shouldBe Seq(wo, bl, wo, bl, wo)
     tokenTypes(Seq(msp("echo 'Hello' \"World\""))) shouldBe Seq(wo, bl, sq, bl, dq)
     tokenTypes(Seq(msp("echo 'Hello' \"World\" # It is saying \"Hello World\""))) shouldBe

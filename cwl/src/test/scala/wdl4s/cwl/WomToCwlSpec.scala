@@ -1,7 +1,7 @@
 package wdl4s.cwl
 
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.cwl.WomToCwl.{NonWhitespaceToken, WhitespaceToken}
+import wdl4s.cwl.WomToCwl.{NonWhitespaceTokenDeprecated, WhitespaceTokenDeprecated}
 import wdl4s.parser.WdlParser.Terminal
 import wdl4s.wdl.{Declaration, RuntimeAttributes, WdlExpression}
 import wdl4s.wdl.command.{ParameterCommandPart, StringCommandPart}
@@ -21,9 +21,9 @@ class WomToCwlSpec extends FlatSpec with Matchers {
     val tokensExpected =
       tokenStrings.map{ tokenString =>
         if(tokenString.charAt(0).isWhitespace) {
-          WhitespaceToken(stringCommandPart, tokenString)
+          WhitespaceTokenDeprecated(stringCommandPart, tokenString)
         } else {
-          NonWhitespaceToken(stringCommandPart, tokenString)
+          NonWhitespaceTokenDeprecated(stringCommandPart, tokenString)
         }
       }
     string shouldBe tokenStrings.mkString("")
