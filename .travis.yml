@@ -1,4 +1,5 @@
 sudo: false
+dist: zesty
 language: scala
 scala:
   - 2.11.7
