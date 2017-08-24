@@ -1,5 +1,5 @@
 sudo: false
-dist: zesty
+install: pip install cwltool
 language: scala
 scala:
   - 2.11.7
