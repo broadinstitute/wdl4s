@@ -55,14 +55,14 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
   }
 
   "Cwl for 1st workflow" should "convert to WOM" in {
-    for {
+    (for {
       wf <- decodeAllCwl(rootPath/"1st-workflow.cwl").
               value.
               unsafeRunSync.
               map(_.select[Workflow].get)
 
       ex <- wf.womExecutable.toEither
-    } yield validateWom(ex)
+    } yield validateWom(ex)).leftMap(e => throw new RuntimeException(s"error! $e"))
 
     def validateWom(ex: Executable) = {
       ex match {

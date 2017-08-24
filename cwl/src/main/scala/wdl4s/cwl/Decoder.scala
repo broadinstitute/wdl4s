@@ -5,16 +5,22 @@ import ammonite.ops._
 import ammonite.ops.ImplicitWd._
 import cats.effect.IO
 import cats.syntax.either._
+import cats.Applicative
 import better.files.{File => BFile}
+import lenthall.validation.ErrorOr._
 
 import scala.util.Try
 
 object CwlDecoder {
 
   type Parse[A] = EitherT[IO, NonEmptyList[String], A]
+
   type ParseValidated[A] = IO[ValidatedNel[String, A]]
 
-  def salad(path: BFile): Parse[String] = {
+  implicit val composedApplicative = Applicative[IO] compose Applicative[ErrorOr]
+
+
+  private def preprocess(path: BFile): Parse[String] = {
     def resultToEither(cr: CommandResult) =
       cr.exitCode match {
         case 0 => Right(cr.out.string)
@@ -26,14 +32,7 @@ object CwlDecoder {
         toEither.
         leftMap(t => NonEmptyList.one(s"running cwltool on file ${path.toString} failed with ${t.getMessage}"))
 
-    EitherT {
-      IO {
-        for {
-          _cwlToolResult <- cwlToolResult
-          result <- resultToEither(_cwlToolResult)
-        } yield result
-      }
-    }
+    EitherT { IO { cwlToolResult flatMap resultToEither } }
   }
 
   def parseJson(json: String): Parse[Cwl] =
@@ -44,10 +43,17 @@ object CwlDecoder {
    */
   def decodeAllCwl(fileName: BFile): Parse[Cwl] =
     for {
-      jsonString <- salad(fileName)
+      jsonString <- preprocess(fileName)
       unmodifiedCwl <- parseJson(jsonString)
       cwlWithEmbeddedCwl <- unmodifiedCwl.fold(AddEmbeddedCwl)
     } yield cwlWithEmbeddedCwl
 
+  //This is used when traversing over Cwl and replacing links w/ embedded data
+  private[cwl] def decodeCwlAsValidated(fileName: String): ParseValidated[(String, Cwl)] = {
+    //The SALAD preprocess step puts "file://" as a prefix to all filenames.  Better files doesn't like this.
+    val bFileName = fileName.drop(5)
+
+    decodeAllCwl(BFile(bFileName)).map(fileName.toString -> _).value.map(_.toValidated)
+  }
 }
 
