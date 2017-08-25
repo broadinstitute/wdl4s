@@ -11,7 +11,7 @@ object Dependencies {
 
   private val catsDependencies = List(
     "org.typelevel" %% "cats-core" % catsV,
-    "com.github.benhutchison" %% "mouse" % "0.9"
+    "com.github.benhutchison" %% "mouse" % "0.10-MF"
   ) map (_
     /*
     Exclude test framework cats-laws and its transitive dependency scalacheck.
