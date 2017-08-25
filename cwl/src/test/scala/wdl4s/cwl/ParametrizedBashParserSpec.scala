@@ -7,17 +7,17 @@ class ParametrizedBashParserSpec extends FlatSpec with Matchers {
 
   sealed trait MockPart
 
-  case class MockStringPart(string: String) extends MockPart
+  case class StringMockPart(string: String) extends MockPart
 
-  case class MockExpressionPart(expr: String) extends MockPart
+  case class ExpressionMockPart(expr: String) extends MockPart
 
-  def msp(string: String): MockStringPart = MockStringPart(string)
+  def msp(string: String): StringMockPart = StringMockPart(string)
 
-  def mep(expr: String): MockExpressionPart = MockExpressionPart(expr)
+  def mep(expr: String): ExpressionMockPart = ExpressionMockPart(expr)
 
-  def newParser: ParametrizedBashParser[MockPart, MockStringPart, MockExpressionPart] =
-    new ParametrizedBashParser[MockPart, MockStringPart,
-      MockExpressionPart](_.isInstanceOf[MockStringPart], _.string)
+  def newParser: ParametrizedBashParser[MockPart, StringMockPart, ExpressionMockPart] =
+    new ParametrizedBashParser[MockPart, StringMockPart,
+      ExpressionMockPart](_.isInstanceOf[StringMockPart], _.string)
 
   it should "merge adjacent string tokens" in {
     val parser = newParser
