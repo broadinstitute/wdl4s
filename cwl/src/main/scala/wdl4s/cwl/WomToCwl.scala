@@ -1,7 +1,6 @@
 package wdl4s.cwl
 
 import cats.Apply
-import cats.data.NonEmptyList
 import cats.data.Validated.Valid
 import cats.syntax.option.catsSyntaxOption
 import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
@@ -17,8 +16,7 @@ object WomToCwl {
     new ParametrizedBashParser[CommandPart, StringCommandPart,
       ParameterCommandPart](_.isInstanceOf[StringCommandPart], _.literal)
 
-  def optionToErrorOr[A](option: Option[A], message: String): ErrorOr[A] =
-    option.toValid(NonEmptyList.of(message))
+  def optionToErrorOr[A](option: Option[A], message: String): ErrorOr[A] = option.toValidNel(message)
 
   def toBaseCommand(tokenizeResult: parser.TokenizeResult): ErrorOr[BaseCommand] = {
     val noNonBlankTokenMessage = "Need non-blank token for base command, but found none"
@@ -33,13 +31,11 @@ object WomToCwl {
 
   def toArguments(tokenizeResult: parser.TokenizeResult): ErrorOr[Seq[Argument]] = {
     val nonBlanks = tokenizeResult.nonBlankTokens
-    println(s"nonBlanks = $nonBlanks")
     if (nonBlanks.size < 2) {
       Valid(Seq.empty)
     } else {
       val indexWhere = nonBlanks.indexWhere(_.string.hasParameters)
       val endIndex = if(indexWhere >= 0) indexWhere else nonBlanks.length
-      println(s"endIndex = $endIndex")
       if (endIndex < 1) {
         Valid(Seq.empty)
       } else {

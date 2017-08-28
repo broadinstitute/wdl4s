@@ -13,9 +13,7 @@ import wdl4s.wom.expression.WomExpression
 class WomToCwlSpec extends FlatSpec with Matchers {
 
   it should "convert command line" in {
-    val parser = WomToCwl.parser
     val commandLine = Seq(StringCommandPart("echo Hello World"))
-    println(parser.tokenize(parser.scan(commandLine)))
     val baseCommand = WomToCwl.toBaseCommand(WomToCwl.parser.tokenize(WomToCwl.parser.scan(commandLine)))
     baseCommand.toOption.get.select[String].get shouldBe "echo"
   }
@@ -26,7 +24,8 @@ class WomToCwlSpec extends FlatSpec with Matchers {
     errorOrCwlCmd.isValid shouldBe true
     val cwlCmd = errorOrCwlCmd.toOption.get
     cwlCmd.baseCommand shouldBe Some(Coproduct[BaseCommand]("echo"))
-    cwlCmd.arguments shouldBe Some(Array(Coproduct[Argument]("Hello"), Coproduct[Argument]("World")))
+    val expectedArguments = Some(Seq(Coproduct[Argument]("Hello"), Coproduct[Argument]("World")))
+    cwlCmd.arguments.map(_.toSeq) shouldBe expectedArguments
   }
 
   it should "convert CromWOM TaskDefinition to CWL CommandLineTool" in {
@@ -55,7 +54,6 @@ class WomToCwlSpec extends FlatSpec with Matchers {
     val functions = new PureStandardLibraryFunctionsLike {}
     val valueMapper = (value: WdlValue) => value
     val taskString = taskDef.instantiateCommand(taskInputs, functions, valueMapper).get
-    println(taskString)
     taskString shouldBe "echo Hello"
   }
 
