@@ -18,6 +18,12 @@ class WomToCwlSpec extends FlatSpec with Matchers {
     baseCommand.toOption.get.select[String].get shouldBe "echo"
   }
 
+  it should "convert WOM task examples" in {
+    val task = WomTaskExamples.helloWorldLiterally
+    val errorOrCwlCmd = WomToCwl.toCwl(task)
+    errorOrCwlCmd.isValid shouldBe true
+  }
+
   it should "convert CromWOM TaskDefinition to CWL CommandLineTool" in {
     val mockAstId = 42
     val mockLine = 0
