@@ -6,7 +6,7 @@ import cats.data.Validated.Valid
 import cats.syntax.option.catsSyntaxOption
 import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
 import shapeless.Coproduct
-import wdl4s.cwl.CommandLineTool.BaseCommand
+import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand}
 import wdl4s.cwl.ParametrizedBashParser.Token
 import wdl4s.wdl.command.{CommandPart, ParameterCommandPart, StringCommandPart}
 import wdl4s.wom.callable.TaskDefinition
@@ -31,17 +31,41 @@ object WomToCwl {
     errorOrBaseString.map(baseString => Coproduct[BaseCommand](baseString))
   }
 
+  def toArguments(tokenizeResult: parser.TokenizeResult): ErrorOr[Seq[Argument]] = {
+    val nonBlanks = tokenizeResult.nonBlankTokens
+    println(s"nonBlanks = $nonBlanks")
+    if (nonBlanks.size < 2) {
+      Valid(Seq.empty)
+    } else {
+      val indexWhere = nonBlanks.indexWhere(_.string.hasParameters)
+      val endIndex = if(indexWhere >= 0) indexWhere else nonBlanks.length
+      println(s"endIndex = $endIndex")
+      if (endIndex < 1) {
+        Valid(Seq.empty)
+      } else {
+        val argumentTokens = nonBlanks.slice(1, endIndex)
+        val arguments = argumentTokens.map(_.string).flatMap(_.toStringOption).map(Coproduct[Argument](_))
+        Valid(arguments)
+      }
+    }
+  }
+
   def placeholder: ErrorOr[String] = Valid("Yo")
 
   def toCwl(task: TaskDefinition): ErrorOr[CommandLineTool] = {
-    val tokens = parser.tokenize(task.commandTemplate)
+    val tokenizeResult = parser.tokenize(task.commandTemplate)
     Apply[ErrorOr].map2(
-      toBaseCommand(tokens),
-      placeholder
+      toBaseCommand(tokenizeResult),
+      toArguments(tokenizeResult)
     )(
-      (baseCommand, placeHolder) =>
+      (baseCommand, arguments) =>
         CommandLineTool(
-          baseCommand = Option(baseCommand)
+          baseCommand = Option(baseCommand),
+          arguments = if(arguments.isEmpty) {
+            None
+          } else {
+            Option(arguments.toArray)
+          }
         )
     )
   }

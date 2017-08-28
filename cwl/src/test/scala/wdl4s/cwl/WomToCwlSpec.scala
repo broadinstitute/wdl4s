@@ -1,6 +1,8 @@
 package wdl4s.cwl
 
 import org.scalatest.{FlatSpec, Matchers}
+import shapeless.Coproduct
+import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand}
 import wdl4s.parser.WdlParser.Terminal
 import wdl4s.wdl.command.{ParameterCommandPart, StringCommandPart}
 import wdl4s.wdl.expression.PureStandardLibraryFunctionsLike
@@ -22,6 +24,9 @@ class WomToCwlSpec extends FlatSpec with Matchers {
     val task = WomTaskExamples.helloWorldLiterally
     val errorOrCwlCmd = WomToCwl.toCwl(task)
     errorOrCwlCmd.isValid shouldBe true
+    val cwlCmd = errorOrCwlCmd.toOption.get
+    cwlCmd.baseCommand shouldBe Some(Coproduct[BaseCommand]("echo"))
+    cwlCmd.arguments shouldBe Some(Array(Coproduct[Argument]("Hello"), Coproduct[Argument]("World")))
   }
 
   it should "convert CromWOM TaskDefinition to CWL CommandLineTool" in {

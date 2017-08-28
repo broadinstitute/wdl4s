@@ -127,6 +127,8 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
     substring
   }
 
+  def hasParameters: Boolean = parts.exists(_.isParameter)
+
 }
 
 object ParametrizedStringTemplate {
@@ -135,6 +137,8 @@ object ParametrizedStringTemplate {
     def length: Int
 
     def nonEmpty: Boolean
+
+    def isParameter: Boolean
 
     def subPart(beginIndex: Int, endIndex: Int = length): Part[P]
   }
@@ -145,6 +149,8 @@ object ParametrizedStringTemplate {
     override def length: Int = 1
 
     override def nonEmpty: Boolean = true
+
+    override def isParameter: Boolean = true
 
     override def subPart(beginIndex: Int, endIndex: Int): Part[P] = {
       if (beginIndex < 0)
@@ -162,6 +168,8 @@ object ParametrizedStringTemplate {
     override def length: Int = string.length
 
     override def nonEmpty: Boolean = string.nonEmpty
+
+    override def isParameter: Boolean = false
 
     override def subPart(beginIndex: Int, endIndex: Int): Part[Nothing] =
       StringPart(string.substring(beginIndex, endIndex))
