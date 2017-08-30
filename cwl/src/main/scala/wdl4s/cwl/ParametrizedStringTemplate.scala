@@ -129,6 +129,19 @@ case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[In
 
   def hasParameters: Boolean = parts.exists(_.isParameter)
 
+  def nParameters: Int = parts.count(_.isParameter)
+
+  def parameters: Seq[P] = parts.collect({ case ParameterPart(parameter) => parameter })
+
+  def isBareParameter: Boolean = parts.size == 1 && parts.head.isParameter
+
+  def isPrefixedParameter: Boolean = parts.size == 2 && !parts.head.isParameter && parts(1).isParameter
+
+  def prefix: String = if (parts.isEmpty || parts.head.isParameter) {
+    ""
+  } else {
+    parts.head.asInstanceOf[StringPart].string
+  }
 }
 
 object ParametrizedStringTemplate {
