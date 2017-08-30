@@ -16,15 +16,13 @@ object WomToCwl {
     new ParametrizedBashParser[CommandPart, StringCommandPart,
       ParameterCommandPart](_.isInstanceOf[StringCommandPart], _.literal)
 
-  def optionToErrorOr[A](option: Option[A], message: String): ErrorOr[A] = option.toValidNel(message)
-
   def toBaseCommand(tokenizeResult: parser.TokenizeResult): ErrorOr[BaseCommand] = {
     val noNonBlankTokenMessage = "Need non-blank token for base command, but found none"
     val errorOrToken =
-      optionToErrorOr(tokenizeResult.nonBlankTokens.headOption, noNonBlankTokenMessage)
+      tokenizeResult.nonBlankTokens.headOption.toValidNel(noNonBlankTokenMessage)
     val parameterInBaseNameMessage = "The base name must not have parameters."
     val errorOrBaseString = errorOrToken.flatMap { token: Token[ParameterCommandPart] =>
-      optionToErrorOr(token.string.toStringOption, parameterInBaseNameMessage)
+      token.string.toStringOption.toValidNel(parameterInBaseNameMessage)
     }
     errorOrBaseString.map(baseString => Coproduct[BaseCommand](baseString))
   }
