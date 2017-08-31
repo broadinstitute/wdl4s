@@ -10,14 +10,22 @@ import wdl4s.cwl.ParametrizedBashParser.Token
 
 object CwlCmdTokenGrouper {
 
-  sealed trait Group[+P]
+  sealed trait Group[+P] {
+    def pos: Int
+  }
 
-  case class BaseCommand(string: String) extends Group[Nothing]
+  object Group {
 
-  case class Argument[P](string: String) extends Group[Nothing]
+    case class BaseCommand(string: String) extends Group[Nothing] {
+      override def pos: Int = -1
+    }
 
-  case class InputBinding[P](prefixOption: Option[String], separated: Boolean,
-                             parameter: P) extends Group[P]
+    case class Argument[P](pos: Int, string: String) extends Group[Nothing]
+
+    case class InputBinding[P](pos: Int, prefixOption: Option[String], separated: Boolean,
+                               parameter: P) extends Group[P]
+
+  }
 
   def groupTokens[P](tokens: Seq[Token[P]]): ErrorOr[Seq[Group[P]]] = {
     val tokensIter = tokens.iterator
@@ -32,12 +40,14 @@ object CwlCmdTokenGrouper {
 
       val errorOrBaseCommandString =
         firstToken.string.toStringOption.toValidNel("First token must have no parameters")
-      val errorOrBaseCommandGroup = errorOrBaseCommandString.map(BaseCommand)
+      val errorOrBaseCommandGroup = errorOrBaseCommandString.map(Group.BaseCommand)
       errorOrGroups = plusGroup(errorOrGroups, errorOrBaseCommandGroup)
+      var index = 0
       var nextTokenOption: Option[Token[P]] = None
       var nextNextTokenOption: Option[Token[P]] = None
 
       def advanceTokenIterator(): Unit = {
+        index += 1
         nextTokenOption = nextNextTokenOption
         nextNextTokenOption = if (tokensIter.hasNext) Option(tokensIter.next()) else None
       }
@@ -52,10 +62,10 @@ object CwlCmdTokenGrouper {
             } else {
               val parameter = token.string.parameters.head
               if (token.string.isBareParameter) {
-                Valid(InputBinding(None, separated = false, parameter))
+                Valid(Group.InputBinding(index, None, separated = false, parameter))
               } else if (token.string.isPrefixedParameter) {
                 val prefix = token.string.prefix
-                Valid(InputBinding(Option(prefix), separated = false, parameter))
+                Valid(Group.InputBinding(index, Option(prefix), separated = false, parameter))
               } else {
                 Invalid(NonEmptyList.of("Can only handle bare and prefixed, not postfixed parameters."))
               }
@@ -65,10 +75,10 @@ object CwlCmdTokenGrouper {
             val prefix = prefixToken.string.prefix
             val parameter = parameterToken.string.parameters.head
             advanceTokenIterator()
-            Valid(InputBinding(Option(prefix), separated = true, parameter))
+            Valid(Group.InputBinding(index, Option(prefix), separated = true, parameter))
           case (Some(token), _) if !token.string.hasParameters =>
             val argumentString = token.string.prefix
-            Valid(Argument(argumentString))
+            Valid(Group.Argument(index, argumentString))
           case (Some(token), _) =>
             Invalid(NonEmptyList.of(s"Cannot handle token $token"))
         }
