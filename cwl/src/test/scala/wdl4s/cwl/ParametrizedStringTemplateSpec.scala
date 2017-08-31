@@ -27,7 +27,7 @@ class ParametrizedStringTemplateSpec extends FlatSpec with Matchers {
   }
 
   it should "do charAt(pos), indexOf(ch, fromIndex), indexOf(str, fromIndex)" in {
-    Seq((pst1, -1), (pst1, 27), (pst1, 28), (pst2, -1), (pst2, 24), (pst2, 25)).foreach{
+    Seq((pst1, -1), (pst1, 27), (pst1, 28), (pst2, -1), (pst2, 24), (pst2, 25)).foreach {
       case (pst, index) => assertThrows[IndexOutOfBoundsException](pst.charAt(index))
     }
     Seq(1, 2, 6, 7, 25).map(pst1.charAt) shouldBe Seq('H', 'e', ' ', 'W', '!').map(CharElement)
@@ -49,6 +49,32 @@ class ParametrizedStringTemplateSpec extends FlatSpec with Matchers {
     pst3.toStringOption shouldBe Some("Hello World")
     val pst4 = pst3 + ", how are you?"
     pst4.toStringOption shouldBe Some("Hello World, how are you?")
+  }
+
+  it should "do substring" in {
+    pst1.substring(0, 12) shouldBe ParametrizedStringTemplate.fromParameter(ps(0)) + "Hello World"
+    pst1.substring(1, 12) shouldBe ParametrizedStringTemplate.fromString("Hello World")
+    pst1.substring(7) shouldBe
+      ParametrizedStringTemplate.fromString("World ") + ps(1) + ps(2) + "what a day!" + ps(3)
+    pst1.substring(7, 19) shouldBe ParametrizedStringTemplate.fromString("World ") + ps(1) + ps(2) + "what"
+    pst1.substring(26) shouldBe ParametrizedStringTemplate.fromParameter(ps(3))
+  }
+
+  it should "do hasParameters, nParameters, parameters, isBareParameter, isPrefixedParameter, prefix" in {
+    val pure = ParametrizedStringTemplate.fromString("string")
+    val bare = ParametrizedStringTemplate.fromParameter(ps(7))
+    val prefixed = ParametrizedStringTemplate.fromString("prefix") + ps(7)
+    val postfixed = ParametrizedStringTemplate.fromParameter(ps(7)) + "postfix"
+    val sandwiched = ParametrizedStringTemplate.fromString("prefix") + ps(7) + "postfix"
+    val examples = Seq(pst1, pst2, pure, bare, prefixed, postfixed, sandwiched)
+    examples.map(_.hasParameters) shouldBe Seq(true, true, false, true, true, true, true)
+    examples.map(_.nParameters) shouldBe Seq(4, 2, 0, 1, 1, 1, 1)
+    examples.map(_.parameters) shouldBe
+      Seq(Seq(ps(0), ps(1), ps(2), ps(3)), Seq(ps(5), ps(6)), Seq.empty, Seq(ps(7)), Seq(ps(7)),
+        Seq(ps(7)), Seq(ps(7)))
+    examples.map(_.isBareParameter) shouldBe Seq(false, false, false, true, false, false, false)
+    examples.map(_.isPrefixedParameter) shouldBe Seq(false, false, false, false, true, false, false)
+    examples.map(_.prefix) shouldBe Seq("", "Yo", "string", "", "prefix", "", "prefix")
   }
 
 }
