@@ -46,8 +46,6 @@ object WomToCwl {
     }
   }
 
-  def placeholder: ErrorOr[String] = Valid("Yo")
-
   def toCwl(task: TaskDefinition): ErrorOr[CommandLineTool] = {
     val tokenizeResult = parser.tokenize(task.commandTemplate)
     val groups = grouper.groupTokens(tokenizeResult.nonBlankTokens)

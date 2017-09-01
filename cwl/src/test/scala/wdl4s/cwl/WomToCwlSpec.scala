@@ -1,60 +1,26 @@
 package wdl4s.cwl
 
+import cats.data.Validated.Valid
 import org.scalatest.{FlatSpec, Matchers}
-import shapeless.Coproduct
-import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand}
-import wdl4s.parser.WdlParser.Terminal
-import wdl4s.wdl.command.{ParameterCommandPart, StringCommandPart}
-import wdl4s.wdl.expression.PureStandardLibraryFunctionsLike
-import wdl4s.wdl.values.WdlValue
-import wdl4s.wdl.{Declaration, RuntimeAttributes, WdlExpression}
-import wdl4s.wom.callable.{Callable, TaskDefinition}
-import wdl4s.wom.expression.WomExpression
+
 class WomToCwlSpec extends FlatSpec with Matchers {
 
-  it should "convert command line" in {
-    val commandLine = Seq(StringCommandPart("echo Hello World"))
-    val baseCommand = WomToCwl.toBaseCommand(WomToCwl.parser.tokenize(WomToCwl.parser.scan(commandLine)))
-    baseCommand.toOption.get.select[String].get shouldBe "echo"
+  private def compareCwlCmds(cmd1: CommandLineTool, cmd2: CommandLineTool): Unit = {
+    cmd1.baseCommand shouldBe cmd2.baseCommand
+    cmd1.arguments.map(_.toSeq) shouldBe cmd2.arguments.map(_.toSeq)
+    cmd1.inputs.toSeq shouldBe cmd2.inputs.toSeq
+    ()
   }
 
-  it should "convert WOM task examples" in {
-    val task = WomTaskExamples.helloWorldLiterally
-    val errorOrCwlCmd = WomToCwl.toCwl(task)
-    errorOrCwlCmd.isValid shouldBe true
-    val cwlCmd = errorOrCwlCmd.toOption.get
-    cwlCmd.baseCommand shouldBe Some(Coproduct[BaseCommand]("echo"))
-    val expectedArguments = Some(Seq(Coproduct[Argument]("Hello"), Coproduct[Argument]("World")))
-    cwlCmd.arguments.map(_.toSeq) shouldBe expectedArguments
-  }
-
-  it should "convert CromWOM TaskDefinition to CWL CommandLineTool" in {
-    val mockAstId = 42
-    val mockLine = 0
-    val mockCol = 0
-    val taskDef = TaskDefinition(
-      name = "message",
-      commandTemplate = Seq(
-        StringCommandPart("echo "),
-        ParameterCommandPart(
-          attributes = Map.empty[String, String],
-          expression = WdlExpression(
-            ast = new Terminal(mockAstId, "string", "Hello", "Yo", mockLine, mockCol)
-          )
-        )
-      ),
-      runtimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression]),
-      meta = Map.empty[String, String],
-      parameterMeta = Map.empty[String, String],
-      outputs = Set.empty[Callable.OutputDefinition],
-      inputs = Set.empty[Callable.InputDefinition],
-      declarations = List.empty[(String, WomExpression)]
-    )
-    val taskInputs = Map.empty[Declaration, WdlValue]
-    val functions = new PureStandardLibraryFunctionsLike {}
-    val valueMapper = (value: WdlValue) => value
-    val taskString = taskDef.instantiateCommand(taskInputs, functions, valueMapper).get
-    taskString shouldBe "echo Hello"
+  it should "convert WOM examples to CWL" in {
+    for(example <- WomToCwlExamples.examples) {
+      val womTask = example.womTask
+      val errorOrCwlCmdConverted = WomToCwl.toCwl(womTask)
+      errorOrCwlCmdConverted.isValid shouldBe true
+      val cwlCmdConverted = errorOrCwlCmdConverted.asInstanceOf[Valid[CommandLineTool]].a
+      val cwlCmdExpected = example.cwlCmdExpected
+      compareCwlCmds(cwlCmdConverted, cwlCmdExpected)
+    }
   }
 
 }
