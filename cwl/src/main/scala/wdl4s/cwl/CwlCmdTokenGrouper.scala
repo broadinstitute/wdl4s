@@ -54,6 +54,7 @@ object CwlCmdTokenGrouper {
 
       advanceTokenIterator()
       advanceTokenIterator()
+      index = 0
       while (nextTokenOption.nonEmpty) {
         val errorOrGroup = (nextTokenOption, nextNextTokenOption) match {
           case (Some(token), _) if token.string.hasParameters =>

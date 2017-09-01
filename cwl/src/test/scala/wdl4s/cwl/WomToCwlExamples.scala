@@ -17,7 +17,7 @@ object WomToCwlExamples {
     ParameterCommandPart(attributes, expression)
   }
 
-  private def womTask(name: String, commandTemplate: Seq[CommandPart]) =
+  private def womTask(name: String)(commandTemplate: CommandPart*) =
     TaskDefinition(
       name = name,
       commandTemplate = commandTemplate,
@@ -29,23 +29,33 @@ object WomToCwlExamples {
       declarations = List.empty[(String, WomExpression)]
     )
 
-  private def bind(pos: Int, value:String): CommandLineBinding = {
+  private def bind(pos: Int, value: String): CommandLineBinding = {
     CommandLineBinding(
       position = Option(pos),
       valueFrom = Option(Coproduct[StringOrExpression](value))
     )
   }
 
-  private def cwlCmd(base: String)(args: CommandLineBinding*)(ins: (String, CommandLineBinding)*)
+  private case class Input(pos: Int, prefixOption: Option[String], separate: Boolean, value: String) {
+    val id = s"input$pos"
+  }
+
+
+  private def cwlCmd(base: String)(args: CommandLineBinding*)(ins: Input*)
   : CommandLineTool = {
     val baseCommand = Option(Coproduct[BaseCommand](base))
     val arguments = Option(args.map(Coproduct[Argument](_)).toArray)
-    val inputs = ins.map {
-      case (id: String, binding: CommandLineBinding) =>
-        CommandInputParameter(
-          id = id,
-          inputBinding = Option(binding)
-        )
+    val inputs = ins.map { input =>
+      val binding = CommandLineBinding(
+        position = Option(input.pos),
+        prefix = input.prefixOption,
+        separate = Option(if(input.separate) "true" else "false"),
+        valueFrom = Option(Coproduct[StringOrExpression](input.value))
+      )
+      CommandInputParameter(
+        id = input.id,
+        inputBinding = Option(binding)
+      )
     }.toArray
     CommandLineTool(
       baseCommand = baseCommand,
@@ -57,16 +67,39 @@ object WomToCwlExamples {
   case class Example(womTask: TaskDefinition, cwlCmdExpected: CommandLineTool)
 
   val helloWorldLiterals: Example = Example(
-    womTask("hello", Seq(scp("echo Hello World"))),
-    cwlCmd("echo")(bind(2, "Hello"), bind(3, "World"))()
+    womTask("hello")(scp("echo Hello World")),
+    cwlCmd("echo")(bind(0, "Hello"), bind(1, "World"))()
   )
 
-  val helloWorldOneParam: Example = Example(
-    womTask("hello", Seq(scp("echo "), pcp("greeting"))),
-    cwlCmd("echo")()()
+  val helloWorldParam: Example = Example(
+    womTask("hello")(scp("echo "), pcp("greeting")),
+    cwlCmd("echo")()(Input(0, None, separate = false, "greeting"))
   )
 
-  val helloWorldLiterally: TaskDefinition = womTask("hello", Seq(scp("echo Hello World")))
+  val concat: Example = Example(
+    womTask("cat")(scp("cat "), pcp("in1"), scp(" "), pcp("in2"), scp(" "), pcp("out")),
+    cwlCmd("cat")()(
+      Input(0, None, separate = false, "in1"),
+      Input(1, None, separate = false, "in2"),
+      Input(2, None, separate = false, "out")
+    )
+  )
 
-  val examples: Seq[Example] = Seq(helloWorldLiterals)
+  val dd: Example = Example(
+    womTask("dd")(scp("dd in="), pcp("infile"), scp(" out="), pcp("outfile")),
+    cwlCmd("dd")()(
+      Input(0, Option("in="), separate = false, "infile"),
+      Input(1, Option("out="), separate = false, "outfile")
+    )
+  )
+
+  val clayc : Example = Example(
+    womTask("clayc")(scp("clayc -v -f -i "), pcp("infile"), scp(" -o "), pcp("outfile")),
+    cwlCmd("clayc")(bind(0, "-v"), bind(1, "-f"))(
+      Input(3, Some("-i"), separate = true, "infile"),
+      Input(5, Some("-o"), separate = true, "outfile")
+    )
+  )
+
+  val examples: Seq[Example] = Seq(helloWorldLiterals, helloWorldParam, concat, dd, clayc)
 }

@@ -63,6 +63,7 @@ object WomToCwl {
           val valueFrom = Option(Coproduct[StringOrExpression](parameter.expression.toWdlString))
           val inputBinding = Option(
             CommandLineBinding(
+              position = Option(pos),
               prefix = prefixOption,
               separate = if(separate) Option("true") else Option("false"),
               valueFrom = valueFrom
