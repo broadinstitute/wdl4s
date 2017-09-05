@@ -1,23 +1,18 @@
 package wdl4s.cwl
 
-import shapeless.syntax.singleton._
-import shapeless._
-import cats.syntax.foldable._
-import shapeless.{:+:, CNil, Poly1, Witness}
-import CwlType._
-import shapeless.syntax.singleton._
-import CwlVersion._
 import cats.data.Validated._
 import lenthall.validation.ErrorOr._
+import shapeless.syntax.singleton._
+import shapeless.{:+:, CNil, Poly1, Witness, _}
 import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
 import wdl4s.cwl.CwlType.CwlType
-import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
-import wdl4s.wdl.command.CommandPart
+import wdl4s.cwl.CwlVersion._
 import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.executable.Executable
-import wdl4s.wom.expression.{WomExpression, PlaceholderWomExpression}
-import wdl4s.wom.graph._
+import wdl4s.wom.expression.WomExpression
+import wdl4s.wom.graph.{CallNode, GraphNode}
+import wdl4s.wom.{WomCommandPart, WomRuntimeAttributes}
 
 /**
   *
@@ -101,9 +96,10 @@ case class CommandLineTool(
 
     val id = this.id.getOrElse(taskDefinitionId)
 
-    val commandTemplate: Seq[CommandPart] = baseCommand.get.fold(BaseCommandToCommandParts)
+    val commandTemplate: Seq[WomCommandPart] = baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
+      arguments.map(_.map(_.fold(ArgumentToCommandPart)).toSeq).toSeq.flatten
 
-    val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression])
+    val runtimeAttributes: WomRuntimeAttributes = WomRuntimeAttributes(Map.empty[String, WomExpression])
 
     val meta: Map[String, String] = Map.empty
     val parameterMeta: Map[String, String] = Map.empty
@@ -111,23 +107,20 @@ case class CommandLineTool(
     //TODO: This output does _not_ capture expressions from the output.outputBinding
     //The implementation must include the expression evaluation pieces as detailed in:
     //http://www.commonwl.org/v1.0/CommandLineTool.html#CommandOutputBinding
+    
+    // For inputs and outputs, we only keep the variable name in the definition
     val outputs: Set[Callable.OutputDefinition] = this.outputs.map {
       output =>
         val wdlType = output.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get //<-- here be `get` dragons
-        OutputDefinition(output.id, wdlType, PlaceholderWomExpression(Set.empty, wdlType))
+        OutputDefinition(RunId(output.id).variableId, wdlType, CwlWomExpression(output, wdlType))
     }.toSet
 
-    val inputs: Set[_ <: Callable.InputDefinition] =
+    val inputs: List[_ <: Callable.InputDefinition] =
       this.inputs.map { cip =>
         val tpe = cip.`type`.flatMap(_.select[CwlType]).map(cwlTypeToWdlType).get
 
-        //TODO: This id includes the filename, which makes assigning input values more laborious
-        //We should consider dropping filenames for _all_ ids, as long as we can guarantee uniqueness
-        val inputId = cip.id
-        RequiredInputDefinition(inputId, tpe)
-      }.toSet
-
-    val declarations: List[(String, WomExpression)] = List.empty
+        RequiredInputDefinition(RunId(cip.id).variableId, tpe)
+      }.toList
 
     TaskDefinition(
       id,
@@ -137,14 +130,10 @@ case class CommandLineTool(
       parameterMeta,
       outputs,
       inputs,
-      declarations
+      // TODO: This doesn't work in all cases and it feels clunky anyway - find a way to sort that out
+      prefixSeparator = "#",
+      commandPartSeparator = " "
     )
-  }
-
-  def graphNodes: ErrorOr[Set[GraphNode]] = {
-    CallNode.
-      callWithInputs(id.getOrElse("this is a made up call node name"), taskDefinition, Map.empty, Set.empty).
-      map(cwi => Set.empty[GraphNode] ++ cwi.newInputs + cwi.node)
   }
 
   def asCwl = Coproduct[Cwl](this)

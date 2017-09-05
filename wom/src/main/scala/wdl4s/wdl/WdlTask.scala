@@ -6,14 +6,13 @@ import cats.data.Validated.Valid
 import lenthall.util.TryUtil
 import wdl4s.parser.WdlParser._
 import wdl4s.wdl.AstTools._
-import wdl4s.wdl.command.{CommandPart, ParameterCommandPart, StringCommandPart}
+import wdl4s.wdl.command.{WdlCommandPart, ParameterCommandPart, StringCommandPart}
 import wdl4s.wdl.expression.{WdlFunctions, WdlStandardLibraryFunctions}
 import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.util.StringUtil
 import wdl4s.wdl.values.{WdlFile, WdlValue}
 import wdl4s.wom.callable.Callable.{OptionalInputDefinition, OptionalInputDefinitionWithDefault, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition}
-import wdl4s.wom.expression.{PlaceholderWomExpression, WomExpression}
 
 import scala.collection.JavaConverters._
 import scala.language.postfixOps
@@ -63,7 +62,7 @@ object WdlTask {
   * @param ast               The syntax tree from which this was built.
   */
 case class WdlTask(name: String,
-                   commandTemplate: Seq[CommandPart],
+                   commandTemplate: Seq[WdlCommandPart],
                    runtimeAttributes: RuntimeAttributes,
                    meta: Map[String, String],
                    parameterMeta: Map[String, String],
@@ -113,7 +112,8 @@ case class WdlTask(name: String,
   def instantiateCommand(taskInputs: EvaluatedTaskInputs,
                          functions: WdlFunctions[WdlValue],
                          valueMapper: WdlValue => WdlValue = (v) => v): Try[String] = {
-    Try(StringUtil.normalize(commandTemplate.map(_.instantiate(declarations, taskInputs, functions, valueMapper)).mkString("")))
+    val mappedInputs = taskInputs.map({case (k, v) => k.unqualifiedName -> v})
+    Try(StringUtil.normalize(commandTemplate.map(_.instantiate(declarations, mappedInputs, functions, valueMapper)).mkString("")))
   }
 
   def commandTemplateString: String = StringUtil.normalize(commandTemplate.map(_.toString).mkString)
@@ -214,25 +214,19 @@ case class WdlTask(name: String,
   private def buildWomTaskDefinition: TaskDefinition = TaskDefinition(
     name,
     commandTemplate,
-    runtimeAttributes,
+    runtimeAttributes.toWomRuntimeAttributes,
     meta,
     parameterMeta,
     outputs.map(_.womOutputDefinition).toSet,
-    buildWomInputs,
-    buildWomDeclarations
+    buildWomInputs
   )
 
-  private def buildWomDeclarations: List[(String, WomExpression)] = declarations.toList collect {
-    case d if d.expression.nonEmpty =>
-      d.unqualifiedName -> PlaceholderWomExpression(Set.empty, d.wdlType)
-  }
-
-  private def buildWomInputs: Set[Callable.InputDefinition] = declarations collect {
+  private def buildWomInputs: List[Callable.InputDefinition] = declarations collect {
     case d if d.expression.isEmpty && !d.wdlType.isInstanceOf[WdlOptionalType] =>
       RequiredInputDefinition(d.unqualifiedName, d.wdlType)
     case d if d.expression.isEmpty && d.wdlType.isInstanceOf[WdlOptionalType] =>
       OptionalInputDefinition(d.unqualifiedName, d.wdlType.asInstanceOf[WdlOptionalType])
-    case d if d.expression.nonEmpty && d.wdlType.isInstanceOf[WdlOptionalType] =>
-      OptionalInputDefinitionWithDefault(d.unqualifiedName, d.wdlType.asInstanceOf[WdlOptionalType], PlaceholderWomExpression(Set.empty, d.wdlType))
-  } toSet
+    case d if d.expression.nonEmpty =>
+      OptionalInputDefinitionWithDefault(d.unqualifiedName, d.wdlType, WdlWomExpression(d.expression.get, Option(this)))
+  } toList
 }

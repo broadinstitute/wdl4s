@@ -2,10 +2,13 @@ package wdl4s.wdl
 
 import wdl4s.parser.WdlParser.{Ast, AstList}
 import wdl4s.wdl.AstTools.{AstNodeName, EnhancedAstNode}
+import wdl4s.wom.WomRuntimeAttributes
 
 import scala.collection.JavaConverters._
 
-case class RuntimeAttributes(attrs: Map[String, WdlExpression])
+case class RuntimeAttributes(attrs: Map[String, WdlExpression]) {
+  def toWomRuntimeAttributes = WomRuntimeAttributes(attrs.mapValues(WdlWomExpression(_, None)))
+}
 
 object RuntimeAttributes {
   def apply(ast: Ast): RuntimeAttributes = {
