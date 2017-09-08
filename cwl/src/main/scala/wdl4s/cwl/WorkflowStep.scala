@@ -3,11 +3,8 @@ package wdl4s.cwl
 import shapeless._
 import wdl4s.cwl.ScatterMethod._
 import wdl4s.cwl.WorkflowStep.{Outputs, Run}
-import wdl4s.wdl.command.CommandPart
-import wdl4s.wdl.{RuntimeAttributes, WdlExpression}
 import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{Callable, TaskDefinition}
-import wdl4s.wom.expression.WomExpression
 import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 import wdl4s.wom.graph.{CallNode, GraphNode, TaskCallNode}
 
@@ -33,76 +30,62 @@ case class WorkflowStep(
 
   def fileName: Option[String] = run.select[String]
 
-  def taskDefinitionInputs(typeMap: WdlTypeMap): Set[_ <: Callable.InputDefinition] =
-    in.map { workflowStepInput =>
-
-      val _source: String = workflowStepInput.source.flatMap(_.select[String]).get
-
-      val mungedTypeMap = typeMap map {
-        case (i, t) => RunOutputsToTypeMap.mungeId(i) -> t
-      }
-
-      val value = FullyQualifiedName(_source) match {
-        case WorkflowStepOutputIdReference(_, stepOutputId, _) => stepOutputId
-        case WorkflowInputId(_, inputId) => inputId
-      }
-
-      val tpe = mungedTypeMap(value)
-      RequiredInputDefinition(_source, tpe)
-    }.toSet
-
-
-  def taskDefinitionOutputs: Set[Callable.OutputDefinition] = {
-
-    //this map will only match on the "id" field of the fully qualified name
-    val idMap = typedOutputs map {
-      case (id, tpe) => RunOutputId(id).outputId -> tpe
-    }
-
-    out.fold(WorkflowOutputsToOutputDefinition).apply(idMap)
-  }
-
-  def taskDefinition(typeMap: WdlTypeMap): TaskDefinition = {
-
-    val id = this.id
-
-    val commandTemplate: Seq[CommandPart] =
-    //TODO: turn this select into a fold that supports other types of runnables
-      run.select[CommandLineTool].map {
-        clt =>
-          clt.baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
-            clt.arguments.map(_.map(_.fold(ArgumentToCommandPart)).toSeq).toSeq.flatten
-      }.toSeq.flatten
-
-    val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WdlExpression])
-
-    val meta: Map[String, String] = Map.empty
-    val parameterMeta: Map[String, String] = Map.empty
-
-    val declarations: List[(String, WomExpression)] = List.empty
-
-    TaskDefinition(
-      id,
-      commandTemplate,
-      runtimeAttributes,
-      meta,
-      parameterMeta,
-      taskDefinitionOutputs,
-      taskDefinitionInputs(typeMap),
-      declarations
-    )
-  }
-
   /**
     * In order to produce a map to lookup workflow
     * @param typeMap
     * @param workflow
     * @return
     */
+
   def callWithInputs(typeMap: WdlTypeMap,
                      workflow: Workflow,
                      knownNodes: Set[GraphNode],
                      workflowInputs: Map[String, GraphNodeOutputPort]): Set[GraphNode] = {
+
+    def taskDefinition: TaskDefinition = {
+
+
+      val taskDefinitionInputs: Set[_ <: Callable.InputDefinition] =
+        in.map { workflowStepInput =>
+
+          val _source: String = workflowStepInput.source.flatMap(_.select[String]).get
+
+          val mungedTypeMap = typeMap map {
+            case (i, t) => RunOutputsToTypeMap.mungeId(i) -> t
+          }
+
+          val value = FullyQualifiedName(_source) match {
+            case WorkflowStepOutputIdReference(_, stepOutputId, _) => stepOutputId
+            case WorkflowInputId(_, inputId) => inputId
+          }
+
+          val tpe = mungedTypeMap(value)
+          RequiredInputDefinition(_source, tpe)
+        }.toSet
+
+
+      val taskDefinitionOutputs: Set[Callable.OutputDefinition] = {
+
+        //this map will only match on the "id" field of the fully qualified name
+        val idMap = typedOutputs map {
+          case (id, tpe) => RunOutputId(id).outputId -> tpe
+        }
+
+        out.fold(WorkflowOutputsToOutputDefinition).apply(idMap)
+      }
+
+
+      val id = this.id
+
+      //This task has inputs and outputs
+      val cltTask = run.select[CommandLineTool].map(_.taskDefinition).get
+
+
+
+      ???
+
+    }
+
     def foldInputs(mapAndNodes: (Map[String, OutputPort], Set[GraphNode]), workflowStepInput: WorkflowStepInput): (Map[String, OutputPort], Set[GraphNode]) =
       mapAndNodes match {
         case ((map, knownNodes)) => //shadowing knownNodes on purpose to avoid accidentally referencing the outer one
@@ -169,7 +152,7 @@ case class WorkflowStep(
       val workflowOutputsMap: (Map[String, OutputPort], Set[GraphNode]) =
         in.foldLeft((Map.empty[String, OutputPort], knownNodes)) (foldInputs)
 
-      val td = taskDefinition(typeMap)
+      val td = taskDefinition
 
       // TODO: Fixme!
       CallNode.callWithInputs(id, td, workflowInputs ++ workflowOutputsMap._1, Set.empty).getOrElse(???).nodes ++ workflowOutputsMap._2
