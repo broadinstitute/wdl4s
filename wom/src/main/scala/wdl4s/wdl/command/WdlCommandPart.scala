@@ -3,10 +3,10 @@ package wdl4s.wdl.command
 import wdl4s.wdl.expression.{WdlFunctions, WdlStandardLibraryFunctions}
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wdl._
-import wdl4s.wom.WomCommandPart
+import wdl4s.wom.CommandPart
 import wdl4s.wom.expression.IoFunctionSet
 
-trait WdlCommandPart extends WomCommandPart {
+trait WdlCommandPart extends CommandPart {
   def instantiate(declarations: Seq[Declaration],
                   inputsMap: Map[String, WdlValue],
                   functions: WdlFunctions[WdlValue],

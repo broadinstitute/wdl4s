@@ -5,7 +5,7 @@ import cats.syntax.apply._
 import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
 import org.scalatest.{FlatSpec, Matchers}
 import wdl4s.wdl.types.{WdlArrayType, WdlIntegerType, WdlStringType}
-import wdl4s.wom.WomRuntimeAttributes
+import wdl4s.wom.RuntimeAttributes
 import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.TaskDefinition
 import wdl4s.wom.expression.PlaceholderWomExpression
@@ -17,7 +17,7 @@ class ScatterNodeSpec extends FlatSpec with Matchers {
 
   val task_foo = TaskDefinition(name = "foo",
     commandTemplate = null,
-    runtimeAttributes = WomRuntimeAttributes(Map.empty),
+    runtimeAttributes = RuntimeAttributes(Map.empty),
     meta = Map.empty,
     parameterMeta = Map.empty,
     outputs = Set(OutputDefinition("out", WdlStringType, PlaceholderWomExpression(Set.empty, WdlStringType))),

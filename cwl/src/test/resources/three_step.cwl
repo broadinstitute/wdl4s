@@ -20,11 +20,11 @@ steps:
     outputs:
     - id: file:///Users/danb/wdl4s/r.cwl#ps/0b4ba500-5584-4fed-a831-9fa6f914ad3f/ps-stdOut
       outputBinding:
-        glob: stdout
+        glob: ps-stdOut.txt
       type: File
     class: CommandLineTool
     baseCommand: ps
-    stdout: stdout
+    stdout: ps-stdOut.txt
     id: file:///Users/danb/wdl4s/r.cwl#ps/0b4ba500-5584-4fed-a831-9fa6f914ad3f
 - id: file:///Users/danb/wdl4s/r.cwl#cgrep
   in:
@@ -43,7 +43,7 @@ steps:
     outputs:
     - id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875/cgrep-count
       outputBinding:
-        glob: stdout
+        glob: cgrep-stdOut.txt
         loadContents: true
         outputEval: $(self[0].contents.toInt)
       type: int
@@ -54,7 +54,7 @@ steps:
     arguments:
     - valueFrom: grep
       shellQuote: false
-    - valueFrom: $(inputs.pattern)
+    - valueFrom: $(inputs.pattern).
       shellQuote: false
     - valueFrom: $(inputs.file)
       shellQuote: false
@@ -64,7 +64,7 @@ steps:
       shellQuote: false
     - valueFrom: -l
       shellQuote: false
-    stdout: stdout
+    stdout: cgrep-stdOut.txt
     id: file:///Users/danb/wdl4s/r.cwl#cgrep/09f8bcac-a91a-49d5-afb6-2f1b1294e875
 - id: file:///Users/danb/wdl4s/r.cwl#wc
   in:
@@ -79,7 +79,7 @@ steps:
     outputs:
     - id: file:///Users/danb/wdl4s/r.cwl#wc/45d98851-7bfe-473e-ab24-aac922553f3e/wc-count
       outputBinding:
-        glob: stdout
+        glob: wc-stdOut.txt
         loadContents: true
         outputEval: $(self[0].contents.toInt)
       type: int
@@ -98,6 +98,6 @@ steps:
       shellQuote: false
     - valueFrom: -l
       shellQuote: false
-    stdout: stdout
+    stdout: wc-stdOut.txt
     id: file:///Users/danb/wdl4s/r.cwl#wc/45d98851-7bfe-473e-ab24-aac922553f3e
 id: file:///Users/danb/wdl4s/r.cwl

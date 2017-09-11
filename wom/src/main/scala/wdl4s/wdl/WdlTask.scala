@@ -34,7 +34,7 @@ object WdlTask {
     val taskNameTerminal = ast.getAttribute("name").asInstanceOf[Terminal]
     val name = taskNameTerminal.sourceString
     val commandAsts = ast.findAsts(AstNodeName.Command)
-    val runtimeAttributes = RuntimeAttributes(ast)
+    val runtimeAttributes = WdlRuntimeAttributes(ast)
     val meta = AstTools.wdlSectionToStringMap(ast, AstNodeName.Meta, wdlSyntaxErrorFormatter)
     val parameterMeta = AstTools.wdlSectionToStringMap(ast, AstNodeName.ParameterMeta, wdlSyntaxErrorFormatter)
 
@@ -47,7 +47,7 @@ object WdlTask {
     WdlTask(name, commandTemplate, runtimeAttributes, meta, parameterMeta, ast)
   }
 
-  def empty: WdlTask = new WdlTask("taskName", Seq.empty, RuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, null)
+  def empty: WdlTask = new WdlTask("taskName", Seq.empty, WdlRuntimeAttributes(Map.empty[String, WdlExpression]), Map.empty, Map.empty, null)
 
 }
 
@@ -63,7 +63,7 @@ object WdlTask {
   */
 case class WdlTask(name: String,
                    commandTemplate: Seq[WdlCommandPart],
-                   runtimeAttributes: RuntimeAttributes,
+                   runtimeAttributes: WdlRuntimeAttributes,
                    meta: Map[String, String],
                    parameterMeta: Map[String, String],
                    ast: Ast) extends WdlCallable {

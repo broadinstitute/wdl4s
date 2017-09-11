@@ -11,8 +11,7 @@ import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.executable.Executable
 import wdl4s.wom.expression.WomExpression
-import wdl4s.wom.graph.{CallNode, GraphNode}
-import wdl4s.wom.{WomCommandPart, WomRuntimeAttributes}
+import wdl4s.wom.{CommandPart, RuntimeAttributes}
 
 /**
   *
@@ -96,10 +95,10 @@ case class CommandLineTool(
 
     val id = this.id.getOrElse(taskDefinitionId)
 
-    val commandTemplate: Seq[WomCommandPart] = baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
+    val commandTemplate: Seq[CommandPart] = baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
       arguments.map(_.map(_.fold(ArgumentToCommandPart)).toSeq).toSeq.flatten
 
-    val runtimeAttributes: WomRuntimeAttributes = WomRuntimeAttributes(Map.empty[String, WomExpression])
+    val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WomExpression])
 
     val meta: Map[String, String] = Map.empty
     val parameterMeta: Map[String, String] = Map.empty
