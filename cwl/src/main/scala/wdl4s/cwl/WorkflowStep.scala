@@ -49,7 +49,7 @@ case class WorkflowStep(
     if (haveWeSeenThisStep) knownNodes
     else {
       // Create a task definition for the underlying run.
-      // For sub workflows, we'll need to handlt the case where this could be a workflow definition
+      // For sub workflows, we'll need to handle the case where this could be a workflow definition
       //TODO: turn this select into a fold that supports other types of runnables
       val taskDefinition = run.select[CommandLineTool].map { _.taskDefinition } get
 
@@ -158,7 +158,7 @@ case class WorkflowStep(
 
       // TODO: getOrElse(???) nooooooooo
       // Use what we've got to generate a call node and required input nodes
-      // However here we expect WOM NOT to return any required input nodes here because it would mean that some task definitions inputs
+      // However here we expect WOM NOT to return any required input nodes because it would mean that some task definition inputs
       // have not been linked to either a workflow input or an upstream output, in which case they have no other way to be satisfied ( <- is that true ?)
       CallNode.callWithInputs(unqualifiedStepId, taskDefinition, workflowInputs ++ workflowOutputsMap._1, Set.empty, prefixSeparator = "#").getOrElse(???).nodes ++ workflowOutputsMap._2
     }

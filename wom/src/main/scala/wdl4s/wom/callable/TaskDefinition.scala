@@ -33,7 +33,7 @@ case class TaskDefinition(name: String,
 
   def instantiateCommand(taskInputs: WomEvaluatedCallInputs,
                          functions: IoFunctionSet,
-                         valueMapper: WdlValue => WdlValue = (v) => v,
+                         valueMapper: WdlValue => WdlValue = identity[WdlValue],
                          separate: Boolean = false): Try[String] = {
     val mappedInputs = taskInputs.map({case (k, v) => k.name -> v})
     // TODO: Bring back inputs: Try(StringUtil.normalize(commandTemplate.map(_.instantiate(declarations, taskInputs, functions, valueMapper)).mkString("")))

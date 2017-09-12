@@ -95,8 +95,8 @@ case class CommandLineTool(
 
     val id = this.id.getOrElse(taskDefinitionId)
 
-    val commandTemplate: Seq[CommandPart] = baseCommand.map(_.fold(BaseCommandToCommandParts)).toSeq.flatten ++
-      arguments.map(_.map(_.fold(ArgumentToCommandPart)).toSeq).toSeq.flatten
+    val commandTemplate: Seq[CommandPart] = baseCommand.toSeq.flatMap(_.fold(BaseCommandToCommandParts)) ++
+      arguments.toSeq.flatMap(_.map(_.fold(ArgumentToCommandPart)))
 
     val runtimeAttributes: RuntimeAttributes = RuntimeAttributes(Map.empty[String, WomExpression])
 
