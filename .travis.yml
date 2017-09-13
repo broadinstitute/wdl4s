@@ -3,6 +3,7 @@ install:
   - pip install 'requests[security]'
   - pip install --ignore-installed cwltool
 language: scala
+group: deprecated-2017Q3
 scala:
   - 2.12.3
 jdk:
