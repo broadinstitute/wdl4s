@@ -1,5 +1,7 @@
 sudo: false
-install: pip install --ignore-installed cwltool
+install: 
+  - pip install 'requests[security]'
+  - pip install --ignore-installed cwltool
 language: scala
 scala:
   - 2.12.3
