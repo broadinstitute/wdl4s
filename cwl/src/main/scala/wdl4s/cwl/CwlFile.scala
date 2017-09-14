@@ -1,11 +1,9 @@
 package wdl4s.cwl
 
-import shapeless.syntax.singleton._
 import shapeless._
 import cats.syntax.foldable._
 import shapeless.{:+:, CNil, Poly1, Witness}
 import CwlType._
-import shapeless.syntax.singleton._
 import CwlVersion._
 import cats.data.Validated._
 import lenthall.validation.ErrorOr._
@@ -42,7 +40,7 @@ import wdl4s.wom.graph._
 case class CommandLineTool(
                             inputs: Array[CommandInputParameter] = Array.empty,
                             outputs: Array[CommandOutputParameter] = Array.empty,
-                            `class`: Witness.`"CommandLineTool"`.T = "CommandLineTool".narrow,
+                            `class`: CommandLineTool.ClassType = CommandLineTool.`class`,
                             id: Option[String] = None,
                             requirements: Option[Array[Requirement]] = None,
 
@@ -151,6 +149,10 @@ case class CommandLineTool(
 }
 
 object CommandLineTool {
+
+  type ClassType = Witness.`"CommandLineTool"`.T
+
+  val `class`: ClassType = "CommandLineTool".asInstanceOf[ClassType]
 
   type StringOrExpression = ECMAScriptExpression :+: String :+: CNil
 
