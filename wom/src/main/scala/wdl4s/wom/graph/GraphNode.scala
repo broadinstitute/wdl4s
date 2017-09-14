@@ -5,7 +5,7 @@ import wdl4s.wom.graph.GraphNode._
 import wdl4s.wom.graph.GraphNodePort.{ConnectedInputPort, InputPort, OutputPort}
 import cats.implicits._
 import wdl4s.wom.callable.Callable
-import wdl4s.wom.callable.Callable.{OptionalInputDefinition, OptionalInputDefinitionWithDefault, RequiredInputDefinition}
+import wdl4s.wom.callable.Callable.{OptionalInputDefinition, InputDefinitionWithDefault, RequiredInputDefinition}
 
 trait GraphNode {
 
@@ -56,7 +56,7 @@ object GraphNode {
     * Allows a level of indirection, so that GraphNodePorts can be constructed before their associated GraphNode is
     * constructed. If used, the _graphNode must be set before anything tries to apply 'get'.
     */
-  private[graph] class GraphNodeSetter {
+  private [wdl4s] class GraphNodeSetter {
     var _graphNode: GraphNode = _
     private def getGraphNode = _graphNode
     def get: Unit => GraphNode = _ => getGraphNode
@@ -85,7 +85,7 @@ object GraphNode {
       case OptionalInputDefinition(n, womType) =>
         val result = OptionalGraphInputNode(s"$inputPrefix$n", womType)
         (result.singleOutputPort, Option(result)) // Read: Some(result)
-      case OptionalInputDefinitionWithDefault(n, womType, default) =>
+      case InputDefinitionWithDefault(n, womType, default) =>
         val result = OptionalGraphInputNodeWithDefault(s"$inputPrefix$n", womType, default)
         (result.singleOutputPort, Option(result)) // Read: Some(result)
     }
@@ -109,5 +109,6 @@ object GraphNode {
   trait GeneratedNodeAndNewInputs {
     def node: GraphNode
     def newInputs: Set[GraphInputNode]
+    def newExpressions: Set[ExpressionNode]
   }
 }

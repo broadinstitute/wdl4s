@@ -22,6 +22,6 @@ case class GraphNodeInputExpression(inputName: String, expression: WomExpression
   /**
     * Runs instantiateExpression and returns it tupled with the inputName.
     */
-  private[graph] def instantiateExpressionWithInputName(graphNodeSetter: GraphNodeSetter): ErrorOr[(String, InstantiatedExpression)] = instantiateExpression(graphNodeSetter) map { (inputName, _) }
+  private [wdl4s] def instantiateExpressionWithInputName(graphNodeSetter: GraphNodeSetter): ErrorOr[(String, InstantiatedExpression)] = instantiateExpression(graphNodeSetter) map { (inputName, _) }
   private[graph] lazy val evaluateType: ErrorOr[WdlType] = expression.evaluateType(inputMapping.map { case (name, port) => (name, port.womType) })
 }
