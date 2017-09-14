@@ -74,7 +74,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
 
           nodes collect {
             case cn: CallNode => cn.name
-          } should be(Set(s"compile", s"untar"))
+          } should be(Set("compile", "untar"))
 
           nodes.collectFirst {
             case tarParam: CallNode if tarParam.name == s"untar" => tarParam

@@ -12,7 +12,7 @@ class FullyQualifiedNameSpec extends FlatSpec with Matchers {
   }
 
   "workflow step output id " should "get filename, id, and step" in {
-    val wfid = WorkflowStepIOId("file#step/id")
+    val wfid = WorkflowStepInputOrOutputId("file#step/id")
 
     wfid.fileName shouldBe "file"
     wfid.ioId shouldBe "id"

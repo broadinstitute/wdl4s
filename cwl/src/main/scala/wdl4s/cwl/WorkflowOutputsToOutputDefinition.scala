@@ -9,7 +9,7 @@ object WorkflowOutputsToOutputDefinition extends Poly1 {
   def fullIdToOutputDefintition(fullyQualifiedName: String, typeMap: WdlTypeMap) = {
 
     //we want to only look at the id, not the filename
-    val lookupId = WorkflowStepIOId(fullyQualifiedName).ioId
+    val lookupId = WorkflowStepInputOrOutputId(fullyQualifiedName).ioId
 
     OutputDefinition(fullyQualifiedName, typeMap(lookupId), PlaceholderWomExpression(Set.empty, typeMap(lookupId)))
   }

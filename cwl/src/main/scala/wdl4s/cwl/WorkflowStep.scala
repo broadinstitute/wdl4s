@@ -94,7 +94,7 @@ case class WorkflowStep(
           }
 
           // Parse the workflowStepInput to be able to access its components separately
-          val parsedStepInputId = WorkflowStepIOId(workflowStepInput.id)
+          val parsedStepInputId = WorkflowStepInputOrOutputId(workflowStepInput.id)
           /*
             * Attempt to find the task definition input that corresponds to the workflow step input
             * Note that the Ids might be largely different (including the file name part)
@@ -129,7 +129,7 @@ case class WorkflowStep(
               (map + outputPortMapping, knownNodes)
 
             // The source points to an output from a different step
-            case WorkflowStepIOId(_, stepId, stepOutputId) =>
+            case WorkflowStepInputOrOutputId(_, stepId, stepOutputId) =>
               val newNodesAndOutputPort: Option[(Set[GraphNode], OutputPort)] =
                 // First check if we've already built the WOM node for this step, and if so return the associated output port
                 findThisInputInSet(knownNodes, stepId, stepOutputId).map(Set.empty[GraphNode] -> _)
