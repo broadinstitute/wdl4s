@@ -1,6 +1,7 @@
 package wdl4s.wdl
 
 import cats.data.Validated.Valid
+import com.sun.org.apache.xpath.internal.ExpressionNode
 import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
 import wdl4s.parser.WdlParser.{Ast, AstNode}
 import wdl4s.wdl.AstTools.EnhancedAstNode
@@ -99,6 +100,7 @@ object Declaration {
   final case class IntermediateValueDeclarationNode(expressionNode: ExpressionNode) extends DeclarationNode
   final case class GraphOutputDeclarationNode(graphOutputNode: GraphOutputNode) extends DeclarationNode
 
+
   def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, parent: Option[Scope]): Declaration = {
     Declaration(
       ast.getAttribute("type").wdlType(wdlSyntaxErrorFormatter),
@@ -120,7 +122,7 @@ object Declaration {
       val womExpression = WdlWomExpression(wdlExpression, None)
       for {
         uninstantiatedExpression <- WdlWomExpression.findInputsforExpression(inputName, womExpression, localLookup, outerLookup)
-        expressionNode <- ExpressionNode.linkWithInputs(inputName, womExpression, uninstantiatedExpression.inputMapping)
+        expressionNode <- InstantiatedExpressionNode.linkWithInputs(inputName, womExpression, uninstantiatedExpression.inputMapping)
       } yield IntermediateValueDeclarationNode(expressionNode)
     }
 
@@ -135,7 +137,6 @@ object Declaration {
     decl match {
       case Declaration(opt: WdlOptionalType, _, None, _, _) => Valid(InputDeclarationNode(OptionalGraphInputNode(inputName, opt)))
       case Declaration(_, _, None, _, _) => Valid(InputDeclarationNode(RequiredGraphInputNode(inputName, decl.wdlType)))
-      case Declaration(_, _, Some(expr), _, _) if expr.variableReferences.isEmpty => Valid(InputDeclarationNode(OptionalGraphInputNodeWithDefault(inputName, decl.wdlType, WdlWomExpression(expr, None))))
       case Declaration(_, _, Some(expr), _, _) => declarationAsExpressionNode(expr)
       case WorkflowOutput(_, _, expr, _, _) => workflowOutputAsGraphOutputNode(expr)
     }

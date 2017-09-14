@@ -96,7 +96,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
     }
   }
 
-  "A WdlNamespace for 3step" should "provide conversion to WOM" in {
+  "A Cwl workflow for 3step" should "provide conversion to WOM" in {
 
     val wf = decodeAllCwl(rootPath/"three_step.cwl").map {
       _.select[Workflow].get
@@ -109,7 +109,10 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
 
     val nodes = wfd.innerGraph.nodes
 
-    nodes collect { case gin: GraphInputNode => gin.name } should be(Set("file:///Users/danb/wdl4s/r.cwl#pattern"))
+    val graphInputNodes = nodes collect { case gin: GraphInputNode => gin }
+    graphInputNodes should have size 1
+    val patternInputNode = graphInputNodes.head
+    patternInputNode.name should be("file:///Users/danb/wdl4s/r.cwl#pattern")
 
     nodes collect { case gon: GraphOutputNode => gon.name } should be(Set(
       "file:///Users/danb/wdl4s/r.cwl#cgrep-count",
@@ -128,6 +131,17 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
     cgrep.upstream.filter(_ eq cgrepPatternInput).size shouldBe 1
 
     wc.upstream.filter(_ eq ps).size shouldBe 1
+    
+    // Check that the inputDefinitionMappings are correct
+    ps.inputDefinitionMappings shouldBe empty
+    cgrep.inputDefinitionMappings should have size 2
+    
+    val cgrepFileInputDef = cgrep.callable.inputs.find(_.name == "file").get
+    val psStdoutOutputPort = ps.outputPorts.head
+    cgrep.inputDefinitionMappings(cgrepFileInputDef) shouldBe psStdoutOutputPort
+    
+    val cgrepPatternInputDef = cgrep.callable.inputs.find(_.name == "pattern").get
+    cgrep.inputDefinitionMappings(cgrepPatternInputDef) shouldBe patternInputNode.singleOutputPort
   }
 
 }

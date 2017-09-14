@@ -174,7 +174,7 @@ class WdlScatterWomSpec extends FlatSpec with Matchers {
 
       // Find the inputs:
       val inputNodes: Set[GraphInputNode] = workflowGraph.nodes.filterByType[GraphInputNode]
-      inputNodes.map {_.name} should be(Set("x", "foo.j"))
+      inputNodes.map {_.name} should be(Set("foo.j"))
 
       // Find that scatter:
       val scatterNode = workflowGraph.nodes.collectFirst {
