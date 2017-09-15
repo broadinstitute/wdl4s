@@ -5,10 +5,16 @@ import shapeless.Coproduct
 import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
 import wdl4s.cwl.WorkflowStepInput.InputSource
 
+
+  /**
+   * BROKEN
+   *
+   * (DB)Ability to write JSON removed due to conflicting circe-yaml cats dependency.
+   * See issue https://github.com/broadinstitute/wdl4s/issues/216 for more information.
+   */
 class ExportCwlSamplesSpec extends FlatSpec with Matchers {
-  //TODO: Re-implement ability to write CWL to Yaml
-  //(DB)Ability to write JSON removed due to conflicting circe-yaml cats dependency
-  def assertCorrectJson(cwl: Cwl, expectedYaml: String) = ??? // ??? shouldBe expectedYaml
+
+  def assertCorrectJson(cwl: Cwl, expectedYaml: String) = ??? // shouldBe expectedYaml
 
   it should "encode sample CWL command line tool" ignore {
     val tool =
