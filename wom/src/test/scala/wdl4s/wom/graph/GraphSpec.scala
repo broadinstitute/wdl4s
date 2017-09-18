@@ -3,13 +3,15 @@ package wdl4s.wom.graph
 import cats.data.Validated.{Invalid, Valid}
 import cats.syntax.validated._
 import org.scalatest.{FlatSpec, Matchers}
+import shapeless.Coproduct
 import wdl4s.wdl.types.{WdlFileType, WdlIntegerType, WdlOptionalType, WdlStringType}
-import wdl4s.wdl.values.{WdlOptionalValue, WdlString}
+import wdl4s.wdl.values.{WdlOptionalValue, WdlString, WdlValue}
 import wdl4s.wom.RuntimeAttributes
 import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{TaskDefinition, WorkflowDefinition}
-import wdl4s.wom.expression.PlaceholderWomExpression
+import wdl4s.wom.expression.{PlaceholderWomExpression, WomExpression}
 import wdl4s.wom.graph.CallNode.CallNodeAndNewInputs
+import wdl4s.wom.graph.Graph.ResolvedWorkflowInput
 
 class GraphSpec extends FlatSpec with Matchers {
   behavior of "Graph"
@@ -113,9 +115,9 @@ class GraphSpec extends FlatSpec with Matchers {
       "required" -> WdlString("hello")
     ))
     withOnlyRequiredValue shouldBe Map(
-      requiredGin.singleOutputPort -> Left(WdlString("hello")),
-      optionalWithDefaultGin.singleOutputPort -> Right(defaultExpression),
-      optionalGin.singleOutputPort -> Left(WdlOptionalValue.none(WdlStringType))
+      requiredGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlString("hello"): WdlValue),
+      optionalWithDefaultGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](defaultExpression: WomExpression),
+      optionalGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlOptionalValue.none(WdlStringType): WdlValue)
     ).validNel
 
     // With required input and optionalWithDefault input
@@ -126,9 +128,9 @@ class GraphSpec extends FlatSpec with Matchers {
     ))
 
     withRequiredAndOptional shouldBe Map(
-      requiredGin.singleOutputPort -> Left(WdlString("hello")),
-      optionalWithDefaultGin.singleOutputPort -> Left(WdlString("hola")),
-      optionalGin.singleOutputPort -> Left(WdlOptionalValue(WdlString("ciao")))
+      requiredGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlString("hello"): WdlValue),
+      optionalWithDefaultGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlString("hola"): WdlValue),
+      optionalGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlOptionalValue(WdlString("ciao")): WdlValue)
     ).validNel
   }
 }

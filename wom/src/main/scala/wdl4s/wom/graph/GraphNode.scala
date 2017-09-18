@@ -1,11 +1,11 @@
 package wdl4s.wom.graph
 
-import cats.implicits._
 import lenthall.validation.ErrorOr.ErrorOr
-import wdl4s.wom.callable.Callable
-import wdl4s.wom.callable.Callable._
 import wdl4s.wom.graph.GraphNode._
 import wdl4s.wom.graph.GraphNodePort.{ConnectedInputPort, InputPort, OutputPort}
+import cats.implicits._
+import wdl4s.wom.callable.Callable
+import wdl4s.wom.callable.Callable.{OptionalInputDefinition, OptionalInputDefinitionWithDefault, RequiredInputDefinition}
 
 trait GraphNode {
 
@@ -62,9 +62,7 @@ object GraphNode {
     def get: Unit => GraphNode = _ => getGraphNode
   }
 
-  private[graph] case class LinkedInputPort(newInputPort: Option[InputPort],
-                                            outputPort: OutputPort,
-                                            newGraphInput: Option[GraphInputNode])
+  private[graph] case class LinkedInputPort(newInputPort: InputPort, newGraphInput: Option[GraphInputNode])
 
   /**
     * Attempts to create an InputPort from the input definition, linked to one of the inputMapping entries.
@@ -78,29 +76,21 @@ object GraphNode {
     * @param inputDefinition The input to create an input port for.
     * @return The new input port, and a GraphInputNode if we needed to make one. Wrapped in a case class.
     */
-  private[graph] def linkInputPort(inputPrefix: String, inputMapping: Map[String, OutputPort], callNodeRef: Unit => GraphNode)(inputDefinition: Callable.InputDefinition): LinkedInputPort = {
-
-    def withInputPort(outputPort: OutputPort, graphNode: Option[GraphInputNode]) = {
-      val inputPort = ConnectedInputPort(inputDefinition.name, inputDefinition.womType, outputPort, callNodeRef)
-      LinkedInputPort(Option(inputPort), outputPort, graphNode)
-    }
-
-    // Unsatisfied GraphInputDefinitions generate ExternalGraphInputNodes
-    inputDefinition match {
-      case input if inputMapping.contains(input.name) => withInputPort(inputMapping(input.name), None)
+  private[graph] def linkInputPort(inputPrefix: String, inputMapping: Map[String, OutputPort], callNodeRef: Unit => GraphNode)(inputDefinition: Callable.GraphInputDefinition): LinkedInputPort = {
+    val (outputPort, graphNode): (OutputPort, Option[GraphInputNode]) = inputDefinition match {
+      case input if inputMapping.contains(input.name) => (inputMapping(input.name), None)
       case RequiredInputDefinition(n, womType) =>
         val result = RequiredGraphInputNode(s"$inputPrefix$n", womType)
-        withInputPort(result.singleOutputPort, Option(result)) // Read: Some(result)
+        (result.singleOutputPort, Option(result)) // Read: Some(result)
       case OptionalInputDefinition(n, womType) =>
         val result = OptionalGraphInputNode(s"$inputPrefix$n", womType)
-        withInputPort(result.singleOutputPort, Option(result)) // Read: Some(result)
+        (result.singleOutputPort, Option(result)) // Read: Some(result)
       case OptionalInputDefinitionWithDefault(n, womType, default) =>
         val result = OptionalGraphInputNodeWithDefault(s"$inputPrefix$n", womType, default)
-        withInputPort(result.singleOutputPort, Option(result)) // Read: Some(result)
-      case inputDeclaration: DeclaredInputDefinition =>
-        val result = UnInstantiatedExpressionNode(s"$inputPrefix${inputDeclaration.name}", inputDeclaration.expression, inputDeclaration.womType)
-        LinkedInputPort(None, result.singleExpressionOutputPort, None)
+        (result.singleOutputPort, Option(result)) // Read: Some(result)
     }
+
+    LinkedInputPort(ConnectedInputPort(inputDefinition.name, inputDefinition.womType, outputPort, callNodeRef), graphNode)
   }
 
   private[wom] implicit class EnhancedGraphNodeSet(val nodes: Set[GraphNode]) extends AnyVal {

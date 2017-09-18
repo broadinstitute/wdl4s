@@ -8,6 +8,7 @@ import wdl4s.wdl.types.{WdlFileType, WdlStringType}
 import wdl4s.wom.callable.Callable.RequiredInputDefinition
 import wdl4s.wom.callable.{TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.executable.Executable
+import wdl4s.wom.graph.GraphNodePort.OutputPort
 import wdl4s.wom.graph._
 
 class CwlWorkflowWomSpec extends FlatSpec with Matchers {
@@ -138,10 +139,10 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
     
     val cgrepFileInputDef = cgrep.callable.inputs.find(_.name == "file").get
     val psStdoutOutputPort = ps.outputPorts.head
-    cgrep.inputDefinitionMappings(cgrepFileInputDef) shouldBe psStdoutOutputPort
+    cgrep.inputDefinitionMappings(cgrepFileInputDef).select[OutputPort].get eq psStdoutOutputPort shouldBe true
     
     val cgrepPatternInputDef = cgrep.callable.inputs.find(_.name == "pattern").get
-    cgrep.inputDefinitionMappings(cgrepPatternInputDef) shouldBe patternInputNode.singleOutputPort
+    cgrep.inputDefinitionMappings(cgrepPatternInputDef).select[OutputPort].get eq patternInputNode.singleOutputPort shouldBe true
   }
 
 }

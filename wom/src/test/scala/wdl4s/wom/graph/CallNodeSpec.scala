@@ -5,13 +5,13 @@ import wdl4s.wdl.types.{WdlOptionalType, WdlStringType}
 import wdl4s.wom.RuntimeAttributes
 import wdl4s.wom.callable.Callable.{DeclaredInputDefinition, OptionalInputDefinition, OptionalInputDefinitionWithDefault, RequiredInputDefinition}
 import wdl4s.wom.callable.TaskDefinition
-import wdl4s.wom.expression.PlaceholderWomExpression
-import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
+import wdl4s.wom.expression.{PlaceholderWomExpression, WomExpression}
+import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 
 class CallNodeSpec extends FlatSpec with Matchers {
   behavior of "CallNode"
 
-  def ginNotFound(name: String) = fail(s"Can't find an GraphInputNode for $name")
+  def ginNotFound(name: String) = fail(s"Can't find a GraphInputNode for $name")
 
   it should "produce correct task definition mappings" in {
     val requiredSatisfiedByPort = RequiredInputDefinition("required_satisfied_by_port", WdlStringType)
@@ -46,7 +46,7 @@ class CallNodeSpec extends FlatSpec with Matchers {
     )
 
     val requiredPort = GraphNodeOutputPort("required_port", WdlStringType, null)
-    val optionalPort = GraphNodeOutputPort("optiona_port", WdlStringType, null)
+    val optionalPort = GraphNodeOutputPort("optional_port", WdlStringType, null)
     val optionalWithDefaultPort = GraphNodeOutputPort("optional_with_default_port", WdlStringType, null)
     val declarationPort = GraphNodeOutputPort("declaration_port", WdlStringType, null)
 
@@ -92,32 +92,32 @@ class CallNodeSpec extends FlatSpec with Matchers {
 
     /* *** Unsatisfied *** */
     // unsatisfied input defs should map to the above newInput output ports
-    inputDefinitionMappings(requiredUnsatisfied) eq requiredInput.singleOutputPort shouldBe true
-    inputDefinitionMappings(optionalUnsatisfied) eq optionalInput.singleOutputPort shouldBe true
-    inputDefinitionMappings(optionalWithDefaultUnsatisfied) eq optionalInputWithDefault.singleOutputPort shouldBe true
+    inputDefinitionMappings(requiredUnsatisfied).select[OutputPort].get eq requiredInput.singleOutputPort shouldBe true
+    inputDefinitionMappings(optionalUnsatisfied).select[OutputPort].get eq optionalInput.singleOutputPort shouldBe true
+    inputDefinitionMappings(optionalWithDefaultUnsatisfied).select[OutputPort].get eq optionalInputWithDefault.singleOutputPort shouldBe true
     
     // unsatisfied declared input def gets a FloatingExpressionNode
-    inputDefinitionMappings(declarationUnsatisfied).graphNode.asInstanceOf[UnInstantiatedExpressionNode].womExpression shouldBe declarationUnsatisfied.expression
+    inputDefinitionMappings(declarationUnsatisfied).select[WomExpression].get shouldBe declarationUnsatisfied.expression
 
     /* *** Satisfied by port *** */
     // satisfied by port should map to their respective output port from the  
-    inputDefinitionMappings(requiredSatisfiedByPort) shouldBe requiredPort
-    inputDefinitionMappings(optionalSatisfiedByPort) shouldBe optionalPort
-    inputDefinitionMappings(optionalWithDefaultSatisfiedByPort) shouldBe optionalWithDefaultPort
-    inputDefinitionMappings(declarationSatisfiedByPort) shouldBe declarationPort
+    inputDefinitionMappings(requiredSatisfiedByPort).select[OutputPort].get shouldBe requiredPort
+    inputDefinitionMappings(optionalSatisfiedByPort).select[OutputPort].get shouldBe optionalPort
+    inputDefinitionMappings(optionalWithDefaultSatisfiedByPort).select[OutputPort].get shouldBe optionalWithDefaultPort
+    inputDefinitionMappings(declarationSatisfiedByPort).select[OutputPort].get shouldBe declarationPort
 
     /* *** Satisfied by expression *** */
     // satisfied by expression should map to output port attached to ExpressionNodes carrying the corresponding instantiated expression
     inputDefinitionMappings(requiredSatisfiedByExpression)
-      .graphNode.asInstanceOf[InstantiatedExpressionNode].instantiatedExpression.expression shouldBe requiredExpression.expression
+      .select[InstantiatedExpression].get.expression shouldBe requiredExpression.expression
     
     inputDefinitionMappings(optionalSatisfiedByExpression)
-      .graphNode.asInstanceOf[InstantiatedExpressionNode].instantiatedExpression.expression shouldBe optionalExpression.expression
+      .select[InstantiatedExpression].get.expression shouldBe optionalExpression.expression
     
     inputDefinitionMappings(optionalWithDefaultSatisfiedByExpression)
-      .graphNode.asInstanceOf[InstantiatedExpressionNode].instantiatedExpression.expression shouldBe optionalWithDefaultExpression.expression
+      .select[InstantiatedExpression].get.expression shouldBe optionalWithDefaultExpression.expression
     
     inputDefinitionMappings(declarationSatisfiedByExpression)
-      .graphNode.asInstanceOf[InstantiatedExpressionNode].instantiatedExpression.expression shouldBe declarationExpression.expression
+      .select[InstantiatedExpression].get.expression shouldBe declarationExpression.expression
   }
 }

@@ -4,6 +4,7 @@ import cats.data.Validated.{Invalid, Valid}
 import lenthall.collections.EnhancedCollections._
 import org.scalatest.{FlatSpec, Matchers}
 import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow, WdlWomExpression}
+import wdl4s.wom.graph.GraphNodePort.OutputPort
 import wdl4s.wom.graph._
 
 class WdlNamespaceWomSpec extends FlatSpec with Matchers {
@@ -88,14 +89,14 @@ class WdlNamespaceWomSpec extends FlatSpec with Matchers {
 
     val cgrepFileInputDef = cgrep.callable.inputs.find(_.name == "in_file").get
     val inFileMapping = cgrep.inputDefinitionMappings(cgrepFileInputDef)
-    inFileMapping.graphNode.isInstanceOf[InstantiatedExpressionNode] shouldBe true
+    inFileMapping.select[InstantiatedExpression].isDefined shouldBe true
     // This should be less ugly when we can access a string value from a womexpression
-    inFileMapping.graphNode.asInstanceOf[InstantiatedExpressionNode].instantiatedExpression
+    inFileMapping.select[InstantiatedExpression].get
     .expression.asInstanceOf[WdlWomExpression]
     .wdlExpression.valueString shouldBe "ps.procs"  
     
     val cgrepPatternInputDef = cgrep.callable.inputs.find(_.name == "pattern").get
-    cgrep.inputDefinitionMappings(cgrepPatternInputDef) shouldBe patternInputNode.singleOutputPort
+    cgrep.inputDefinitionMappings(cgrepPatternInputDef).select[OutputPort].get eq patternInputNode.singleOutputPort shouldBe true
   }
 
 }

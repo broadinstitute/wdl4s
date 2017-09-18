@@ -8,6 +8,7 @@ import cats.syntax.validated._
 import lenthall.collections.EnhancedCollections._
 import lenthall.validation.ErrorOr.{ErrorOr, _}
 import lenthall.validation.Validation._
+import shapeless.{:+:, CNil, Coproduct}
 import wdl4s.wdl.WorkflowRawInputs
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.expression.WomExpression
@@ -38,13 +39,13 @@ final case class Graph private(nodes: Set[GraphNode]) {
     }
     
     def fromInputMapping(gin: ExternalGraphInputNode): Option[ErrorOr[ResolvedWorkflowInput]] = {
-      inputsMapping.get(s"$prefix${gin.name}").map(coerceRawValue(_, gin).map(Left.apply))
+      inputsMapping.get(s"$prefix${gin.name}").map(coerceRawValue(_, gin).map(Coproduct[ResolvedWorkflowInput](_)))
     }
 
     def fallBack(gin: ExternalGraphInputNode): ErrorOr[ResolvedWorkflowInput] = gin match {
       case required: RequiredGraphInputNode => s"Cannot find an input value for ${required.name}".invalidNel
-      case optionalWithDefault: OptionalGraphInputNodeWithDefault => Right(optionalWithDefault.default).validNel
-      case optional: OptionalGraphInputNode => Left(optional.womType.none).validNel
+      case optionalWithDefault: OptionalGraphInputNodeWithDefault => Coproduct[ResolvedWorkflowInput](optionalWithDefault.default).validNel
+      case optional: OptionalGraphInputNode => Coproduct[ResolvedWorkflowInput](optional.womType.none: WdlValue).validNel
     }
 
     nodes.collect({
@@ -57,7 +58,7 @@ final case class Graph private(nodes: Set[GraphNode]) {
 
 object Graph {
 
-  type ResolvedWorkflowInput = Either[WdlValue, WomExpression]
+  type ResolvedWorkflowInput = WdlValue :+: WomExpression :+: CNil
 
   /**
     * Checks that every input port for every node in the graph references an upstream node that is also in the graph.
