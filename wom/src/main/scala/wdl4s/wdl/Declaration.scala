@@ -100,7 +100,6 @@ object Declaration {
   final case class IntermediateValueDeclarationNode(expressionNode: ExpressionNode) extends DeclarationNode
   final case class GraphOutputDeclarationNode(graphOutputNode: GraphOutputNode) extends DeclarationNode
 
-
   def apply(ast: Ast, wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter, parent: Option[Scope]): Declaration = {
     Declaration(
       ast.getAttribute("type").wdlType(wdlSyntaxErrorFormatter),
@@ -122,7 +121,7 @@ object Declaration {
       val womExpression = WdlWomExpression(wdlExpression, None)
       for {
         uninstantiatedExpression <- WdlWomExpression.findInputsforExpression(inputName, womExpression, localLookup, outerLookup)
-        expressionNode <- InstantiatedExpressionNode.linkWithInputs(inputName, womExpression, uninstantiatedExpression.inputMapping)
+        expressionNode <- ExpressionNode.linkWithInputs(inputName, womExpression, uninstantiatedExpression.inputMapping)
       } yield IntermediateValueDeclarationNode(expressionNode)
     }
 

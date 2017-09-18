@@ -5,7 +5,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import wdl4s.wdl.types.WdlIntegerType
 import wdl4s.wom.expression._
 
-class InstantiatedExpressionNodeSpec extends FlatSpec with Matchers {
+class ExpressionNodeSpec extends FlatSpec with Matchers {
 
   behavior of "ExpressionBasedGraphOutputNode"
 
@@ -34,7 +34,7 @@ class InstantiatedExpressionNodeSpec extends FlatSpec with Matchers {
     // Declare the expression node using both i and j:
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
     val graph = for {
-      xDeclarationNode <- InstantiatedExpressionNode.linkWithInputs("x", ijExpression, Map("i" -> iInputNode.singleOutputPort, "j" -> jInputNode.singleOutputPort))
+      xDeclarationNode <- ExpressionNode.linkWithInputs("x", ijExpression, Map("i" -> iInputNode.singleOutputPort, "j" -> jInputNode.singleOutputPort))
       xOutputNode = PortBasedGraphOutputNode("x_out", WdlIntegerType, xDeclarationNode.singleExpressionOutputPort)
       g <- Graph.validateAndConstruct(Set(iInputNode, jInputNode, xDeclarationNode, xOutputNode))
     } yield g
@@ -51,7 +51,7 @@ class InstantiatedExpressionNodeSpec extends FlatSpec with Matchers {
       }.getOrElse(fail("No 'x_out' GraphOutputNode in the graph"))
 
       x_outGraphOutputNode.upstream.size should be(1)
-      val xExpressionNode = x_outGraphOutputNode.upstream.head.asInstanceOf[InstantiatedExpressionNode]
+      val xExpressionNode = x_outGraphOutputNode.upstream.head.asInstanceOf[ExpressionNode]
       xExpressionNode.name should be("x")
       xExpressionNode.womType should be(WdlIntegerType)
 
