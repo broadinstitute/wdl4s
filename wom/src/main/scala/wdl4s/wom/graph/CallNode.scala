@@ -9,7 +9,7 @@ import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.expression.WomExpression
 import wdl4s.wom.graph.CallNode.InputDefinitionMappings
 import wdl4s.wom.graph.GraphNode.{GeneratedNodeAndNewInputs, LinkedInputPort}
-import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
+import wdl4s.wom.graph.GraphNodePort.{ConnectedInputPort, GraphNodeOutputPort, OutputPort}
 
 sealed abstract class CallNode extends GraphNode {
   def callable: Callable
@@ -85,8 +85,8 @@ object CallNode {
     *
     * If an input is supplied as a port from another Node, it gets wired in directly.
     * If an input is supplied as an expression, we try to create an InstantiatedExpression and include that in the call.
-    * If an input is not supplied, it gets created as a GraphInputNode.
-    *
+    * If an input is not supplied, it gets created as a GraphInputNode if the input is allowed to be overridden by graph inputs,
+    * otherwise the declared value is used.
     */
   def callWithInputs(name: String,
                      callable: Callable,
@@ -101,21 +101,73 @@ object CallNode {
     instantiatedExpressionInputsAttempt map { instantiatedExpressionInputs =>
       val inputPortLinker = GraphNode.linkInputPort(name + prefixSeparator, portInputs, graphNodeSetter.get) _
 
-      // We didn't find an instantiated expression but there still might be a non external output port (remember we don't
-      // want to to override DeclaredInputDefinition with external inputs). Otherwise use the wom expression.
+      /*
+        * This method is used when we didn't find an instantiated expression for a DeclaredInputDefinition,
+        * but there still might be a non external output port that matches 
+        * (remember we don't want to to override DeclaredInputDefinition with external inputs).
+        * In that case, create a linked input port for it so it can be exposed at the call level (the same way the inputPortLinker would),
+        * and return this output port as the mapping for the input definition.
+        * Otherwise simply use the wom expression.
+       */
       def forDeclaredInput(declared: DeclaredInputDefinition) = {
         portInputs.collectFirst({
           case (portName, outputPort) if
           portName == declared.name && !outputPort.graphNode.isInstanceOf[ExternalGraphInputNode] =>
-            Coproduct[InputDefinitionPointer](outputPort)
-        }) getOrElse Coproduct[InputDefinitionPointer](declared.expression)
+            val linkedInputPort = LinkedInputPort(ConnectedInputPort(declared.name, declared.womType, outputPort, graphNodeSetter.get), None)
+            (Option(linkedInputPort), Coproduct[InputDefinitionPointer](outputPort))
+        }) getOrElse {
+          (None, Coproduct[InputDefinitionPointer](declared.expression))
+        }
       }
 
       /*
-        * This is a bit misleading as it makes it seem like expressions have precedence over output ports. They don't.
-        * What matters is that we look for an expression OR a pre-existing output port before we generate a 
-        * new input node. The inputPortLinker is the one that checks for an existing outputPort before creating the 
-        * input node if necessary.
+        * This method is used to fold over input definitions and
+        * 1) Find a mapping for each input definition of the callable
+        * 2) Collect all LinkedInputPorts that get created in the process
+        * 
+        * An input definition can be mapped to (exclusively)
+        * 1) An instantiated expression (from expressionInputs)
+        * 2) An output port (from portInputs or from a newly created LinkedInputPort)
+        * 3) A wom expression
+        * 
+        * The DeclaredInputDefinition diverts from the other InputDefinitions in terms of precedence rules, so we'll lay out
+        * the rules in 2 parts.
+        * 
+        * @ DeclaredInputDefinition:
+        * The specificity of DeclaredInputDefinition lies in the fact that it cannot be overridden by external graph inputs
+        * (inputs coming from outside the final graph, which at this point can only be workflow inputs).
+        * 
+        * Therefore, here are the rules used to find the mapping for a DeclaredInputDefinition, applied in order:
+        *   A) 
+        *     a) There is a matching instantiated expression
+        *       OR
+        *     b) There is a matching output port (in portInputs) attached to a graph node that is NOT an ExternalGraphInputNode
+        *   Use whichever mapping satisfies a) or b), if any. It is not expected that a) and b) match at the same time for the same input definition.
+        *   In practice a) is checked before b) but this does not hold any meaning in terms of precedence and should not be relied upon. 
+        *   
+        *   B) Use the wom expression declared in the DeclaredInputDefinition
+        * 
+        * @ GraphInputDefinition (input definitions that can be overridden by graph inputs, namely
+        * RequiredInputDefinition, OptionalInputDefinition, OptionalInputDefinitionWithDefault):
+        * 
+        *   C) 
+        *     a) There is a matching instantiated expression
+        *       OR
+        *     b) There is a matching output port (in portInputs)
+        *   Use whichever mapping satisfies a) or b), if any. It is not expected that a) and b) match at the same time for the same input definition.
+        *   In practice a) is checked before b) but this does not hold any meaning in terms of precedence and should not be relied upon. 
+        *
+        *   D) Create a new graph input node (corresponding to the type of GraphInputDefinition: required, optional
+        *   or optionalWithDefault. The output port from this newly created graph input node is used as a mapping for the input definition.
+        * 
+        * 
+        * In A.b, C.b and D, a LinkedInputPort is created. This is because we've determined that the mapping to the input definition is an
+        * output port, for which we need a corresponding input port that will become an input port of the call node. Indeed, the
+        * call now needs on those input ports to be satisfied before it can be run. The input ports from the instantiated expressions
+        * will also contribute to the set of input ports for the call.
+        * 
+        * Additionally, if rule D) is applied, ExternalGraphInputNode have also be created because we were unable
+        * to satisfy a GraphInputDefinition. Those nodes are the "inputs" returned by callWithInputs.
        */
       def foldFunction(fold: InputDefinitionFold, inputDefinition: InputDefinition): InputDefinitionFold = {
         instantiatedExpressionInputs.get(inputDefinition.name) match {
@@ -123,7 +175,11 @@ object CallNode {
             fold.copy(mappings = fold.mappings + (inputDefinition -> Coproduct[InputDefinitionPointer](expression)))
           case None => inputDefinition match {
             case declared: DeclaredInputDefinition =>
-              fold.copy(mappings = fold.mappings + (inputDefinition -> forDeclaredInput(declared)))
+              val (newLinkedInputPort, mapping) = forDeclaredInput(declared)
+              fold.copy(
+                mappings = fold.mappings + (inputDefinition -> mapping),
+                linkedInputPorts = fold.linkedInputPorts ++ newLinkedInputPort
+              )
             case gid: GraphInputDefinition =>
               val linked = inputPortLinker(gid)
               fold.copy(
