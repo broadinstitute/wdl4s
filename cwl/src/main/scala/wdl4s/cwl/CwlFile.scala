@@ -1,7 +1,5 @@
 package wdl4s.cwl
 
-import cats.data.Validated._
-import lenthall.validation.ErrorOr._
 import shapeless.syntax.singleton._
 import shapeless.{:+:, CNil, Poly1, Witness, _}
 import wdl4s.cwl.CommandLineTool.{BaseCommand, StringOrExpression}
@@ -56,8 +54,8 @@ case class CommandLineTool private(
                                    temporaryFailCodes: Option[Array[Int]],
                                    permanentFailCodes: Option[Array[Int]]) {
 
-  def womExecutable: ErrorOr[Executable] =
-    Valid(Executable(taskDefinition))
+  def womExecutable: Checked[Executable] =
+    Right(Executable(taskDefinition))
 
 
   object BaseCommandToString extends Poly1 {

@@ -1,9 +1,9 @@
 package wdl4s
 
+import cats.data.NonEmptyList
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string._
 import eu.timepit.refined._
-import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.CwlType._
 import wdl4s.wdl.types._
@@ -12,25 +12,6 @@ import wdl4s.wom.executable.Executable
 
 /**
  * This package is intended to parse all CWL files.
- *
- * =Usage=
- * {{{
- * import wdl4s.cwl._
- *
- * val firstTool = """
- * cwlVersion: v1.0
- * class: CommandLineTool
- * baseCommand: echo
- * inputs:
- *   message:
- *     type: string
- *     inputBinding:
- *       position: 1
- * outputs: []
- * """
- * decodeCwl(firstTool) //returns Either[Error, Cwl]
- * }}}
- *
  *
  * It makes heavy use of Circe YAML/Json auto derivation feature and
  * Circe modules that support the Scala libraries shapeless and Refined.
@@ -52,6 +33,8 @@ package object cwl extends TypeAliases {
 
   type Cwl = Workflow :+: CommandLineTool :+: CNil
 
+  type Checked[A] = Either[NonEmptyList[String], A]
+
   def cwlTypeToWdlType : CwlType => WdlType = {
     case Null => WdlNothingType
     case Boolean => WdlBooleanType
@@ -63,7 +46,6 @@ package object cwl extends TypeAliases {
     case CwlType.File => WdlFileType
     case CwlType.Directory => ???
   }
-
 
   /**
     *
@@ -80,6 +62,6 @@ package object cwl extends TypeAliases {
   }
 
   implicit class CwlHelper(val cwl: Cwl) extends AnyVal {
-    def womExecutable: ErrorOr[Executable] = cwl.fold(CwlToWomExecutable)
+    def womExecutable: Checked[Executable] = cwl.fold(CwlToWomExecutable)
   }
 }
