@@ -1,7 +1,6 @@
 package wdl4s.wdl
 
 import cats.data.Validated.Valid
-import com.sun.org.apache.xpath.internal.ExpressionNode
 import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
 import wdl4s.parser.WdlParser.{Ast, AstNode}
 import wdl4s.wdl.AstTools.EnhancedAstNode
