@@ -7,7 +7,8 @@ import shapeless.Coproduct
 import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand, StringOrExpression}
 import wdl4s.cwl.CwlCmdTokenGrouper.Group
 import wdl4s.cwl.ParametrizedBashParser.Token
-import wdl4s.wdl.command.{CommandPart, ParameterCommandPart, StringCommandPart}
+import wdl4s.wdl.command.{ParameterCommandPart, StringCommandPart}
+import wdl4s.wom.CommandPart
 import wdl4s.wom.callable.TaskDefinition
 
 object WomToCwl {
