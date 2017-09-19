@@ -48,7 +48,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
               map(_.select[CommandLineTool].get).
               value.
               unsafeRunSync
-      wom <-  clt.womExecutable
+      wom <- clt.womExecutable
     } yield validateWom(wom)).leftMap(e => throw new RuntimeException(s"error! $e"))
   }
 
@@ -103,7 +103,8 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
 
     val wfd = wf.womExecutable match {
       case Right(Executable(wf: WorkflowDefinition)) => wf
-      case o => fail(s"invalid executable $o")
+      case Left(o) => fail(s"Workflow definition was not produced correctly: ${o.toList.mkString(", ")}")
+      case Right(Executable(callable)) => fail(s"produced $callable when a Workflow Definition was expected!")
     }
 
     val nodes = wfd.innerGraph.nodes
