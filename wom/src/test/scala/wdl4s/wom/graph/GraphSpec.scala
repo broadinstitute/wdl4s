@@ -1,12 +1,17 @@
 package wdl4s.wom.graph
 
 import cats.data.Validated.{Invalid, Valid}
+import cats.syntax.validated._
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.wdl.types.{WdlFileType, WdlIntegerType, WdlStringType}
+import shapeless.Coproduct
+import wdl4s.wdl.types.{WdlFileType, WdlIntegerType, WdlOptionalType, WdlStringType}
+import wdl4s.wdl.values.{WdlOptionalValue, WdlString, WdlValue}
 import wdl4s.wom.RuntimeAttributes
 import wdl4s.wom.callable.Callable.{OutputDefinition, RequiredInputDefinition}
 import wdl4s.wom.callable.{TaskDefinition, WorkflowDefinition}
+import wdl4s.wom.expression.{PlaceholderWomExpression, WomExpression}
 import wdl4s.wom.graph.CallNode.CallNodeAndNewInputs
+import wdl4s.wom.graph.Graph.ResolvedWorkflowInput
 
 class GraphSpec extends FlatSpec with Matchers {
   behavior of "Graph"
@@ -18,7 +23,7 @@ class GraphSpec extends FlatSpec with Matchers {
       runtimeAttributes = RuntimeAttributes(attributes = Map.empty),
       meta = Map.empty,
       parameterMeta = Map.empty,
-      outputs = Set(OutputDefinition("procs", WdlFileType, null)),
+      outputs = List(OutputDefinition("procs", WdlFileType, null)),
       inputs = List.empty
     )
 
@@ -28,7 +33,7 @@ class GraphSpec extends FlatSpec with Matchers {
       runtimeAttributes = RuntimeAttributes(attributes = Map.empty),
       meta = Map.empty,
       parameterMeta = Map.empty,
-      outputs = Set(OutputDefinition("count", WdlIntegerType, null)),
+      outputs = List(OutputDefinition("count", WdlIntegerType, null)),
       inputs = List(RequiredInputDefinition("pattern", WdlStringType), RequiredInputDefinition("in_file", WdlFileType))
     )
 
@@ -38,7 +43,7 @@ class GraphSpec extends FlatSpec with Matchers {
       runtimeAttributes = RuntimeAttributes(attributes = Map.empty),
       meta = Map.empty,
       parameterMeta = Map.empty,
-      outputs = Set(OutputDefinition("count", WdlIntegerType, null)),
+      outputs = List(OutputDefinition("count", WdlIntegerType, null)),
       inputs = List(RequiredInputDefinition("in_file", WdlFileType))
     )
 
@@ -90,5 +95,42 @@ class GraphSpec extends FlatSpec with Matchers {
     workflowGraph.nodes collect { case gin: GraphInputNode => gin.name } should be(Set("three_step.cgrep.pattern"))
     workflowGraph.nodes collect { case gon: GraphOutputNode => gon.name } should be(Set("three_step.wc.count", "three_step.cgrep.count", "three_step.ps.procs"))
     workflowGraph.nodes collect { case cn: CallNode => cn.name } should be(Set("three_step"))
+  }
+
+  it should "validate workflow inputs and produce correct mapping" in {
+    val requiredGin = RequiredGraphInputNode("required", WdlStringType)
+    val defaultExpression = PlaceholderWomExpression(Set.empty, WdlStringType)
+    val optionalWithDefaultGin = OptionalGraphInputNodeWithDefault("optional_with_default", WdlStringType, defaultExpression)
+    val optionalGin = OptionalGraphInputNode("optional", WdlOptionalType(WdlStringType))
+    val gins: Set[GraphNode] = Set(requiredGin, optionalWithDefaultGin, optionalGin)
+
+    val graph = Graph.validateAndConstruct(gins).getOrElse(fail("Failed to validate graph"))
+
+    // Missing required input
+    val missingRequiredInput = graph.validateWorkflowInputs(Map.empty)
+    missingRequiredInput shouldBe "Cannot find an input value for required".invalidNel
+
+    // With only required input
+    val withOnlyRequiredValue = graph.validateWorkflowInputs(Map(
+      "required" -> WdlString("hello")
+    ))
+    withOnlyRequiredValue shouldBe Map(
+      requiredGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlString("hello"): WdlValue),
+      optionalWithDefaultGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](defaultExpression: WomExpression),
+      optionalGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlOptionalValue.none(WdlStringType): WdlValue)
+    ).validNel
+
+    // With required input and optionalWithDefault input
+    val withRequiredAndOptional = graph.validateWorkflowInputs(Map(
+      "required" -> WdlString("hello"),
+      "optional_with_default" -> WdlString("hola"),
+      "optional" -> WdlString("ciao")
+    ))
+
+    withRequiredAndOptional shouldBe Map(
+      requiredGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlString("hello"): WdlValue),
+      optionalWithDefaultGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlString("hola"): WdlValue),
+      optionalGin.singleOutputPort -> Coproduct[ResolvedWorkflowInput](WdlOptionalValue(WdlString("ciao")): WdlValue)
+    ).validNel
   }
 }

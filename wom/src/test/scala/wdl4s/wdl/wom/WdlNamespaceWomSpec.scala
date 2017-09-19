@@ -1,10 +1,11 @@
 package wdl4s.wdl.wom
 
-import lenthall.collections.EnhancedCollections._
 import cats.data.Validated.{Invalid, Valid}
+import lenthall.collections.EnhancedCollections._
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
-import wdl4s.wom.graph.{CallNode, GraphInputNode, PortBasedGraphOutputNode, TaskCallNode}
+import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow, WdlWomExpression}
+import wdl4s.wom.graph.GraphNodePort.OutputPort
+import wdl4s.wom.graph._
 
 class WdlNamespaceWomSpec extends FlatSpec with Matchers {
   
@@ -61,8 +62,12 @@ class WdlNamespaceWomSpec extends FlatSpec with Matchers {
       case Valid(g) => g
       case Invalid(errors) => fail(s"Unable to build wom version of 3step from WDL: ${errors.toList.mkString("\n", "\n", "\n")}")
     }
-    
-    workflowGraph.nodes collect { case gin: GraphInputNode => gin.name } should be(Set("cgrep.pattern"))
+
+    val graphInputNodes = workflowGraph.nodes collect { case gin: GraphInputNode => gin }
+    graphInputNodes should have size 1
+    val patternInputNode = graphInputNodes.head
+    patternInputNode.name should be("cgrep.pattern")
+
     workflowGraph.nodes collect { case gon: PortBasedGraphOutputNode => gon.name } should be(Set("wc.count", "cgrep.count", "ps.procs"))
     
     val ps: TaskCallNode = workflowGraph.nodes.collectFirst({ case ps: TaskCallNode if ps.name == "ps" => ps }).get
@@ -78,6 +83,20 @@ class WdlNamespaceWomSpec extends FlatSpec with Matchers {
     ps.upstream shouldBe empty
     cgrep.upstream shouldBe Set(ps, cgrepPatternInput)
     wc.upstream shouldBe Set(ps)
+
+    ps.inputDefinitionMappings shouldBe empty
+    cgrep.inputDefinitionMappings should have size 2
+
+    val cgrepFileInputDef = cgrep.callable.inputs.find(_.name == "in_file").get
+    val inFileMapping = cgrep.inputDefinitionMappings(cgrepFileInputDef)
+    inFileMapping.select[InstantiatedExpression].isDefined shouldBe true
+    // This should be less ugly when we can access a string value from a womexpression
+    inFileMapping.select[InstantiatedExpression].get
+    .expression.asInstanceOf[WdlWomExpression]
+    .wdlExpression.valueString shouldBe "ps.procs"  
+    
+    val cgrepPatternInputDef = cgrep.callable.inputs.find(_.name == "pattern").get
+    cgrep.inputDefinitionMappings(cgrepPatternInputDef).select[OutputPort].get eq patternInputNode.singleOutputPort shouldBe true
   }
 
 }

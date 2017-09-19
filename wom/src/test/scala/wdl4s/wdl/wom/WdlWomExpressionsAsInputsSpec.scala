@@ -4,7 +4,7 @@ import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{FlatSpec, Matchers}
 import wdl4s.wdl.wom.WdlWomExpressionsAsInputsSpec.Wdl
 import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
-import wdl4s.wom.graph.TaskCallNode
+import wdl4s.wom.graph.{InstantiatedExpression, TaskCallNode}
 
 import scala.language.postfixOps
 
@@ -62,9 +62,13 @@ class WdlWomExpressionsAsInputsSpec extends FlatSpec with Matchers {
 
     val callNodes = workflowGraph.nodes.toList collect { case callNode: TaskCallNode => callNode.name -> callNode } toMap
 
+    val a = callNodes("a")
+    val b = callNodes("b")
     val c = callNodes("c")
-    c.expressionBasedInputs should have size 1
-    val inputExpression = c.expressionBasedInputs.values.head
+    c.inputPorts should have size 2
+    c.inputPorts.map(_.upstream) shouldBe a.outputPorts ++ b.outputPorts
+
+    val inputExpression = c.inputDefinitionMappings.head._2.select[InstantiatedExpression].get
 
     List("a", "b") foreach { x =>
       val connectedInputPort = inputExpression.inputMapping(s"$x.int_out")

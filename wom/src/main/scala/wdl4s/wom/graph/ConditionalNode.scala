@@ -1,13 +1,13 @@
 package wdl4s.wom.graph
 
 import cats.data.Validated.Valid
-import cats.syntax.validated._
 import cats.syntax.apply._
-import lenthall.validation.ErrorOr.ErrorOr
-import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
-import wdl4s.wom.graph.GraphNodePort.{ConditionalOutputPort, InputPort, OutputPort}
+import cats.syntax.validated._
+import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
 import wdl4s.wdl.types.{WdlBooleanType, WdlOptionalType}
+import wdl4s.wom.callable.Callable.GraphInputDefinition
 import wdl4s.wom.graph.GraphNode.{GeneratedNodeAndNewInputs, LinkedInputPort}
+import wdl4s.wom.graph.GraphNodePort.{ConditionalOutputPort, InputPort, OutputPort}
 
 /**
   * Currently only WDL has the concept of conditional executions:
@@ -46,7 +46,9 @@ object ConditionalNode  {
 
     // Create an input port for every input going into the ConditionalNode. If that meant creating a new GraphInputNode, that's
     // part of the LinkedInputPort case class.
-    val linkedInputPortsAndGraphInputNodes: Set[LinkedInputPort] = innerGraph.nodes.inputDefinitions.map(inputPortLinker)
+    val linkedInputPortsAndGraphInputNodes: Set[LinkedInputPort] = innerGraph.nodes.inputDefinitions.collect({
+      case gid: GraphInputDefinition => inputPortLinker(gid)
+    })
     // The next two lines split the LinkedInputPort case classes into the sets of InputPorts and GraphInputNodes
     val linkedInputPorts: Set[InputPort] = linkedInputPortsAndGraphInputNodes.map(_.newInputPort)
     val graphInputNodes: Set[GraphInputNode] = linkedInputPortsAndGraphInputNodes collect { case LinkedInputPort(_, Some(gin)) => gin }

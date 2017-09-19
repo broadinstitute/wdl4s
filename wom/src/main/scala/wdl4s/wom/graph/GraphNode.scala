@@ -76,7 +76,7 @@ object GraphNode {
     * @param inputDefinition The input to create an input port for.
     * @return The new input port, and a GraphInputNode if we needed to make one. Wrapped in a case class.
     */
-  private[graph] def linkInputPort(inputPrefix: String, inputMapping: Map[String, OutputPort], callNodeRef: Unit => GraphNode)(inputDefinition: Callable.InputDefinition): LinkedInputPort = {
+  private[graph] def linkInputPort(inputPrefix: String, inputMapping: Map[String, OutputPort], callNodeRef: Unit => GraphNode)(inputDefinition: Callable.GraphInputDefinition): LinkedInputPort = {
     val (outputPort, graphNode): (OutputPort, Option[GraphInputNode]) = inputDefinition match {
       case input if inputMapping.contains(input.name) => (inputMapping(input.name), None)
       case RequiredInputDefinition(n, womType) =>

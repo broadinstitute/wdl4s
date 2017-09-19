@@ -1,14 +1,14 @@
 package wdl4s.wom.graph
 
 import cats.data.Validated.Valid
-import cats.syntax.validated._
 import cats.syntax.apply._
-import lenthall.validation.ErrorOr.ErrorOr
-import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
+import cats.syntax.validated._
+import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
+import wdl4s.wdl.types.{WdlArrayType, WdlMapType}
+import wdl4s.wom.callable.Callable.GraphInputDefinition
+import wdl4s.wom.graph.GraphNode.{GeneratedNodeAndNewInputs, LinkedInputPort}
 import wdl4s.wom.graph.GraphNodePort.{InputPort, OutputPort, ScatterGathererPort}
 import wdl4s.wom.graph.ScatterNode.ScatterVariableMapping
-import wdl4s.wdl.types.{WdlArrayType, WdlMapType}
-import wdl4s.wom.graph.GraphNode.{GeneratedNodeAndNewInputs, LinkedInputPort}
 
 /**
   *
@@ -68,7 +68,9 @@ object ScatterNode {
     val scatterVariableMappingValidation: ErrorOr[ScatterVariableMapping] = scatterVariableSource.instantiateExpression(graphNodeSetter) map { ScatterVariableMapping(_, scatterVariableInput) }
 
     // Filter because we don't want to re-link the scatter variable...
-    val linkedInputPortsAndGraphInputNodes: Set[LinkedInputPort] = (innerGraph.nodes - scatterVariableInput).inputDefinitions.map(inputPortLinker)
+    val linkedInputPortsAndGraphInputNodes: Set[LinkedInputPort] = (innerGraph.nodes - scatterVariableInput).inputDefinitions.collect({
+      case gid: GraphInputDefinition => inputPortLinker(gid)
+    })
     val linkedInputPorts = linkedInputPortsAndGraphInputNodes.map(_.newInputPort)
     val graphInputNodes = linkedInputPortsAndGraphInputNodes collect { case LinkedInputPort(_, Some(gin)) => gin }
 
