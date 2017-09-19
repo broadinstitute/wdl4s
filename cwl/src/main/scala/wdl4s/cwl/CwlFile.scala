@@ -10,6 +10,7 @@ import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.executable.Executable
 import wdl4s.wom.expression.WomExpression
 import wdl4s.wom.{CommandPart, RuntimeAttributes}
+import lenthall.Checked
 
 /**
   *
@@ -104,7 +105,7 @@ case class CommandLineTool private(
     //TODO: This output does _not_ capture expressions from the output.outputBinding
     //The implementation must include the expression evaluation pieces as detailed in:
     //http://www.commonwl.org/v1.0/CommandLineTool.html#CommandOutputBinding
-    
+
     // For inputs and outputs, we only keep the variable name in the definition
     val outputs: Set[Callable.OutputDefinition] = this.outputs.map {
       output =>

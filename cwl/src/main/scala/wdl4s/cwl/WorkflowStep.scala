@@ -7,6 +7,7 @@ import wdl4s.cwl.ScatterMethod._
 import wdl4s.cwl.WorkflowStep.{Outputs, Run}
 import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 import wdl4s.wom.graph.{CallNode, GraphNode, TaskCallNode}
+import lenthall.Checked
 
 import scala.language.postfixOps
 import scala.util.Try

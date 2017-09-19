@@ -9,6 +9,7 @@ import shapeless.syntax.singleton._
 import CwlVersion._
 import cats.data.NonEmptyList
 import lenthall.validation.ErrorOr._
+import lenthall.Checked
 import shapeless._
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.CwlVersion._
