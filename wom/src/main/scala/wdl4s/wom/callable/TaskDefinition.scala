@@ -4,10 +4,12 @@ import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.wdl._
 import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.util.StringUtil
-import wdl4s.wdl.values.WdlValue
+import wdl4s.wdl.values.{WdlGlobFile, WdlValue}
 import wdl4s.wom.expression.IoFunctionSet
-import wdl4s.wom.graph.{Graph, TaskCall}
-import wdl4s.wom.{CommandPart, WomEvaluatedCallInputs, RuntimeAttributes}
+import wdl4s.wom.graph.CallNode.CallNodeAndNewInputs
+import wdl4s.wom.graph.GraphNodePort.OutputPort
+import wdl4s.wom.graph.{CallNode, Graph, GraphNodeInputExpression, TaskCall}
+import wdl4s.wom.{CommandPart, RuntimeAttributes, WomEvaluatedCallInputs}
 
 import scala.util.Try
 
@@ -19,7 +21,9 @@ case class TaskDefinition(name: String,
                           outputs: Set[Callable.OutputDefinition],
                           inputs: List[_ <: Callable.InputDefinition],
                           prefixSeparator: String = ".",
-                          commandPartSeparator: String = "") extends Callable {
+                          commandPartSeparator: String = "",
+                          globFiles: Map[String, WdlValue] => Set[WdlGlobFile]
+                         ) extends Callable {
 
   val unqualifiedName: LocallyQualifiedName = name
 
@@ -44,6 +48,12 @@ case class TaskDefinition(name: String,
 
   override def toString: String = s"[Task name=$name commandTemplate=$commandTemplate}]"
 
+  def callWithInputs(name: String,
+                     portInputs: Map[String, OutputPort],
+                     expressionInputs: Set[GraphNodeInputExpression],
+                     prefixSeparator: String = "."): ErrorOr[CallNodeAndNewInputs] = {
+    CallNode.callWithInputs(name, this, Some(globFiles), portInputs, expressionInputs, prefixSeparator)
+  }
 
   // TODO: fixup? The general version in Callable might not be good enough for Task:
 //  def evaluateOutputs(inputs: EvaluatedTaskInputs,

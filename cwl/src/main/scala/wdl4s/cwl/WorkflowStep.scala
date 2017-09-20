@@ -169,7 +169,7 @@ case class WorkflowStep(
       for {
         mapsAndNodes <- workflowOutputsMap
         (map, nodes) = mapsAndNodes
-        call <-  CallNode.callWithInputs(unqualifiedStepId, taskDefinition, workflowInputs ++ map, Set.empty, prefixSeparator = "#").toEither
+        call <- taskDefinition.callWithInputs(unqualifiedStepId, workflowInputs ++ map, Set.empty, prefixSeparator = "#").toEither
       } yield  call.nodes ++ nodes
     }
   }

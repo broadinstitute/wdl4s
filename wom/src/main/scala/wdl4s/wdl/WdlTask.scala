@@ -6,11 +6,11 @@ import cats.data.Validated.Valid
 import lenthall.util.TryUtil
 import wdl4s.parser.WdlParser._
 import wdl4s.wdl.AstTools._
-import wdl4s.wdl.command.{WdlCommandPart, ParameterCommandPart, StringCommandPart}
-import wdl4s.wdl.expression.{WdlFunctions, WdlStandardLibraryFunctions}
+import wdl4s.wdl.command.{ParameterCommandPart, StringCommandPart, WdlCommandPart}
+import wdl4s.wdl.expression.{NoFunctions, WdlFunctions, WdlStandardLibraryFunctions}
 import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.util.StringUtil
-import wdl4s.wdl.values.{WdlFile, WdlValue}
+import wdl4s.wdl.values.{WdlFile, WdlGlobFile, WdlValue}
 import wdl4s.wom.callable.Callable.{OptionalInputDefinition, OptionalInputDefinitionWithDefault, RequiredInputDefinition}
 import wdl4s.wom.callable.{Callable, TaskDefinition}
 
@@ -175,6 +175,13 @@ case class WdlTask(name: String,
     outputFiles.distinct
   }
 
+  def globFiles: Map[String, WdlValue] => Set[WdlGlobFile] = {
+    inputs =>
+      findOutputFiles(inputs, NoFunctions).collect {
+        case wdlGlobFile: WdlGlobFile => wdlGlobFile
+      }.toSet
+  }
+
   def evaluateOutputs(inputs: EvaluatedTaskInputs,
                       wdlFunctions: WdlStandardLibraryFunctions,
                       postMapper: WdlValue => Try[WdlValue] = v => Success(v)): Try[Map[TaskOutput, WdlValue]] = {
@@ -218,7 +225,8 @@ case class WdlTask(name: String,
     meta,
     parameterMeta,
     outputs.map(_.womOutputDefinition).toSet,
-    buildWomInputs
+    buildWomInputs,
+    globFiles = globFiles
   )
 
   private def buildWomInputs: List[Callable.InputDefinition] = declarations collect {

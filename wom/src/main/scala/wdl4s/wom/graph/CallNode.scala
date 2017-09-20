@@ -3,6 +3,7 @@ package wdl4s.wom.graph
 import cats.syntax.traverse._
 import cats.instances.list._
 import lenthall.validation.ErrorOr.ErrorOr
+import wdl4s.wdl.values.{WdlGlobFile, WdlValue}
 import wdl4s.wom.callable.Callable.OutputDefinition
 import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.graph.GraphNode.{GeneratedNodeAndNewInputs, LinkedInputPort}
@@ -18,7 +19,12 @@ sealed abstract class CallNode extends GraphNode {
   override final val inputPorts = portBasedInputs ++ expressionBasedInputs.values.flatMap(_.inputPorts)
 }
 
-final case class TaskCallNode private(override val name: String, callable: TaskDefinition, portBasedInputs: Set[GraphNodePort.InputPort], expressionBasedInputs: Map[String, InstantiatedExpression]) extends CallNode {
+final case class TaskCallNode private(override val name: String,
+                                      callable: TaskDefinition,
+                                      portBasedInputs: Set[GraphNodePort.InputPort],
+                                      expressionBasedInputs: Map[String, InstantiatedExpression],
+                                      globFiles: Map[String, WdlValue] => Set[WdlGlobFile]
+                                     ) extends CallNode {
   val callType: String = "task"
   override val outputPorts: Set[GraphNodePort.OutputPort] = {
     callable.outputs.map(o => GraphNodeOutputPort(o.name, o.womType, this))
@@ -40,7 +46,8 @@ object TaskCall {
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
 
     for {
-      callWithInputs <- CallNode.callWithInputs(taskDefinition.name, taskDefinition, Map.empty, Set.empty, prefixSeparator = taskDefinition.prefixSeparator)
+      //callWithInputs <- CallNode.callWithInputs(taskDefinition.name, taskDefinition, Some(taskDefinition.globFiles), Map.empty, Set.empty, prefixSeparator = taskDefinition.prefixSeparator)
+      callWithInputs <- taskDefinition.callWithInputs(taskDefinition.name, Map.empty, Set.empty)
       outputs <- taskDefinition.outputs.toList.traverse(linkOutput(callWithInputs.node) _)
       callSet = Set[GraphNode](callWithInputs.node)
       inputsSet = callWithInputs.newInputs.toSet[GraphNode]
@@ -56,13 +63,6 @@ object CallNode {
     def nodes: Set[GraphNode] = Set(node) ++ newInputs
   }
 
-  /**
-    * Don't use this directly; go via callWithInputs to make sure everything's in order when constructing a CallNode.
-    */
-  private[graph] def apply(name: String, callable: Callable, linkedInputPorts: Set[GraphNodePort.InputPort], instantiatedExpressionInputs: Map[String, InstantiatedExpression]): CallNode = callable match {
-    case t: TaskDefinition => TaskCallNode(name, t, linkedInputPorts, instantiatedExpressionInputs)
-    case w: WorkflowDefinition => WorkflowCallNode(name, w, linkedInputPorts, instantiatedExpressionInputs)
-  }
 
   /**
     * Create a CallNode for a Callable (task or workflow).
@@ -72,7 +72,9 @@ object CallNode {
     * If an input is not supplied, it gets created as a GraphInputNode.
     *
     */
-  def callWithInputs(name: String, callable: Callable,
+  def callWithInputs(name: String,
+                     callable: Callable,
+                     globFilesOption: Option[Map[String, WdlValue] => Set[WdlGlobFile]],
                      portInputs: Map[String, OutputPort],
                      expressionInputs: Set[GraphNodeInputExpression],
                      prefixSeparator: String = "."): ErrorOr[CallNodeAndNewInputs] = {
@@ -91,7 +93,12 @@ object CallNode {
       val linkedInputPorts = linkedInputPortsAndGraphInputNodes.map(_.newInputPort)
       val graphInputNodes = linkedInputPortsAndGraphInputNodes collect { case LinkedInputPort(_, Some(gin)) => gin }
 
-      val callNode = CallNode(name, callable, linkedInputPorts.toSet, instantiatedExpressionInputs)
+      val callNode = (callable, globFilesOption) match {
+        case (taskDefinition: TaskDefinition, Some(globFiles)) =>
+          TaskCallNode(name, taskDefinition, linkedInputPorts.toSet, instantiatedExpressionInputs, globFiles)
+        case (workflowDefinition: WorkflowDefinition, None) =>
+          WorkflowCallNode(name, workflowDefinition, linkedInputPorts.toSet, instantiatedExpressionInputs)
+      }
 
       graphNodeSetter._graphNode = callNode
       CallNodeAndNewInputs(callNode, graphInputNodes.toSet)

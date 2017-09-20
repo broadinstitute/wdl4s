@@ -4,7 +4,9 @@ import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.wdl.types.{WdlOptionalType, WdlType}
 import wdl4s.wom.callable.Callable._
 import wdl4s.wom.expression.WomExpression
-import wdl4s.wom.graph.Graph
+import wdl4s.wom.graph.CallNode.CallNodeAndNewInputs
+import wdl4s.wom.graph.{Graph, GraphNodeInputExpression}
+import wdl4s.wom.graph.GraphNodePort.OutputPort
 
 
 trait Callable {
@@ -12,6 +14,11 @@ trait Callable {
 
   def graph: ErrorOr[Graph]
   def inputs: List[_ <: InputDefinition]
+
+  def callWithInputs(name: String,
+                     portInputs: Map[String, OutputPort],
+                     expressionInputs: Set[GraphNodeInputExpression],
+                     prefixSeparator: String = "."): ErrorOr[CallNodeAndNewInputs]
 }
 
 object Callable {

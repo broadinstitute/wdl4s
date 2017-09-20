@@ -1,7 +1,7 @@
 package wdl4s.wom.callable
 
 import lenthall.validation.ErrorOr.ErrorOr
-import wdl4s.wom.graph.{Graph, TaskCallNode}
+import wdl4s.wom.graph._
 import cats.syntax.validated._
 import wdl4s.wom.expression.WomExpression
 import wdl4s.wom.graph.GraphNode._
@@ -20,5 +20,12 @@ final case class WorkflowDefinition(name: String,
 
   lazy val taskCallNodes: Set[TaskCallNode] = innerGraph.nodes collect {
     case taskNode: TaskCallNode => taskNode
+  }
+
+  def callWithInputs(name: String,
+                     portInputs: Map[String, GraphNodePort.OutputPort],
+                     expressionInputs: Set[GraphNodeInputExpression],
+                     prefixSeparator: String) = {
+    CallNode.callWithInputs(name, this, None, portInputs, expressionInputs, prefixSeparator)
   }
 }
