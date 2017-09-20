@@ -130,7 +130,8 @@ case class CommandLineTool private(
       inputs,
       // TODO: This doesn't work in all cases and it feels clunky anyway - find a way to sort that out
       prefixSeparator = "#",
-      commandPartSeparator = " "
+      commandPartSeparator = " ",
+      x => ???
     )
   }
 

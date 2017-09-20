@@ -20,6 +20,7 @@ case class TaskDefinition(name: String,
                           parameterMeta: Map[String, String],
                           outputs: Set[Callable.OutputDefinition],
                           inputs: List[_ <: Callable.InputDefinition],
+                         //TODO: Move this out?  Not being used.  Or add prefix separator field on Callable
                           prefixSeparator: String = ".",
                           commandPartSeparator: String = "",
                           globFiles: Map[String, WdlValue] => Set[WdlGlobFile]

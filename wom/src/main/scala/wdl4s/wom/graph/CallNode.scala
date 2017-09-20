@@ -98,6 +98,7 @@ object CallNode {
           TaskCallNode(name, taskDefinition, linkedInputPorts.toSet, instantiatedExpressionInputs, globFiles)
         case (workflowDefinition: WorkflowDefinition, None) =>
           WorkflowCallNode(name, workflowDefinition, linkedInputPorts.toSet, instantiatedExpressionInputs)
+        case _ => throw new RuntimeException("this error situation of an invalid callable is hardcoded to never happen")
       }
 
       graphNodeSetter._graphNode = callNode
