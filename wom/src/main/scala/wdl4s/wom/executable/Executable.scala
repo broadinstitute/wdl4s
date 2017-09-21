@@ -15,6 +15,6 @@ final case class Executable(entryPoint: Callable) {
   
   def validateWorkflowInputs(inputsMapping: WorkflowRawInputs): ErrorOr[Map[OutputPort, ResolvedWorkflowInput]] = for {
     validGraph <- graph
-    inputs <- validGraph.validateWorkflowInputs(inputsMapping, s"${entryPoint.name}.")
+    inputs <- validGraph.validateWorkflowInputs(inputsMapping)
   } yield inputs
 }

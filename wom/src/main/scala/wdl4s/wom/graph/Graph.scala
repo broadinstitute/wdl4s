@@ -31,15 +31,14 @@ final case class Graph private(nodes: Set[GraphNode]) {
     * @param inputsMapping workflow inputs in the form of Map[FQN, Any]
     * @return validated mappings from GraphInputPort to ResolvedWorkflowInput, which can be a WdlValue or an expression
     */
-    // TODO we shouldn't need the prefix with correct FQNs
-  def validateWorkflowInputs(inputsMapping: WorkflowRawInputs, prefix: String = ""): ErrorOr[Map[OutputPort, ResolvedWorkflowInput]] = {
+  def validateWorkflowInputs(inputsMapping: WorkflowRawInputs): ErrorOr[Map[OutputPort, ResolvedWorkflowInput]] = {
 
     def coerceRawValue(value: Any, gin: ExternalGraphInputNode): ErrorOr[WdlValue] = {
       gin.womType.coerceRawValue(value).toErrorOr
     }
     
     def fromInputMapping(gin: ExternalGraphInputNode): Option[ErrorOr[ResolvedWorkflowInput]] = {
-      inputsMapping.get(s"$prefix${gin.name}").map(coerceRawValue(_, gin).map(Coproduct[ResolvedWorkflowInput](_)))
+      inputsMapping.get(s"${gin.name}").map(coerceRawValue(_, gin).map(Coproduct[ResolvedWorkflowInput](_)))
     }
 
     def fallBack(gin: ExternalGraphInputNode): ErrorOr[ResolvedWorkflowInput] = gin match {
