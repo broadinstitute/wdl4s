@@ -4,6 +4,7 @@ import cats.data.NonEmptyList
 import cats.syntax.either._
 import lenthall.Checked
 import lenthall.validation.ErrorOr.ErrorOr
+import lenthall.validation.Checked._
 import shapeless._
 import wdl4s.cwl.ScatterMethod._
 import wdl4s.cwl.WorkflowStep.{Outputs, Run, WorkflowStepInputFold, _}
@@ -114,9 +115,7 @@ case class WorkflowStep(
             // Try to find it in the workflow inputs map, if we can't it's an error
             workflowInputs.collectFirst {
               case (inputId, port) if inputSource == inputId => updateFold(port)
-            } getOrElse {
-              Left(NonEmptyList.one(s"Can't find workflow input for $inputSource"))
-            }
+            } getOrElse s"Can't find workflow input for $inputSource".invalidNelCheck[GraphNode]
           }
 
           def fromStepOutput(stepId: String, stepOutputId: String): Checked[WorkflowStepInputFold] = {
@@ -170,24 +169,23 @@ case class WorkflowStep(
                   .withMapping(inputDefinition, expressionNode.inputDefinitionPointer)
                   .withInputPort(callNodeBuilder.makeInputPort(inputDefinition, expressionNode.singleExpressionOutputPort))
                   .withExpressionNode(expressionNode)  
-                  .asRight[NonEmptyList[String]]
+                  .validNelCheck
 
                 // No expression node mapping, use the default
               case withDefault @ InputDefinitionWithDefault(_, _, expression) =>
                 fold
                   .withMapping(withDefault, Coproduct[InputDefinitionPointer](expression))
-                  .asRight[NonEmptyList[String]]
+                  .validNelCheck
 
                 // Required input without default value and without mapping, this is a validation error
               case RequiredInputDefinition(requiredName, _) =>
-                NonEmptyList.one(s"Input $requiredName is required and is not bound to any value")
-                  .asLeft[InputDefinitionFold]
+                s"Input $requiredName is required and is not bound to any value".invalidNelCheck[InputDefinitionFold]
 
                 // Optional input without mapping, defaults to empty value
               case optional: OptionalInputDefinition =>
                 fold
                   .withMapping(optional, Coproduct[InputDefinitionPointer](optional.womType.none: WdlValue))
-                  .asRight[NonEmptyList[String]]
+                  .validNelCheck
             }
         }
 
