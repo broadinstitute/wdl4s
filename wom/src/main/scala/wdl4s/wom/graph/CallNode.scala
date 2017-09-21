@@ -46,7 +46,6 @@ object TaskCall {
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
 
     for {
-      //callWithInputs <- CallNode.callWithInputs(taskDefinition.name, taskDefinition, Some(taskDefinition.globFiles), Map.empty, Set.empty, prefixSeparator = taskDefinition.prefixSeparator)
       callWithInputs <- taskDefinition.callWithInputs(taskDefinition.name, Map.empty, Set.empty)
       outputs <- taskDefinition.outputs.toList.traverse(linkOutput(callWithInputs.node) _)
       callSet = Set[GraphNode](callWithInputs.node)

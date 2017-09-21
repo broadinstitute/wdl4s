@@ -35,6 +35,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
 
           taskDefinition.graph.map {
             graph =>
+              // TODO: issue w/ prefix separator: https://github.com/broadinstitute/wdl4s/issues/224
               graph.nodes.collect { case gin: GraphInputNode => gin.name } should be(Set(s"file://$rootPath/1st-tool.cwl.message"))
               graph.nodes collect { case cn: CallNode => cn.name } should be(Set(s"file://$rootPath/1st-tool.cwl"))
           }

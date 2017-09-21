@@ -52,9 +52,8 @@ case class TaskDefinition(name: String,
   def callWithInputs(name: String,
                      portInputs: Map[String, OutputPort],
                      expressionInputs: Set[GraphNodeInputExpression],
-                     prefixSeparator: String = "."): ErrorOr[CallNodeAndNewInputs] = {
+                     prefixSeparator: String = "."): ErrorOr[CallNodeAndNewInputs] =
     CallNode.callWithInputs(name, this, Some(globFiles), portInputs, expressionInputs, prefixSeparator)
-  }
 
   // TODO: fixup? The general version in Callable might not be good enough for Task:
 //  def evaluateOutputs(inputs: EvaluatedTaskInputs,

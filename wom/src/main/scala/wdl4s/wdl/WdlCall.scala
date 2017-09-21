@@ -59,7 +59,7 @@ object WdlCall {
     for {
       combined <- (graphNodeInputExpressionValidation, wdlCall.callable.womDefinition).tupled
       (inputToOutputPort, callable) = combined
-      callWithInputs <- callable.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName),Map.empty, inputToOutputPort.toSet)
+      callWithInputs <- callable.callWithInputs(wdlCall.alias.getOrElse(wdlCall.callable.unqualifiedName), Map.empty, inputToOutputPort.toSet)
     } yield callWithInputs
   }
 }

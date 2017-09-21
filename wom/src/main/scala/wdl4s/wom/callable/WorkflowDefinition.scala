@@ -25,7 +25,6 @@ final case class WorkflowDefinition(name: String,
   def callWithInputs(name: String,
                      portInputs: Map[String, GraphNodePort.OutputPort],
                      expressionInputs: Set[GraphNodeInputExpression],
-                     prefixSeparator: String) = {
+                     prefixSeparator: String) =
     CallNode.callWithInputs(name, this, None, portInputs, expressionInputs, prefixSeparator)
-  }
 }
