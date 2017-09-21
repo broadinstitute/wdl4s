@@ -1,11 +1,14 @@
 package wdl4s.wom.graph
 
+import cats.syntax.traverse._
+import cats.instances.list._
+import lenthall.validation.ErrorOr.ErrorOr
 import shapeless.{:+:, CNil}
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.callable.Callable._
 import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.expression.WomExpression
-import wdl4s.wom.graph.CallNode.InputDefinitionMappings
+import wdl4s.wom.graph.CallNode.{CallNodeBuilder, InputDefinitionFold, InputDefinitionMappings}
 import wdl4s.wom.graph.GraphNode.GeneratedNodeAndNewInputs
 import wdl4s.wom.graph.GraphNodePort.{ConnectedInputPort, GraphNodeOutputPort, InputPort, OutputPort}
 
@@ -33,6 +36,37 @@ final case class WorkflowCallNode private(override val name: String,
   val callType: String = "workflow"
   override val outputPorts: Set[GraphNodePort.OutputPort] = {
     callable.innerGraph.nodes.collect { case gon: GraphOutputNode => GraphNodeOutputPort(gon.name, gon.womType, this) }
+  }
+}
+
+object TaskCall {
+  def graphFromDefinition(taskDefinition: TaskDefinition): ErrorOr[Graph] = {
+
+    def linkOutput(call: GraphNode)(output: OutputDefinition): ErrorOr[GraphNode] = call.outputByName(output.name).map(out => PortBasedGraphOutputNode(output.name, output.womType, out))
+    import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
+
+    val callNodeBuilder = new CallNodeBuilder()
+
+    val inputDefinitionFold = taskDefinition.inputs.foldLeft(InputDefinitionFold.empty)((fold, inputDef) => {
+      val newNode = inputDef match {
+        case RequiredInputDefinition(name, womType) => RequiredGraphInputNode(name, womType)
+        case InputDefinitionWithDefault(name, womType, default) => OptionalGraphInputNodeWithDefault(name, womType, default)
+        case OptionalInputDefinition(name, womType) => OptionalGraphInputNode(name, womType)
+      }
+      fold
+        .withGraphInputNode(newNode)
+        .withInputPort(callNodeBuilder.makeInputPort(inputDef, newNode.singleOutputPort))
+    })
+
+    val callWithInputs = callNodeBuilder.build(taskDefinition.name, taskDefinition, inputDefinitionFold)
+
+    for {
+      outputs <- taskDefinition.outputs.traverse(linkOutput(callWithInputs.node) _)
+      callSet = Set[GraphNode](callWithInputs.node)
+      inputsSet = callWithInputs.newInputs.toSet[GraphNode]
+      outputsSet = outputs.toSet[GraphNode]
+      graph <- Graph.validateAndConstruct(callSet ++ inputsSet ++ outputsSet)
+    } yield graph
   }
 }
 
@@ -72,6 +106,7 @@ object CallNode {
 
   /**
     * Helper class to build call nodes.
+    * Helps making input ports and building the node while making sure node references are set properly.
     */
   private [wdl4s] class CallNodeBuilder {
     private val graphNodeSetter = new GraphNode.GraphNodeSetter()
@@ -83,7 +118,7 @@ object CallNode {
     def makeInputPort(inputDefinition: InputDefinition, outputPort: OutputPort) = {
       ConnectedInputPort(inputDefinition.name, inputDefinition.womType, outputPort, graphNodeSetter.get)
     }
-    
+
     def build(name: String,
               callable: Callable,
               inputDefinitionFold: InputDefinitionFold): CallNodeAndNewNodes = {

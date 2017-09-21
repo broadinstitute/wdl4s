@@ -56,7 +56,7 @@ object GraphNode {
     * Allows a level of indirection, so that GraphNodePorts can be constructed before their associated GraphNode is
     * constructed. If used, the _graphNode must be set before anything tries to apply 'get'.
     */
-  private [wdl4s] class GraphNodeSetter {
+  private[graph] class GraphNodeSetter {
     var _graphNode: GraphNode = _
     private def getGraphNode = _graphNode
     def get: Unit => GraphNode = _ => getGraphNode

@@ -1,13 +1,12 @@
 package wdl4s.wom.callable
 
-import cats.syntax.validated._
 import lenthall.validation.ErrorOr.ErrorOr
 import wdl4s.wdl._
 import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.util.StringUtil
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.expression.IoFunctionSet
-import wdl4s.wom.graph.Graph
+import wdl4s.wom.graph.{Graph, TaskCall}
 import wdl4s.wom.{CommandPart, RuntimeAttributes, WomEvaluatedCallInputs}
 
 import scala.util.Try
@@ -24,7 +23,7 @@ case class TaskDefinition(name: String,
 
   val unqualifiedName: LocallyQualifiedName = name
 
-  override lazy val graph: ErrorOr[Graph] = "Task definitions don't contain graphs".invalidNel
+  override lazy val graph: ErrorOr[Graph] = TaskCall.graphFromDefinition(this)
 
   def lookupFunction(knownInputs: WorkflowCoercedInputs,
                      wdlFunctions: WdlFunctions[WdlValue],
