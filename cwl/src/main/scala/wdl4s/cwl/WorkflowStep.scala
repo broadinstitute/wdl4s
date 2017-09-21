@@ -9,7 +9,6 @@ import wdl4s.cwl.ScatterMethod._
 import wdl4s.cwl.WorkflowStep.{Outputs, Run, WorkflowStepInputFold, _}
 import wdl4s.wdl.types.WdlAnyType
 import wdl4s.wdl.values.WdlValue
-import wdl4s.wom.callable.Callable
 import wdl4s.wom.callable.Callable._
 import wdl4s.wom.expression.PlaceholderWomExpression
 import wdl4s.wom.graph.CallNode.{InputDefinitionFold, InputDefinitionPointer}
@@ -73,7 +72,7 @@ case class WorkflowStep(
         *   1) link each input of the step to an output port (which at this point can be from a different step or from a workflow input)
         *   2) accumulate the nodes created along the way to achieve 1)
         */
-      def foldInputs(currentFold: Checked[WorkflowStepInputFold], workflowStepInput: WorkflowStepInput): Checked[WorkflowStepInputFold] = currentFold flatMap {
+      def foldStepInput(currentFold: Checked[WorkflowStepInputFold], workflowStepInput: WorkflowStepInput): Checked[WorkflowStepInputFold] = currentFold flatMap {
         fold =>
           // The source from which we expect to satisfy this input (output from other step or workflow input)
           // TODO: this can be None, a single source, or multiple sources. Currently assuming it's a single one
@@ -159,9 +158,8 @@ case class WorkflowStep(
      /*
        * Folds over input definitions and build an InputDefinitionFold
       */
-      def foldInputDefinitions(expressionNodes: Map[String, ExpressionNode], callable: Callable): Checked[InputDefinitionFold] = {
-
-        def foldFunction(currentFold: Checked[InputDefinitionFold], inputDefinition: InputDefinition): Checked[InputDefinitionFold] = currentFold flatMap {
+        def foldInputDefinition(expressionNodes: Map[String, ExpressionNode])
+                               (currentFold: Checked[InputDefinitionFold], inputDefinition: InputDefinition): Checked[InputDefinitionFold] = currentFold flatMap {
           fold =>
             inputDefinition match {
                 // We got an expression node, meaning there was a workflow step input for this input definition
@@ -192,15 +190,23 @@ case class WorkflowStep(
                   .asRight[NonEmptyList[String]]
             }
         }
-        callable.inputs.foldLeft(InputDefinitionFold.empty.asRight[NonEmptyList[String]])(foldFunction)
-      }
 
-      // Use what we've got to generate a call node and required input nodes
-      // However here we expect WOM NOT to return any required input nodes because it would mean that some task definition inputs
-      // have not been linked to either a workflow input or an upstream output, in which case they have no other way to be satisfied ( <- is that true ?)
+      /*
+        1) Fold over the workflow step inputs:
+          - Create an expression node for each input
+          - recursively generates call nodes that we haven't yet but need to create the expression node
+          - accumulate all that in the WorkflowStepInputFold
+        2) Fold over the callable input definition using the expression node map from 1):
+          - determine the correct mapping for the input definition based on the expression node map
+          and the type of input definition
+          - accumulate those mappings, along with potentially newly created graph input nodes as well as call input ports
+          in a InputDefinitionFold
+        3) Use the InputDefinitionFold to build a new call node
+       */
       for {
-        stepInputFold <- in.foldLeft(WorkflowStepInputFold.empty.asRight[NonEmptyList[String]])(foldInputs)
-        inputDefinitionFold <- foldInputDefinitions(stepInputFold.stepInputMapping, taskDefinition)
+        stepInputFold <- in.foldLeft(WorkflowStepInputFold.emptyRight)(foldStepInput)
+        inputDefinitionFold <- taskDefinition.inputs
+          .foldLeft(InputDefinitionFold.emptyRight)(foldInputDefinition(stepInputFold.stepInputMapping))
         callAndNodes = callNodeBuilder.build(unqualifiedStepId, taskDefinition, inputDefinitionFold)
       } yield stepInputFold.generatedNodes ++ callAndNodes.nodes ++ knownNodes
     }
@@ -215,7 +221,7 @@ case class WorkflowStepOutput(id: String)
 object WorkflowStep {
 
   private [cwl] object WorkflowStepInputFold {
-    private [cwl] def empty = WorkflowStepInputFold(Map.empty, Set.empty)
+    private [cwl] def emptyRight = WorkflowStepInputFold(Map.empty, Set.empty).asRight[NonEmptyList[String]]
   }
   private [cwl] case class WorkflowStepInputFold(stepInputMapping: Map[String, ExpressionNode], generatedNodes: Set[GraphNode]) {
     def withMapping(stepInput: String, value: ExpressionNode) = this.copy(stepInputMapping = stepInputMapping + (stepInput -> value))

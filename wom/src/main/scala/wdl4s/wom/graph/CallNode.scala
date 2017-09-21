@@ -1,5 +1,6 @@
 package wdl4s.wom.graph
 
+import cats.data.NonEmptyList
 import cats.syntax.traverse._
 import cats.instances.list._
 import lenthall.validation.ErrorOr.ErrorOr
@@ -72,7 +73,9 @@ object TaskCall {
 
 object CallNode {
   object InputDefinitionFold {
+    import cats.syntax.either._
     private [wdl4s] def empty = new InputDefinitionFold(Map.empty)
+    private [wdl4s] def emptyRight = empty.asRight[NonEmptyList[String]]
   }
   private [wdl4s] final case class InputDefinitionFold(mappings: InputDefinitionMappings,
                                                        callInputPorts: Set[InputPort] = Set.empty,
