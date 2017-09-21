@@ -41,7 +41,7 @@ class ExpressionAsCallInputSpec extends FlatSpec with Matchers {
     // Use that as an input to a one-input task:
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
     val graph = for {
-      callNode <- CallNode.callWithInputs("foo", TaskDefinitionSpec.oneInputTask, Map.empty, Set(GraphNodeInputExpression("bar", ijExpression, Map("i" -> iInputNode.singleOutputPort, "j" -> jInputNode.singleOutputPort))))
+      callNode <- TaskDefinitionSpec.oneInputTask.callWithInputs("foo", Map.empty, Set(GraphNodeInputExpression("bar", ijExpression, Map("i" -> iInputNode.singleOutputPort, "j" -> jInputNode.singleOutputPort))))
       _ = validateCallResult(callNode)
       g <- Graph.validateAndConstruct(Set(iInputNode, jInputNode, callNode.node))
     } yield g

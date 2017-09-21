@@ -35,7 +35,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers {
 
           taskDefinition.graph.map {
             graph =>
-              graph.nodes.collect { case gin: GraphInputNode => gin.name } should be(Set(s"file://$rootPath/1st-tool.cwl#message"))
+              graph.nodes.collect { case gin: GraphInputNode => gin.name } should be(Set(s"file://$rootPath/1st-tool.cwl.message"))
               graph.nodes collect { case cn: CallNode => cn.name } should be(Set(s"file://$rootPath/1st-tool.cwl"))
           }
           ()

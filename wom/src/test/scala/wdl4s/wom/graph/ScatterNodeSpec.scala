@@ -21,7 +21,8 @@ class ScatterNodeSpec extends FlatSpec with Matchers {
     meta = Map.empty,
     parameterMeta = Map.empty,
     outputs = Set(OutputDefinition("out", WdlStringType, PlaceholderWomExpression(Set.empty, WdlStringType))),
-    inputs = List(RequiredInputDefinition("i", WdlIntegerType))
+    inputs = List(RequiredInputDefinition("i", WdlIntegerType)),
+    globFiles = x => ???
   )
 
   /**
@@ -49,7 +50,7 @@ class ScatterNodeSpec extends FlatSpec with Matchers {
     val xs_inputNode = RequiredGraphInputNode("xs", WdlArrayType(WdlIntegerType))
 
     val x_inputNode = RequiredGraphInputNode("x", WdlIntegerType)
-    val CallNodeAndNewInputs(foo_callNode, _) = CallNode.callWithInputs("foo", task_foo, Map("i" -> x_inputNode.singleOutputPort), Set.empty).getOrElse(fail("Unable to call foo_callNode"))
+    val CallNodeAndNewInputs(foo_callNode, _) = task_foo.callWithInputs("foo", Map("i" -> x_inputNode.singleOutputPort), Set.empty).getOrElse(fail("Unable to call foo_callNode"))
     val foo_call_outNode = PortBasedGraphOutputNode("foo.out", WdlStringType, foo_callNode.outputByName("out").getOrElse(fail("foo CallNode didn't contain the expected 'out' output")))
     val scatterGraph = Graph.validateAndConstruct(Set(foo_callNode, x_inputNode, foo_call_outNode)) match {
       case Valid(sg) => sg

@@ -19,7 +19,8 @@ class GraphSpec extends FlatSpec with Matchers {
       meta = Map.empty,
       parameterMeta = Map.empty,
       outputs = Set(OutputDefinition("procs", WdlFileType, null)),
-      inputs = List.empty
+      inputs = List.empty,
+      globFiles = x => ???
     )
 
     val taskDefinition_cgrep = TaskDefinition(
@@ -29,7 +30,8 @@ class GraphSpec extends FlatSpec with Matchers {
       meta = Map.empty,
       parameterMeta = Map.empty,
       outputs = Set(OutputDefinition("count", WdlIntegerType, null)),
-      inputs = List(RequiredInputDefinition("pattern", WdlStringType), RequiredInputDefinition("in_file", WdlFileType))
+      inputs = List(RequiredInputDefinition("pattern", WdlStringType), RequiredInputDefinition("in_file", WdlFileType)),
+      globFiles = x => ???
     )
 
     val taskDefinition_wc = TaskDefinition(
@@ -39,14 +41,15 @@ class GraphSpec extends FlatSpec with Matchers {
       meta = Map.empty,
       parameterMeta = Map.empty,
       outputs = Set(OutputDefinition("count", WdlIntegerType, null)),
-      inputs = List(RequiredInputDefinition("in_file", WdlFileType))
+      inputs = List(RequiredInputDefinition("in_file", WdlFileType)),
+      globFiles = x => ???
     )
 
-    val CallNodeAndNewInputs(psCall, psGraphInputs) = CallNode.callWithInputs("ps", taskDefinition_ps, Map.empty, Set.empty).getOrElse(fail("Unable to call ps"))
+    val CallNodeAndNewInputs(psCall, psGraphInputs) = taskDefinition_ps.callWithInputs("ps", Map.empty, Set.empty).getOrElse(fail("Unable to call ps"))
     val ps_procsOutputPort = psCall.outputByName("procs").getOrElse(fail("Unexpectedly unable to find 'ps.procs' output"))
-    val CallNodeAndNewInputs(cgrepCall, cgrepGraphInputs) = CallNode.callWithInputs("cgrep", taskDefinition_cgrep, Map("in_file" -> ps_procsOutputPort), Set.empty).getOrElse(fail("Unable to call cgrep"))
+    val CallNodeAndNewInputs(cgrepCall, cgrepGraphInputs) = taskDefinition_cgrep.callWithInputs("cgrep", Map("in_file" -> ps_procsOutputPort), Set.empty).getOrElse(fail("Unable to call cgrep"))
     val cgrep_countOutputPort = cgrepCall.outputByName("count").getOrElse(fail("Unexpectedly unable to find 'cgrep.count' output"))
-    val CallNodeAndNewInputs(wcCall, wcGraphInputs) = CallNode.callWithInputs("wc", taskDefinition_wc, Map("in_file" -> ps_procsOutputPort), Set.empty).getOrElse(fail("Unable to call wc"))
+    val CallNodeAndNewInputs(wcCall, wcGraphInputs) = taskDefinition_wc.callWithInputs("wc", Map("in_file" -> ps_procsOutputPort), Set.empty).getOrElse(fail("Unable to call wc"))
     val wc_countOutputPort = wcCall.outputByName("count").getOrElse(fail("Unexpectedly unable to find 'wc.count' output"))
 
     val psProcsOutputNode = PortBasedGraphOutputNode("ps.procs", WdlFileType, ps_procsOutputPort)
@@ -75,7 +78,7 @@ class GraphSpec extends FlatSpec with Matchers {
 
   it should "be able to represent calls to sub-workflows" in {
     val threeStepWorkflow = WorkflowDefinition("three_step", makeThreeStep, Map.empty, Map.empty, List.empty)
-    val CallNodeAndNewInputs(threeStepCall, threeStepInputs) = CallNode.callWithInputs("three_step", threeStepWorkflow, Map.empty, Set.empty).getOrElse(fail("Unable to call three_step"))
+    val CallNodeAndNewInputs(threeStepCall, threeStepInputs) = threeStepWorkflow.callWithInputs("three_step", Map.empty, Set.empty).getOrElse(fail("Unable to call three_step"))
 
     // This is painful manually, but it's not up to WOM to decide which subworkflow outputs are forwarded through:
     val psProcsOutputNode = PortBasedGraphOutputNode("three_step.ps.procs", WdlFileType, threeStepCall.outputByName("ps.procs").getOrElse(fail("Subworkflow didn't expose the ps.procs output")))
