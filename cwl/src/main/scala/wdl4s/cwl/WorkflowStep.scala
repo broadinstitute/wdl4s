@@ -194,13 +194,13 @@ case class WorkflowStep(
       /*
         1) Fold over the workflow step inputs:
           - Create an expression node for each input
-          - recursively generates call nodes that we haven't yet but need to create the expression node
+          - recursively generates unseen call nodes as we discover them going through step input sources
           - accumulate all that in the WorkflowStepInputFold
         2) Fold over the callable input definition using the expression node map from 1):
           - determine the correct mapping for the input definition based on the expression node map
           and the type of input definition
           - accumulate those mappings, along with potentially newly created graph input nodes as well as call input ports
-          in a InputDefinitionFold
+          in an InputDefinitionFold
         3) Use the InputDefinitionFold to build a new call node
        */
       for {
@@ -239,8 +239,8 @@ object WorkflowStep {
   }
 
   object InputSourcesFold extends Poly1 {
-    implicit def one = at[String] { Set(_): Set[String] }
-    implicit def many = at[Array[String]] { _.toSet: Set[String] }
+    implicit def one: Case.Aux[String, Set[String]] = at[String] { Set(_): Set[String] }
+    implicit def many: Case.Aux[Array[String], Set[String]] = at[Array[String]] { _.toSet: Set[String] }
   }
 
   type Run =
