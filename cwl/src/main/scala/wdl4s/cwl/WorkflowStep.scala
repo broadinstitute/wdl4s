@@ -65,7 +65,7 @@ case class WorkflowStep(
       val taskDefinition = run.select[CommandLineTool].map { _.taskDefinition } get
 
       val callNodeBuilder = new CallNode.CallNodeBuilder()
-      
+
       /**
         * Method used to fold over the list of inputs declared by this step.
         * Note that because we work on saladed CWL, all ids are fully qualified at this point (e.g: file:///path/to/file/r.cwl#cgrep/pattern
@@ -81,9 +81,9 @@ case class WorkflowStep(
 
           // Name of the step input
           val stepInputName = WorkflowStepInputOrOutputId(workflowStepInput.id).ioId
-          
+
           val accumulatedNodes = fold.generatedNodes ++ knownNodes
-          
+
           /*
             * Try to find in the given set an output port named stepOutputId in a call node named stepId
             * This is useful when we've determined that the input points to an output of a different step and we want
@@ -115,7 +115,7 @@ case class WorkflowStep(
             // Try to find it in the workflow inputs map, if we can't it's an error
             workflowInputs.collectFirst {
               case (inputId, port) if inputSource == inputId => updateFold(port)
-            } getOrElse s"Can't find workflow input for $inputSource".invalidNelCheck[GraphNode]
+            } getOrElse s"Can't find workflow input for $inputSource".invalidNelCheck[WorkflowStepInputFold]
           }
 
           def fromStepOutput(stepId: String, stepOutputId: String): Checked[WorkflowStepInputFold] = {
@@ -153,41 +153,41 @@ case class WorkflowStep(
             case WorkflowStepInputOrOutputId(_, stepId, stepOutputId) => fromStepOutput(stepId, stepOutputId)
           }
       }
+      
+      /*
+        * Folds over input definitions and build an InputDefinitionFold
+       */
+      def foldInputDefinition(expressionNodes: Map[String, ExpressionNode])
+                             (currentFold: Checked[InputDefinitionFold], inputDefinition: InputDefinition): Checked[InputDefinitionFold] = currentFold flatMap {
+        fold =>
+          inputDefinition match {
+            // We got an expression node, meaning there was a workflow step input for this input definition
+            // Add the mapping, create an input port from the expression node and add the expression node to the fold
+            case _ if expressionNodes.contains(inputDefinition.name) =>
+              val expressionNode = expressionNodes(inputDefinition.name)
+              fold
+                .withMapping(inputDefinition, expressionNode.inputDefinitionPointer)
+                .withInputPort(callNodeBuilder.makeInputPort(inputDefinition, expressionNode.singleExpressionOutputPort))
+                .withExpressionNode(expressionNode)
+                .validNelCheck
 
-     /*
-       * Folds over input definitions and build an InputDefinitionFold
-      */
-        def foldInputDefinition(expressionNodes: Map[String, ExpressionNode])
-                               (currentFold: Checked[InputDefinitionFold], inputDefinition: InputDefinition): Checked[InputDefinitionFold] = currentFold flatMap {
-          fold =>
-            inputDefinition match {
-                // We got an expression node, meaning there was a workflow step input for this input definition
-                // Add the mapping, create an input port from the expression node and add the expression node to the fold
-              case _ if expressionNodes.contains(inputDefinition.name) =>
-                val expressionNode = expressionNodes(inputDefinition.name)
-                fold
-                  .withMapping(inputDefinition, expressionNode.inputDefinitionPointer)
-                  .withInputPort(callNodeBuilder.makeInputPort(inputDefinition, expressionNode.singleExpressionOutputPort))
-                  .withExpressionNode(expressionNode)  
-                  .validNelCheck
+            // No expression node mapping, use the default
+            case withDefault @ InputDefinitionWithDefault(_, _, expression) =>
+              fold
+                .withMapping(withDefault, Coproduct[InputDefinitionPointer](expression))
+                .validNelCheck
 
-                // No expression node mapping, use the default
-              case withDefault @ InputDefinitionWithDefault(_, _, expression) =>
-                fold
-                  .withMapping(withDefault, Coproduct[InputDefinitionPointer](expression))
-                  .validNelCheck
+            // Required input without default value and without mapping, this is a validation error
+            case RequiredInputDefinition(requiredName, _) =>
+              s"Input $requiredName is required and is not bound to any value".invalidNelCheck[InputDefinitionFold]
 
-                // Required input without default value and without mapping, this is a validation error
-              case RequiredInputDefinition(requiredName, _) =>
-                s"Input $requiredName is required and is not bound to any value".invalidNelCheck[InputDefinitionFold]
-
-                // Optional input without mapping, defaults to empty value
-              case optional: OptionalInputDefinition =>
-                fold
-                  .withMapping(optional, Coproduct[InputDefinitionPointer](optional.womType.none: WdlValue))
-                  .validNelCheck
-            }
-        }
+            // Optional input without mapping, defaults to empty value
+            case optional: OptionalInputDefinition =>
+              fold
+                .withMapping(optional, Coproduct[InputDefinitionPointer](optional.womType.none: WdlValue))
+                .validNelCheck
+          }
+      }
 
       /*
         1) Fold over the workflow step inputs:

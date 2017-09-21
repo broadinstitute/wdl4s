@@ -1,8 +1,8 @@
 package wdl4s.wom.graph
 
 import cats.data.NonEmptyList
-import cats.syntax.traverse._
 import cats.instances.list._
+import cats.syntax.traverse._
 import lenthall.validation.ErrorOr.ErrorOr
 import shapeless.{:+:, CNil}
 import wdl4s.wdl.values.WdlValue
