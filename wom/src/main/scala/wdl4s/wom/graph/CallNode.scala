@@ -89,7 +89,7 @@ object CallNode {
     def withExpressionNode(expressionNode: ExpressionNode) = this.copy(newExpressionNodes = newExpressionNodes + expressionNode)
   }
 
-  type InputDefinitionPointer = OutputPort :+: InstantiatedExpression :+: WomExpression :+: WdlValue :+: CNil
+  type InputDefinitionPointer = OutputPort :+: WomExpression :+: WdlValue :+: CNil
   type InputDefinitionMappings = Map[InputDefinition, InputDefinitionPointer]
 
   final case class CallNodeAndNewNodes(node: CallNode, newInputs: Set[GraphInputNode], newExpressions: Set[ExpressionNode]) extends GeneratedNodeAndNewInputs {
