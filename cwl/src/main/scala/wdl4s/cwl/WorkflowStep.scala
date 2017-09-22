@@ -239,8 +239,8 @@ object WorkflowStep {
   }
 
   object InputSourcesFold extends Poly1 {
-    implicit def one: Case.Aux[String, Set[String]] = at[String] { Set(_): Set[String] }
-    implicit def many: Case.Aux[Array[String], Set[String]] = at[Array[String]] { _.toSet: Set[String] }
+    implicit def one: Case.Aux[String, Set[String]] = at[String] { Set(_) }
+    implicit def many: Case.Aux[Array[String], Set[String]] = at[Array[String]] { _.toSet }
   }
 
   type Run =
