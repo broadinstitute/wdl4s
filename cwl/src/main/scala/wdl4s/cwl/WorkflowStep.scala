@@ -206,8 +206,6 @@ case class WorkflowStep(
        */
       for {
         stepInputFold <- in.foldLeft(WorkflowStepInputFold.emptyRight)(foldStepInput)
-        // cats has a monoid implicit for either, but it only combines "Right" values not "Left". However here 
-        // "Left" is a NonEmptyList so we *could* combine it. We could write a custom monoid for that. 
         inputDefinitionFold <- taskDefinition.inputs.foldMap(foldInputDefinition(stepInputFold.stepInputMapping)).toEither
         callAndNodes = callNodeBuilder.build(unqualifiedStepId, taskDefinition, inputDefinitionFold)
       } yield stepInputFold.generatedNodes ++ callAndNodes.nodes ++ knownNodes
