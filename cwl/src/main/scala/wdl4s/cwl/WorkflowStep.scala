@@ -223,6 +223,8 @@ case class WorkflowStepOutput(id: String)
 
 object WorkflowStep {
 
+  // A monoid can't be derived automatically for this class because it contains a Map[String, ExpressionNode],
+  // and there's no monoid defined over ExpressionNode
   implicit val workflowStepInputFoldMonoid: Monoid[WorkflowStepInputFold] = new Monoid[WorkflowStepInputFold] {
     override def empty: WorkflowStepInputFold = WorkflowStepInputFold()
     override def combine(x: WorkflowStepInputFold, y: WorkflowStepInputFold): WorkflowStepInputFold = {
