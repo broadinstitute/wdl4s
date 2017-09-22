@@ -129,8 +129,10 @@ case class CommandLineTool private(
       outputs,
       inputs,
       // TODO: This doesn't work in all cases and it feels clunky anyway - find a way to sort that out
+      // issue: https://github.com/broadinstitute/wdl4s/issues/224
       prefixSeparator = "#",
-      commandPartSeparator = " "
+      commandPartSeparator = " ",
+      x => ???
     )
   }
 

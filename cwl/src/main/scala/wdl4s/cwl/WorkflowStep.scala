@@ -48,7 +48,7 @@ case class WorkflowStep(
                      workflowInputs: Map[String, GraphNodeOutputPort]): Checked[Set[GraphNode]] = {
 
     // To avoid duplicating nodes, return immediately if we've already covered this node
-    val haveWeSeenThisStep: Boolean = knownNodes.collect { case TaskCallNode(name, _, _, _) => name }.contains(unqualifiedStepId)
+    val haveWeSeenThisStep: Boolean = knownNodes.collect { case TaskCallNode(name, _, _, _, _) => name }.contains(unqualifiedStepId)
 
     if (haveWeSeenThisStep) Right(knownNodes)
     else {
@@ -169,7 +169,7 @@ case class WorkflowStep(
       for {
         mapsAndNodes <- workflowOutputsMap
         (map, nodes) = mapsAndNodes
-        call <-  CallNode.callWithInputs(unqualifiedStepId, taskDefinition, workflowInputs ++ map, Set.empty, prefixSeparator = "#").toEither
+        call <- taskDefinition.callWithInputs(unqualifiedStepId, workflowInputs ++ map, Set.empty, prefixSeparator = "#").toEither
       } yield  call.nodes ++ nodes
     }
   }
