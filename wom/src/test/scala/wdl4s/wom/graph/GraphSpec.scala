@@ -56,7 +56,7 @@ class GraphSpec extends FlatSpec with Matchers {
     
     val psNodeBuilder = new CallNodeBuilder()
     
-    val CallNodeAndNewNodes(psCall, psGraphInputs, _) = psNodeBuilder.build("ps", taskDefinition_ps, InputDefinitionFold.empty)
+    val CallNodeAndNewNodes(psCall, psGraphInputs, _) = psNodeBuilder.build("ps", taskDefinition_ps, InputDefinitionFold())
     val ps_procsOutputPort = psCall.outputByName("procs").getOrElse(fail("Unexpectedly unable to find 'ps.procs' output"))
     
     val cgrepNodeBuilder = new CallNodeBuilder()

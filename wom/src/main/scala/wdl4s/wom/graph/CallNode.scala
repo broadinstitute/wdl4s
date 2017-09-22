@@ -1,15 +1,16 @@
 package wdl4s.wom.graph
 
-import cats.data.NonEmptyList
 import cats.instances.list._
+import cats.kernel.Monoid
+import cats.syntax.foldable._
 import cats.syntax.traverse._
 import lenthall.validation.ErrorOr.ErrorOr
-import shapeless.{:+:, CNil}
+import shapeless.{:+:, CNil, Coproduct}
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.callable.Callable._
 import wdl4s.wom.callable.{Callable, TaskDefinition, WorkflowDefinition}
 import wdl4s.wom.expression.WomExpression
-import wdl4s.wom.graph.CallNode.{CallNodeBuilder, InputDefinitionFold, InputDefinitionMappings}
+import wdl4s.wom.graph.CallNode._
 import wdl4s.wom.graph.GraphNode.GeneratedNodeAndNewInputs
 import wdl4s.wom.graph.GraphNodePort.{ConnectedInputPort, GraphNodeOutputPort, InputPort, OutputPort}
 
@@ -42,22 +43,26 @@ final case class WorkflowCallNode private(override val name: String,
 
 object TaskCall {
   def graphFromDefinition(taskDefinition: TaskDefinition): ErrorOr[Graph] = {
-
     def linkOutput(call: GraphNode)(output: OutputDefinition): ErrorOr[GraphNode] = call.outputByName(output.name).map(out => PortBasedGraphOutputNode(output.name, output.womType, out))
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
 
     val callNodeBuilder = new CallNodeBuilder()
 
-    val inputDefinitionFold = taskDefinition.inputs.foldLeft(InputDefinitionFold.empty)((fold, inputDef) => {
+    val inputDefinitionFold = taskDefinition.inputs.foldMap({ inputDef =>
+    {
       val newNode = inputDef match {
         case RequiredInputDefinition(name, womType) => RequiredGraphInputNode(name, womType)
         case InputDefinitionWithDefault(name, womType, default) => OptionalGraphInputNodeWithDefault(name, womType, default)
         case OptionalInputDefinition(name, womType) => OptionalGraphInputNode(name, womType)
       }
-      fold
-        .withGraphInputNode(newNode)
-        .withInputPort(callNodeBuilder.makeInputPort(inputDef, newNode.singleOutputPort))
-    })
+
+      InputDefinitionFold(
+        mappings = Map(inputDef -> Coproduct[InputDefinitionPointer](newNode.singleOutputPort: OutputPort)),
+        newGraphInputNodes = Set(newNode),
+        callInputPorts = Set(callNodeBuilder.makeInputPort(inputDef, newNode.singleOutputPort))
+      )
+    }
+    })(inputDefinitionFoldMonoid)
 
     val callWithInputs = callNodeBuilder.build(taskDefinition.name, taskDefinition, inputDefinitionFold)
 
@@ -72,22 +77,22 @@ object TaskCall {
 }
 
 object CallNode {
-  object InputDefinitionFold {
-    import cats.syntax.either._
-    private [wdl4s] def empty = new InputDefinitionFold(Map.empty)
-    private [wdl4s] def emptyRight = empty.asRight[NonEmptyList[String]]
+  implicit val inputDefinitionFoldMonoid = new Monoid[InputDefinitionFold] {
+    override def empty: InputDefinitionFold = InputDefinitionFold()
+    override def combine(x: InputDefinitionFold, y: InputDefinitionFold): InputDefinitionFold = {
+      InputDefinitionFold(
+        mappings = x.mappings ++ y.mappings,
+        callInputPorts = x.callInputPorts ++ y.callInputPorts,
+        newGraphInputNodes = x.newGraphInputNodes ++ y.newGraphInputNodes,
+        newExpressionNodes = x.newExpressionNodes ++ y.newExpressionNodes
+      )
+    }
   }
-  private [wdl4s] final case class InputDefinitionFold(mappings: InputDefinitionMappings,
+
+  private [wdl4s] final case class InputDefinitionFold(mappings: InputDefinitionMappings = Map.empty,
                                                        callInputPorts: Set[InputPort] = Set.empty,
                                                        newGraphInputNodes: Set[GraphInputNode] = Set.empty,
-                                                       newExpressionNodes: Set[ExpressionNode] = Set.empty) {
-    def withMapping(inputDefinition: InputDefinition, value: InputDefinitionPointer) = {
-      this.copy(mappings = mappings + (inputDefinition -> value))
-    }
-    def withInputPort(callInputPort: InputPort) = this.copy(callInputPorts = callInputPorts + callInputPort)
-    def withGraphInputNode(graphInputNode: GraphInputNode) = this.copy(newGraphInputNodes = newGraphInputNodes + graphInputNode)
-    def withExpressionNode(expressionNode: ExpressionNode) = this.copy(newExpressionNodes = newExpressionNodes + expressionNode)
-  }
+                                                       newExpressionNodes: Set[ExpressionNode] = Set.empty)
 
   type InputDefinitionPointer = OutputPort :+: WomExpression :+: WdlValue :+: CNil
   type InputDefinitionMappings = Map[InputDefinition, InputDefinitionPointer]

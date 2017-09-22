@@ -1,10 +1,13 @@
 package wdl4s.cwl
 
 import cats.data.NonEmptyList
+import cats.instances.either._
+import cats.instances.list._
 import cats.syntax.either._
+import cats.syntax.foldable._
 import lenthall.Checked
-import lenthall.validation.ErrorOr.ErrorOr
 import lenthall.validation.Checked._
+import lenthall.validation.ErrorOr.ErrorOr
 import shapeless._
 import wdl4s.cwl.ScatterMethod._
 import wdl4s.cwl.WorkflowStep.{Outputs, Run, WorkflowStepInputFold, _}
@@ -12,7 +15,7 @@ import wdl4s.wdl.types.WdlAnyType
 import wdl4s.wdl.values.WdlValue
 import wdl4s.wom.callable.Callable._
 import wdl4s.wom.expression.PlaceholderWomExpression
-import wdl4s.wom.graph.CallNode.{InputDefinitionFold, InputDefinitionPointer}
+import wdl4s.wom.graph.CallNode._
 import wdl4s.wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 import wdl4s.wom.graph._
 
@@ -158,24 +161,23 @@ case class WorkflowStep(
         * Folds over input definitions and build an InputDefinitionFold
        */
       def foldInputDefinition(expressionNodes: Map[String, ExpressionNode])
-                             (currentFold: Checked[InputDefinitionFold], inputDefinition: InputDefinition): Checked[InputDefinitionFold] = currentFold flatMap {
-        fold =>
+                             (inputDefinition: InputDefinition): Checked[InputDefinitionFold] = {
           inputDefinition match {
             // We got an expression node, meaning there was a workflow step input for this input definition
             // Add the mapping, create an input port from the expression node and add the expression node to the fold
             case _ if expressionNodes.contains(inputDefinition.name) =>
               val expressionNode = expressionNodes(inputDefinition.name)
-              fold
-                .withMapping(inputDefinition, expressionNode.inputDefinitionPointer)
-                .withInputPort(callNodeBuilder.makeInputPort(inputDefinition, expressionNode.singleExpressionOutputPort))
-                .withExpressionNode(expressionNode)
-                .validNelCheck
+              InputDefinitionFold(
+                mappings = Map(inputDefinition -> expressionNode.inputDefinitionPointer),
+                callInputPorts = Set(callNodeBuilder.makeInputPort(inputDefinition, expressionNode.singleExpressionOutputPort)),
+                newExpressionNodes = Set(expressionNode)
+              ).validNelCheck
 
             // No expression node mapping, use the default
             case withDefault @ InputDefinitionWithDefault(_, _, expression) =>
-              fold
-                .withMapping(withDefault, Coproduct[InputDefinitionPointer](expression))
-                .validNelCheck
+              InputDefinitionFold(
+                mappings = Map(withDefault -> Coproduct[InputDefinitionPointer](expression))
+              ).validNelCheck
 
             // Required input without default value and without mapping, this is a validation error
             case RequiredInputDefinition(requiredName, _) =>
@@ -183,9 +185,9 @@ case class WorkflowStep(
 
             // Optional input without mapping, defaults to empty value
             case optional: OptionalInputDefinition =>
-              fold
-                .withMapping(optional, Coproduct[InputDefinitionPointer](optional.womType.none: WdlValue))
-                .validNelCheck
+              InputDefinitionFold(
+                mappings = Map(optional -> Coproduct[InputDefinitionPointer](optional.womType.none: WdlValue))
+              ).validNelCheck
           }
       }
 
@@ -203,8 +205,9 @@ case class WorkflowStep(
        */
       for {
         stepInputFold <- in.foldLeft(WorkflowStepInputFold.emptyRight)(foldStepInput)
-        inputDefinitionFold <- taskDefinition.inputs
-          .foldLeft(InputDefinitionFold.emptyRight)(foldInputDefinition(stepInputFold.stepInputMapping))
+        // cats has a monoid implicit for either, but it only combines "Right" values not "Left". However here 
+        // "Left" is a NonEmptyList so we *could* combine it. We could write a custom monoid for that. 
+        inputDefinitionFold <- taskDefinition.inputs.foldMap(foldInputDefinition(stepInputFold.stepInputMapping))
         callAndNodes = callNodeBuilder.build(unqualifiedStepId, taskDefinition, inputDefinitionFold)
       } yield stepInputFold.generatedNodes ++ callAndNodes.nodes ++ knownNodes
     }

@@ -1,6 +1,8 @@
 package wdl4s.wdl
 
+import cats.instances.list._
 import cats.syntax.apply._
+import cats.syntax.foldable._
 import shapeless.Coproduct
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.wdl.AstTools.EnhancedAstNode
@@ -10,7 +12,7 @@ import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.values._
 import wdl4s.wom.callable.Callable
 import wdl4s.wom.callable.Callable._
-import wdl4s.wom.graph.CallNode.{InputDefinitionFold, InputDefinitionPointer}
+import wdl4s.wom.graph.CallNode._
 import wdl4s.wom.graph.GraphNodePort.OutputPort
 import wdl4s.wom.graph.{ExpressionNode, _}
 
@@ -56,7 +58,7 @@ object WdlCall {
 
     val callNamePrefix = s"${wdlCall.fullyQualifiedName}."
     val callNodeBuilder = new CallNode.CallNodeBuilder()
-    
+
     /*
       * Each input mapping gets its own ExpressionNode:
       * 
@@ -82,41 +84,44 @@ object WdlCall {
     def foldInputDefinitions(expressionNodes: Map[String, ExpressionNode], callable: Callable): InputDefinitionFold = {
       // Updates the fold with a new graph input node. Happens when an optional or required undefined input without an
       // expression node mapping is found
-      def withGraphInputNode(fold: InputDefinitionFold, inputDefinition: InputDefinition, graphInputNode: GraphInputNode) = {
-        fold
-          .withMapping(inputDefinition, Coproduct[InputDefinitionPointer](graphInputNode.singleOutputPort: OutputPort))
-          .withInputPort(callNodeBuilder.makeInputPort(inputDefinition, graphInputNode.singleOutputPort))
-          .withGraphInputNode(graphInputNode)
+      def withGraphInputNode(inputDefinition: InputDefinition, graphInputNode: GraphInputNode) = {
+        InputDefinitionFold(
+          mappings = Map(inputDefinition -> Coproduct[InputDefinitionPointer](graphInputNode.singleOutputPort: OutputPort)),
+          callInputPorts = Set(callNodeBuilder.makeInputPort(inputDefinition, graphInputNode.singleOutputPort)),
+          newGraphInputNodes = Set(graphInputNode)
+        )
       }
 
-      callable.inputs.foldLeft(InputDefinitionFold.empty) {
+      callable.inputs.foldMap {
         // If there is an input mapping for this input definition, use that
-        case (fold, inputDefinition) if expressionNodes.contains(inputDefinition.name) =>
+        case inputDefinition if expressionNodes.contains(inputDefinition.name) =>
           val expressionNode = expressionNodes(inputDefinition.name)
-          fold
-            .withMapping(inputDefinition, expressionNode.inputDefinitionPointer)
-            .withInputPort(callNodeBuilder.makeInputPort(inputDefinition, expressionNode.singleExpressionOutputPort))
-            .withExpressionNode(expressionNode)  
+          InputDefinitionFold(
+            mappings = Map(inputDefinition -> expressionNode.inputDefinitionPointer),
+            callInputPorts = Set(callNodeBuilder.makeInputPort(inputDefinition, expressionNode.singleExpressionOutputPort)),
+            newExpressionNodes = Set(expressionNode)
+          )
 
-          // No input mapping, use the default expression
-        case (fold, withDefault @ InputDefinitionWithDefault(_, _, expression)) =>
-          fold
-            .withMapping(withDefault, Coproduct[InputDefinitionPointer](expression))
+        // No input mapping, use the default expression
+        case withDefault @ InputDefinitionWithDefault(_, _, expression) =>
+          InputDefinitionFold(
+            mappings = Map(withDefault -> Coproduct[InputDefinitionPointer](expression))
+          )
 
-          // No input mapping, required and we don't have a default value, create a new RequiredGraphInputNode
-          // so that it can be satisfied via workflow inputs
-        case (fold, required @ RequiredInputDefinition(n, womType)) =>
-          withGraphInputNode(fold, required, RequiredGraphInputNode(s"$callNamePrefix$n", womType))
+        // No input mapping, required and we don't have a default value, create a new RequiredGraphInputNode
+        // so that it can be satisfied via workflow inputs
+        case required @ RequiredInputDefinition(n, womType) =>
+          withGraphInputNode(required, RequiredGraphInputNode(s"$callNamePrefix$n", womType))
 
-          // No input mapping, no default value but optional, create a OptionalGraphInputNode
-          // so that it can be satisfied via workflow inputs
-        case (fold, optional @ OptionalInputDefinition(n, womType)) =>
-          withGraphInputNode(fold, optional, OptionalGraphInputNode(s"$callNamePrefix$n", womType))
+        // No input mapping, no default value but optional, create a OptionalGraphInputNode
+        // so that it can be satisfied via workflow inputs
+        case optional @ OptionalInputDefinition(n, womType) =>
+          withGraphInputNode(optional, OptionalGraphInputNode(s"$callNamePrefix$n", womType))
       }
     }
 
     (expressionNodeMappings, wdlCall.callable.womDefinition) mapN {
-      case (mappings, callable) => 
+      case (mappings, callable) =>
         callNodeBuilder.build(wdlCall.unqualifiedName, callable, foldInputDefinitions(mappings, callable))
     }
   }
