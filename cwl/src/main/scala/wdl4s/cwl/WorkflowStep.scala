@@ -1,9 +1,10 @@
 package wdl4s.cwl
 
 import cats.data.NonEmptyList
-import cats.instances.either._
-import cats.instances.list._
 import cats.syntax.either._
+import cats.instances.list._
+import cats.syntax.validated._
+import cats.data.Validated._
 import cats.syntax.foldable._
 import lenthall.Checked
 import lenthall.validation.Checked._
@@ -161,7 +162,7 @@ case class WorkflowStep(
         * Folds over input definitions and build an InputDefinitionFold
        */
       def foldInputDefinition(expressionNodes: Map[String, ExpressionNode])
-                             (inputDefinition: InputDefinition): Checked[InputDefinitionFold] = {
+                             (inputDefinition: InputDefinition): ErrorOr[InputDefinitionFold] = {
           inputDefinition match {
             // We got an expression node, meaning there was a workflow step input for this input definition
             // Add the mapping, create an input port from the expression node and add the expression node to the fold
@@ -171,23 +172,23 @@ case class WorkflowStep(
                 mappings = Map(inputDefinition -> expressionNode.inputDefinitionPointer),
                 callInputPorts = Set(callNodeBuilder.makeInputPort(inputDefinition, expressionNode.singleExpressionOutputPort)),
                 newExpressionNodes = Set(expressionNode)
-              ).validNelCheck
+              ).validNel
 
             // No expression node mapping, use the default
             case withDefault @ InputDefinitionWithDefault(_, _, expression) =>
               InputDefinitionFold(
                 mappings = Map(withDefault -> Coproduct[InputDefinitionPointer](expression))
-              ).validNelCheck
+              ).validNel
 
             // Required input without default value and without mapping, this is a validation error
             case RequiredInputDefinition(requiredName, _) =>
-              s"Input $requiredName is required and is not bound to any value".invalidNelCheck[InputDefinitionFold]
+              s"Input $requiredName is required and is not bound to any value".invalidNel
 
             // Optional input without mapping, defaults to empty value
             case optional: OptionalInputDefinition =>
               InputDefinitionFold(
                 mappings = Map(optional -> Coproduct[InputDefinitionPointer](optional.womType.none: WdlValue))
-              ).validNelCheck
+              ).validNel
           }
       }
 
@@ -207,7 +208,7 @@ case class WorkflowStep(
         stepInputFold <- in.foldLeft(WorkflowStepInputFold.emptyRight)(foldStepInput)
         // cats has a monoid implicit for either, but it only combines "Right" values not "Left". However here 
         // "Left" is a NonEmptyList so we *could* combine it. We could write a custom monoid for that. 
-        inputDefinitionFold <- taskDefinition.inputs.foldMap(foldInputDefinition(stepInputFold.stepInputMapping))
+        inputDefinitionFold <- taskDefinition.inputs.foldMap(foldInputDefinition(stepInputFold.stepInputMapping)).toEither
         callAndNodes = callNodeBuilder.build(unqualifiedStepId, taskDefinition, inputDefinitionFold)
       } yield stepInputFold.generatedNodes ++ callAndNodes.nodes ++ knownNodes
     }
