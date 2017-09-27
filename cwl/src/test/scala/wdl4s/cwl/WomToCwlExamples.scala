@@ -25,7 +25,7 @@ object WomToCwlExamples {
       runtimeAttributes = RuntimeAttributes(Map.empty[String, WomExpression]),
       meta = Map.empty[String, String],
       parameterMeta = Map.empty[String, String],
-      outputs = Set.empty[Callable.OutputDefinition],
+      outputs = List.empty[Callable.OutputDefinition],
       inputs = List.empty[Callable.InputDefinition]
     )
 
