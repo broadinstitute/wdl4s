@@ -51,6 +51,7 @@ case class StringExpression(expression: String) extends CwlWomExpression {
 }
 
 object CwlWomExpression {
+
   def apply(expression: String): WomExpression = {
     StringExpression(expression)
   }

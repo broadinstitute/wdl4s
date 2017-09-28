@@ -22,10 +22,6 @@ object CommandOutputBindingEvaluator {
   def commandOutputBindingToWdlValue(commandOutputBinding: CommandOutputBinding,
                                      parameterContext: ParameterContext,
                                      ioFunctionSet: IoFunctionSet): WdlValue = {
-    /*
-    TODO: WOM: If the file cwl.outputs.json is present in the output, outputBinding is ignored.
-    - http://www.commonwl.org/v1.0/CommandLineTool.html#File
-     */
 
     val paths: Seq[String] = commandOutputBinding.glob map { globValue =>
       GlobEvaluator.globPaths(globValue, parameterContext, ioFunctionSet)
