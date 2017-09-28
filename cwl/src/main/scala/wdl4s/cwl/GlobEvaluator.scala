@@ -19,6 +19,10 @@ object GlobEvaluator {
 
   private type GlobHandler = ParameterContext => Seq[String]
 
+  type Glob[A] = String
+
+  //def applyGlob(in: String) : Glob[Set[better.files.File]]
+
   def globPaths(glob: CommandOutputBinding.Glob,
                 parameterContext: ParameterContext,
                 ioFunctionSet: IoFunctionSet): Seq[String] = {
@@ -40,8 +44,8 @@ object GlobEvaluator {
   }
 
   object GlobToPaths extends Poly1 {
-    implicit def caseECMAScript: Case.Aux[ECMAScript, GlobHandler] = {
-      at[ECMAScript] { ecmaScript =>
+    implicit def caseECMAScript: Case.Aux[Expression, GlobHandler] = {
+      at[Expression] { ecmaScript =>
         (parameterContext: ParameterContext) => {
           val result = ExpressionEvaluator.evalExpression(ecmaScript.value, parameterContext)
           result match {

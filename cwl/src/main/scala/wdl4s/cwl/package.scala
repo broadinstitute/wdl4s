@@ -1,14 +1,12 @@
 package wdl4s
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.string._
-import eu.timepit.refined._
 import wdl4s.cwl.CwlType.CwlType
 import wdl4s.cwl.CwlType._
 import wdl4s.wdl.types._
 import shapeless._
 import wdl4s.wom.executable.Executable
 import lenthall.Checked
+import wdl4s.cwl.ExpressionEvaluator.{ECMAScriptExpression, ECMAScriptFunction}
 
 /**
  * This package is intended to parse all CWL files.
@@ -45,18 +43,16 @@ package object cwl extends TypeAliases {
     case CwlType.Directory => ???
   }
 
-  type MatchesECMAScript = MatchesRegex[W.`"""\\$\\(.*\\)"""`.T]
-  type MatchesECMAFunction = MatchesRegex[W.`"""\\$\\{.*\\}"""`.T]
 
   /**
     *
     * These are supposed to be valid ECMAScript Expressions.
     * See http://www.commonwl.org/v1.0/Workflow.html#Expressions
     */
-  type ECMAScript = String Refined MatchesECMAScript
-  type ECMAFunction = String Refined MatchesECMAFunction
 
-  type StringOrExpression = ECMAScript :+: ECMAFunction :+: String :+: CNil
+  type StringOrExpression = Expression :+: String :+: CNil
+
+  type Expression = ECMAScriptExpression :+: ECMAScriptFunction :+: CNil
 
 
   type WdlTypeMap = Map[String, WdlType]

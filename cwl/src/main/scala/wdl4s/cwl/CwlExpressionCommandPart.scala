@@ -5,7 +5,7 @@ import wdl4s.wom.CommandPart
 import wdl4s.wom.expression.IoFunctionSet
 
 
-case class CwlExpressionCommandPart(expr: String) extends CommandPart {
+case class CwlExpressionCommandPart(expr: Expression) extends CommandPart {
   override def instantiate(inputsMap: Map[String, WdlValue],
                             functions: IoFunctionSet,
                             valueMapper: (WdlValue) => WdlValue): String = {

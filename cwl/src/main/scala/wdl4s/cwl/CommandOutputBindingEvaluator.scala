@@ -2,6 +2,7 @@ package wdl4s.cwl
 
 import scala.Function._
 import shapeless._
+import wdl4s.cwl.ExpressionEvaluator.{ECMAScriptExpression, ECMAScriptFunction}
 import wdl4s.wdl.values._
 import wdl4s.wom.expression.IoFunctionSet
 
@@ -48,22 +49,27 @@ object CommandOutputBindingEvaluator {
   }
 
   object OutputEvalToWdlValue extends Poly1 {
-    implicit def caseECMAScript: Case.Aux[ECMAScript, OutputEvalHandler] = {
-      at[ECMAScript] { ecmaScript =>
+    implicit def caseECMAScript: Case.Aux[Expression, OutputEvalHandler] = {
+      at[Expression] { ecmaScript =>
         (parameterContext: ParameterContext) =>
-          ExpressionEvaluator.evalExpression(ecmaScript.value, parameterContext)
-      }
-    }
-
-    implicit def caseECMAFunction: Case.Aux[ECMAFunction, OutputEvalHandler] = {
-      at[ECMAFunction] { ecmaFunction =>
-        (parameterContext: ParameterContext) =>
-          ExpressionEvaluator.evalExpression(ecmaFunction.value, parameterContext)
+          ecmaScript.fold(ExpressionToWdlValue).apply(parameterContext)
       }
     }
 
     implicit def caseString: Case.Aux[String, OutputEvalHandler] = {
       at[String] { string => const(WdlString(string)) }
     }
+  }
+}
+
+object ExpressionToWdlValue extends Poly1 {
+  implicit def script = at[ECMAScriptExpression] { e =>
+    (parameterContext: ParameterContext) =>
+      ExpressionEvaluator.evalExpression(e.value, parameterContext)
+  }
+
+  implicit def function = at[ECMAScriptFunction] { f =>
+    (parameterContext: ParameterContext) =>
+      ExpressionEvaluator.evalExpression(f.value, parameterContext)
   }
 }

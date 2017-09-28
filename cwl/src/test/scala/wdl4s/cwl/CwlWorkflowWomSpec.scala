@@ -119,8 +119,8 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers with TableDrivenProperty
 
   private def getTestName(stringOrExpression: StringOrExpression): String = {
     object StringOrExpressionToTestName extends Poly1 {
-      implicit def caseECMAScript: Case.Aux[ECMAScript, String] = {
-        at[ECMAScript] { script => s"expression ${script.value}" }
+      implicit def caseECMAScript: Case.Aux[Expression, String] = {
+        at[Expression] { script => s"expression ${script.value}" }
       }
 
       implicit def caseECMAFunction: Case.Aux[ECMAFunction, String] = {

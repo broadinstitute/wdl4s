@@ -24,21 +24,19 @@ sealed trait CwlWomExpression extends WomExpression {
   override def inputs: Set[String] = ???
 }
 
-case class CommandOutputExpression(commandOutputParameter: CommandOutputParameter,
+case class CommandOutputExpression(outputBinding: CommandOutputBinding,
                                    override val cwlExpressionType: WdlType) extends CwlWomExpression {
   override def evaluateValue(inputValues: Map[String, WdlValue], ioFunctionSet: IoFunctionSet): ErrorOr[WdlValue] = {
     val parameterContext = ParameterContext.Empty.withInputs(inputValues, ioFunctionSet)
 
-    commandOutputParameter.outputBinding match {
-      case Some(outputBindingValue) =>
+    outputBinding match {
+      case outputBindingValue =>
         val wdlValue = CommandOutputBindingEvaluator.commandOutputBindingToWdlValue(
           outputBindingValue,
           parameterContext,
           ioFunctionSet
         )
         cwlExpressionType.coerceRawValue(wdlValue).toErrorOr
-      case None =>
-        s"outputBinding not specified in $commandOutputParameter".invalidNel
     }
   }
 }
@@ -53,10 +51,6 @@ case class StringExpression(expression: String) extends CwlWomExpression {
 }
 
 object CwlWomExpression {
-  def apply(commandOutputParameter: CommandOutputParameter, wdlType: WdlType): WomExpression = {
-    CommandOutputExpression(commandOutputParameter, wdlType)
-  }
-
   def apply(expression: String): WomExpression = {
     StringExpression(expression)
   }

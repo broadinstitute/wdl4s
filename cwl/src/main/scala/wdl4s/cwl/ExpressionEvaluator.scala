@@ -1,16 +1,25 @@
 package wdl4s.cwl
 
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.string.MatchesRegex
+import shapeless.Witness
 import wdl4s.wdl.util.JsUtil
 import wdl4s.wdl.values.WdlValue
 
 // http://www.commonwl.org/v1.0/CommandLineTool.html#Expressions
 object ExpressionEvaluator {
   // A code fragment wrapped in the $(...) syntax must be evaluated as a ECMAScript expression.
-  private val EcmaScriptRegex = """\$\((.*)\)""".r
+  val ECMAScriptExpressionWitness = Witness("""\$\((.*)\)""")
+  val ECMAScriptExpressionRegex = ECMAScriptExpressionWitness.value.r
+  type ECMAScriptExpression = String Refined MatchesRegex[ECMAScriptExpressionWitness.T]
 
   // A code fragment wrapped in the ${...} syntax must be evaluated as a ECMAScript function body for an anonymous,
   // zero-argument function.
-  private val EcmaFunctionRegex = """\$\{(.*)\}""".r
+  val ECMAScriptFunctionWitness = Witness("""\$\{(.*)\}""")
+  type ECMAScriptFunction = String Refined MatchesRegex[ECMAScriptFunctionWitness.T]
+  val ECMAScriptFunctionRegex = ECMAScriptFunctionWitness.value.r
+
+
 
   def evalExpression(expression: String, parameterContext: ParameterContext): WdlValue = {
     val evalValues = Map(
@@ -21,8 +30,8 @@ object ExpressionEvaluator {
 
     // TODO: WOM: Are we supposed to be trimming the expression just in case before matching?
     expression.trim match {
-      case EcmaScriptRegex(ecmaScriptExpression) => JsUtil.eval(ecmaScriptExpression, evalValues)
-      case EcmaFunctionRegex(functionBody) =>
+      case ECMAScriptExpressionRegex(ecmaScriptExpression) => JsUtil.eval(ecmaScriptExpression, evalValues)
+      case ECMAScriptFunctionRegex(functionBody) =>
         val functionExpression =
           s"""|(function() {
               |FUNCTION_BODY
