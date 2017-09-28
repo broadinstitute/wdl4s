@@ -32,10 +32,6 @@ import lenthall.Checked
 package object cwl extends TypeAliases {
 
   type Cwl = Workflow :+: CommandLineTool :+: CNil
-  // Possible value types for a workflow input (from the input file)
-  // TODO WOM: should this actually be MyriadInputType ? Or a to be created MyriadInputValue ?
-  // Not sure exactly how much needs to be supported here
-  type CwlInputValue = File :+: Directory :+: String :+: CNil
 
   def cwlTypeToWdlType : CwlType => WdlType = {
     case Null => WdlNothingType

@@ -14,7 +14,6 @@ object Dependencies {
     "com.github.benhutchison" %% "mouse" % "0.10-MF"
   )
   
-  private val circeYamlDependency = "io.circe" %% "circe-yaml" % "0.6.1"
 
   val womDependencies = List(
     "org.broadinstitute" %% "lenthall" % lenthallV,
@@ -27,10 +26,11 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % "3.0.2" % "test",
     "org.scala-graph" %% "graph-core" % "1.12.0",
     "com.chuusai" %% "shapeless" % "2.3.2"
-  ) ++ catsDependencies :+ circeYamlDependency
+  ) ++ catsDependencies
 
   val wdlDependencies = List() ++ womDependencies
 
+  private val circeYamlDependency = "io.circe" %% "circe-yaml" % "0.6.1"
   private val circeDependencies = List(
     "core",
     "parser",

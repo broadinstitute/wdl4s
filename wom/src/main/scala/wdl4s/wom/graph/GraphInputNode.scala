@@ -14,16 +14,27 @@ sealed trait GraphInputNode extends GraphNode {
 
 sealed trait ExternalGraphInputNode extends GraphInputNode {
   /**
-    * Name of this node that is to be looked for in external the input map available at runtime.
+    * The idea is this value should be the same as the one we expect the key in the input file to have.
     * e.g in WDL:
-    * workflow w {
-    *   String s # "name" = "s", "fullyQualifiedIdentifier" = "w.s"
-    * }
+    * workflow.wdl:
+    *   workflow w {
+    *     String s # "name" = "s", "fullyQualifiedIdentifier" = "w.s"
+    *   }
+    * 
+    * input.json:
+    *   {
+    *     "w.s": "hi!"
+    *   }
     * 
     * e.g in CWL:
-    * class: Workflow
-    * inputs:
-    *   s: string # "name" = "s", "fullyQualifiedIdentifier" = "s"
+    * workflow.cwl:
+    *   class: Workflow
+    *   inputs:
+    *     s: string # "name" = "s", "fullyQualifiedIdentifier" = "s"
+    *   
+    * inputs.yml:
+    *   s: "hi !"
+    * 
     */
   def fullyQualifiedIdentifier: String
 }
