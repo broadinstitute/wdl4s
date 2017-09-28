@@ -5,6 +5,8 @@ import org.scalatest.{FlatSpec, Matchers}
 import spray.json._
 
 import scala.collection.immutable.ListMap
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class WdlWiringSpec extends FlatSpec with Matchers {
   val testCases = File("src/test/cases")
@@ -13,7 +15,7 @@ class WdlWiringSpec extends FlatSpec with Matchers {
   testCases.list.toSeq.filter(_.isDirectory) foreach { testDir =>
     val wdlFile = testDir / "test.wdl"
     if (!wdlFile.exists) fail(s"Expecting a 'test.wdl' file in directory 'cases/${testDir.name}'")
-    def resolvers: Seq[ImportResolver] = Seq((relPath: String) => (testDir / relPath).contentAsString)
+    def resolvers: Seq[ImportResolver] = Seq((relPath: String) => Future { (testDir / relPath).contentAsString })
     val namespace = WdlNamespaceWithWorkflow.load(File(wdlFile.path).contentAsString, resolvers).get
     val wdlFileRelPath = File(".").relativize(wdlFile)
 

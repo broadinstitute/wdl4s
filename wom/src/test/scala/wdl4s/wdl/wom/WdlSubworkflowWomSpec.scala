@@ -6,6 +6,9 @@ import wdl.types.{WdlArrayType, WdlIntegerType, WdlStringType}
 import wdl.{ImportResolver, WdlNamespace, WdlNamespaceWithWorkflow}
 import wom.graph.{ExpressionNode, Graph, TaskCallNode, WorkflowCallNode}
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
 
   behavior of "WdlNamespaces with subworkflows"
@@ -44,7 +47,7 @@ class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
       """.stripMargin
 
 
-    def innerResolver: ImportResolver = _ => innerWdl
+    def innerResolver: ImportResolver = _ => Future { innerWdl }
 
     val namespace = WdlNamespace.loadUsingSource(
       workflowSource = outerWdl,
@@ -133,7 +136,7 @@ class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
       """.stripMargin
 
 
-    def innerResolver: ImportResolver = _ => innerWdl
+    def innerResolver: ImportResolver = _ => Future { innerWdl }
 
     val namespace = WdlNamespace.loadUsingSource(
       workflowSource = outerWdl,

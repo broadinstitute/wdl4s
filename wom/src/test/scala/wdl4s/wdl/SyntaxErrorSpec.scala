@@ -6,6 +6,9 @@ import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.prop.Tables.Table
 import wdl.util.StringUtil
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import scala.util.{Failure, Success}
 
 class SyntaxErrorSpec extends FlatSpec with Matchers {
@@ -31,7 +34,7 @@ class SyntaxErrorSpec extends FlatSpec with Matchers {
      |  }
      |}""".stripMargin
 
-  private def resolver(importUri: String): WorkflowSource = {
+  private def resolver(importUri: String): Future[WorkflowSource] = Future {
     importUri match {
       case "ps" => psTaskWdl
       case "cgrep" => cgrepTaskWdl

@@ -8,6 +8,8 @@ import wdl4s.parser.WdlParser.SyntaxError
 import wdl.types._
 import wdl.values._
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
 class WdlWorkflowSpec extends WordSpec with Matchers {
@@ -142,10 +144,10 @@ class WdlWorkflowSpec extends WordSpec with Matchers {
         case Failure(e) => fail(e)
       }
     }
-    
+
     def verifyOutputs(outputString: String, declarationExpectations: Seq[WorkflowOutputExpectation], evaluationExpectations: Map[String, WdlValue]) = {
       val ns = WdlNamespaceWithWorkflow.load(
-        wdl.replace("<<OUTPUTS>>", outputString), Seq((uri: String) => subWorkflow)).get
+        wdl.replace("<<OUTPUTS>>", outputString), Seq( (uri: String) => Future {subWorkflow} ) ).get
       verifyOutputsForNamespace(ns, declarationExpectations, evaluationExpectations, outputResolverForWorkflow(ns.workflow))
     }
 
@@ -409,7 +411,7 @@ class WdlWorkflowSpec extends WordSpec with Matchers {
         """.stripMargin
 
       a[SyntaxError] should be thrownBy {
-        WdlNamespaceWithWorkflow.load(wdl.replace("<<OUTPUTS>>", output), Seq((uri: String) => subWorkflow)).get
+        WdlNamespaceWithWorkflow.load(wdl.replace("<<OUTPUTS>>", output), Seq((uri: String) => Future {subWorkflow})).get
       }
     }
 
@@ -485,7 +487,7 @@ class WdlWorkflowSpec extends WordSpec with Matchers {
         """.stripMargin
       
       val exception = the[SyntaxError] thrownBy
-        WdlNamespaceWithWorkflow.load(parentWorkflow, Seq((uri: String) => subWorkflow)).get
+        WdlNamespaceWithWorkflow.load(parentWorkflow, Seq((uri: String) => Future {subWorkflow})).get
       exception.getMessage shouldBe s"""Workflow sub_workflow is used as a sub workflow but has outputs declared with a deprecated syntax not compatible with sub workflows.
                                         |To use this workflow as a sub workflow please update the workflow outputs section to the latest WDL specification.
                                         |See https://github.com/broadinstitute/wdl/blob/develop/SPEC.md#outputs""".stripMargin

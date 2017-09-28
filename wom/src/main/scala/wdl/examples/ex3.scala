@@ -1,6 +1,9 @@
 package wdl.examples
 
-import wdl.{WorkflowSource, WdlNamespaceWithWorkflow}
+import wdl.{WdlNamespaceWithWorkflow, WorkflowSource}
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object ex3 {
   def main(args: Array[String]): Unit = {
@@ -13,7 +16,7 @@ object ex3 {
       | call a
       |}""".stripMargin
 
-    def resolver(importString: String): WorkflowSource = {
+    def resolver(importString: String): Future[WorkflowSource] = Future {
       importString match {
         case "some_string" => "task imported { command {ps} }"
         case _ => throw new NotImplementedError()

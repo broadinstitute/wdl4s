@@ -2,8 +2,6 @@ package wdl
 
 import java.nio.file.{Path, Paths}
 
-import better.files._
-import lenthall.util.TryUtil
 import wdl4s.parser.WdlParser._
 import wdl.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl.command.ParameterCommandPart
@@ -15,7 +13,15 @@ import wom.executable.Executable
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+
+// why is this necessary now?
+import lenthall.util.TryUtil
+import better.files.File
 
 /**
   * Represents a parsed WDL file
@@ -190,7 +196,7 @@ object WdlNamespace {
     def tryResolve(str: String, remainingResolvers: Seq[ImportResolver], errors: List[Throwable]): WorkflowSource = {
       remainingResolvers match {
         case resolver :: tail =>
-          Try(resolver(str)) match {
+          Try(Await.result(resolver(str), 5.seconds)) match {
             case Success(s) => s
             case Failure(f) => tryResolve(str, tail, errors :+ f)
           }
@@ -549,13 +555,13 @@ object WdlNamespace {
 
   private def readFile(wdlFile: Path): WorkflowSource = File(wdlFile).contentAsString
 
-  def fileResolver(str: String): WorkflowSource = readFile(Paths.get(str))
+  def fileResolver(str: String): Future[WorkflowSource] = Future { readFile(Paths.get(str)) }
 
-  def directoryResolver(directory: File)(str: String): WorkflowSource = {
+  def directoryResolver(directory: File)(str: String): Future[WorkflowSource] = Future {
     val absolutePathToFile = Paths.get(directory.path.resolve(str).toFile.getCanonicalPath)
     val absolutePathToImports = Paths.get(directory.toJava.getCanonicalPath)
     if (absolutePathToFile.startsWith(absolutePathToImports)) {
-      fileResolver(absolutePathToFile.toString)
+      readFile(Paths.get(absolutePathToFile.toString))
     } else {
       throw new IllegalArgumentException(s"$str is not a valid import")
     }

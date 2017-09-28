@@ -6,6 +6,8 @@ import wdl.expression.{NoFunctions, PureStandardLibraryFunctionsLike}
 import wdl.types.{WdlArrayType, WdlFileType, WdlIntegerType, WdlStringType}
 import wdl.values._
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
 
 class WdlCallSpec extends WordSpec with Matchers {
@@ -112,7 +114,7 @@ class WdlCallSpec extends WordSpec with Matchers {
         |}
       """.stripMargin
 
-    val ns = WdlNamespaceWithWorkflow.load(wdl, Seq((_: String) => subWorkflow)).get
+    val ns = WdlNamespaceWithWorkflow.load(wdl, Seq((_: String) => Future {subWorkflow} )).get
     ns.workflow.workflowCalls.size shouldBe 1
     ns.workflow.taskCalls.size shouldBe 1
   }

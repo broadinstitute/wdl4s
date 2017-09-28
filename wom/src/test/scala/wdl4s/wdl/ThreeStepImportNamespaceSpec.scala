@@ -3,6 +3,8 @@ package wdl
 import org.scalatest.{FlatSpec, Matchers}
 import wdl.exception.ValidationException
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Failure
 
 class ThreeStepImportNamespaceSpec extends FlatSpec with Matchers {
@@ -54,7 +56,7 @@ class ThreeStepImportNamespaceSpec extends FlatSpec with Matchers {
     |  }
     |}""".stripMargin
 
-  def resolver(importUri: String): WorkflowSource = {
+  def resolver(importUri: String): Future[WorkflowSource] = Future {
     importUri match {
       case "ps" => psTaskWdl
       case "cgrep" => cgrepTaskWdl
@@ -76,7 +78,7 @@ class ThreeStepImportNamespaceSpec extends FlatSpec with Matchers {
     namespace.namespaces flatMap {_.tasks} map {_.name} shouldEqual Seq("ps", "cgrep", "wc")
   }
   it should "Throw an exception if the import resolver fails to resolve an import" in {
-    def badResolver(s: String): String = {
+    def badResolver(s: String): Future[WorkflowSource] = Future {
       throw new RuntimeException(s"Can't Resolve")
     }
     WdlNamespace.loadUsingSource(workflowWdl, None, Option(Seq(badResolver))) match {

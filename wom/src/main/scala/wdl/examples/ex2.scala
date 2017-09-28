@@ -2,6 +2,10 @@ package wdl.examples
 
 import wdl.{WorkflowSource, WdlNamespaceWithWorkflow}
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
+
 object ex2 {
   def main(args: Array[String]): Unit = {
     val wdl = """
@@ -13,7 +17,7 @@ object ex2 {
       | call a
       |}""".stripMargin
 
-    def resolver(importString: String): WorkflowSource = {
+    def resolver(importString: String): Future[WorkflowSource] = Future {
       importString match {
         case "some_string" => "task imported { command {ps} }"
         case s if s.startsWith("http://") =>

@@ -2,6 +2,7 @@
 import wdl.exception.OutputVariableLookupException
 import wdl.values.WdlValue
 
+import scala.concurrent.Future
 import scala.util.{Failure, Try}
 
 package object wdl {
@@ -12,7 +13,7 @@ package object wdl {
   type FullyQualifiedName = String
   type LocallyQualifiedName = String
   type EvaluatedTaskInputs = Map[Declaration, WdlValue]
-  type ImportResolver = String => WorkflowSource
+  type ImportResolver = String => Future[WorkflowSource]
   type OutputResolver = (WdlGraphNode, Option[Int]) => Try[WdlValue]
 
   val NoOutputResolver: OutputResolver = (node: WdlGraphNode, i: Option[Int]) => Failure(OutputVariableLookupException(node, i))

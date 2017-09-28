@@ -3,8 +3,11 @@ package wdl
 import better.files.File
 import org.scalatest.{Matchers, WordSpecLike}
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 trait WdlTest extends Matchers with WordSpecLike {
-  def resolver(root: File)(relPath: String): String = (root / relPath).contentAsString
+  def resolver(root: File)(relPath: String): Future[WorkflowSource] = Future { (root / relPath).contentAsString }
   def loadWdlFile(wdlFile: File) =
     WdlNamespaceWithWorkflow.load(wdlFile.contentAsString, Seq(resolver(wdlFile / "..") _)).get
   def getTask(ns: WdlNamespace, name: String): WdlTask = ns.tasks.find(_.unqualifiedName == name).get

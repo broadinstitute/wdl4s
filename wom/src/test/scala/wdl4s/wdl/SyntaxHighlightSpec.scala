@@ -3,6 +3,9 @@ package wdl
 import wdl.formatter.{AnsiSyntaxHighlighter, HtmlSyntaxHighlighter, SyntaxFormatter}
 import org.scalatest.{Matchers, WordSpec}
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class SyntaxHighlightSpec extends WordSpec with Matchers {
   "SyntaxFormatter for typical workflow" should {
     val namespace = WdlNamespace.loadUsingSource(
@@ -256,7 +259,7 @@ class SyntaxHighlightSpec extends WordSpec with Matchers {
                        |}
                      """.stripMargin
 
-    def resolver(importUri: String): WorkflowSource = {
+    def resolver(importUri: String): Future[WorkflowSource] = Future {
       importUri match {
         case "foo.wdl" => fooTaskWdl
         case _ => throw new RuntimeException(s"Can't resolve $importUri")
