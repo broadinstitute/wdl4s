@@ -1,5 +1,6 @@
 package wdl4s.cwl
 
+import lenthall.Checked
 import shapeless.syntax.singleton._
 import shapeless.{:+:, CNil, Poly1, Witness, _}
 import wdl4s.cwl.CommandLineTool.BaseCommand
@@ -10,7 +11,6 @@ import wdl4s.wom.callable.{Callable, TaskDefinition}
 import wdl4s.wom.executable.Executable
 import wdl4s.wom.expression.WomExpression
 import wdl4s.wom.{CommandPart, RuntimeAttributes}
-import lenthall.Checked
 
 /**
   *
@@ -56,7 +56,7 @@ case class CommandLineTool private(
                                    permanentFailCodes: Option[Array[Int]]) {
 
   def womExecutable: Checked[Executable] =
-    Right(Executable(taskDefinition))
+    Right(Executable(taskDefinition, CwlInputParsing.inputCoercionFunction))
 
 
   object BaseCommandToString extends Poly1 {

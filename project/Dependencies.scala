@@ -13,6 +13,8 @@ object Dependencies {
     "org.typelevel" %% "cats-core" % catsV,
     "com.github.benhutchison" %% "mouse" % "0.10-MF"
   )
+  
+  private val circeYamlDependency = "io.circe" %% "circe-yaml" % "0.6.1"
 
   val womDependencies = List(
     "org.broadinstitute" %% "lenthall" % lenthallV,
@@ -25,7 +27,7 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % "3.0.2" % "test",
     "org.scala-graph" %% "graph-core" % "1.12.0",
     "com.chuusai" %% "shapeless" % "2.3.2"
-  ) ++ catsDependencies
+  ) ++ catsDependencies :+ circeYamlDependency
 
   val wdlDependencies = List() ++ womDependencies
 
@@ -37,7 +39,7 @@ object Dependencies {
     "shapes",
     "refined",
     "literal"
-  ).map(m => "io.circe" %% s"circe-$m" % circeVersion)
+  ).map(m => "io.circe" %% s"circe-$m" % circeVersion) :+ circeYamlDependency
 
   val cwlDependencies = List(
     "eu.timepit" %% "refined" % "0.8.3",

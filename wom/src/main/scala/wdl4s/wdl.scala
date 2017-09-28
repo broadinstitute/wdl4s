@@ -8,7 +8,7 @@ import scala.util.{Failure, Try}
 package object wdl {
   type WorkflowSource = String
   type WorkflowJson = String
-  type WorkflowRawInputs = Map[FullyQualifiedName, Any]
+  type ExecutableInputMap = Map[String, Any]
   type WorkflowCoercedInputs = Map[FullyQualifiedName, WdlValue]
   type FullyQualifiedName = String
   type LocallyQualifiedName = String

@@ -24,18 +24,38 @@ trait TypeAliases {
       StepInputExpressionRequirement :+:
       CNil
 
+  // TODO WOM: Record Schema as well as Directories are not included because they're not supported yet, although they should eventually be.
+  // Removing them saves some compile time when building decoders for this type (in CwlInputParsing)
+  type MyriadInputValue =
+    String :+:
+    Int :+:
+    Long :+:
+    File :+:
+    Float :+:
+    Double :+:
+    Boolean :+:
+      Array[
+        String :+:
+          Int :+:
+          Long :+:
+          File :+:
+          Float :+:
+          Double :+:
+          Boolean :+:
+          CNil
+        ] :+:
+      CNil
+  
   type MyriadInputType =
     CwlType :+:
       InputRecordSchema :+:
       InputEnumSchema :+:
       InputArraySchema :+:
-      String :+:
       Array[
         CwlType :+:
           InputRecordSchema :+:
           InputEnumSchema :+:
           InputArraySchema :+:
-          String :+:
           CNil
         ] :+:
       CNil
