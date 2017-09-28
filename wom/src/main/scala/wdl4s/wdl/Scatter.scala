@@ -54,7 +54,7 @@ object Scatter {
       g <- WdlGraphNode.buildWomGraph(scatter, Set(womInnerGraphScatterVariableInput), localLookup)
     } yield (g, womInnerGraphScatterVariableInput)
 
-    (scatterVariableSourceValidation, innerGraphAndScatterItemInputValidation).tupled map { case (scatterVariableSource, (innerGraph, scatterItemInputNode)) =>
+    (scatterVariableSourceValidation, innerGraphAndScatterItemInputValidation) mapN { case (scatterVariableSource, (innerGraph, scatterItemInputNode)) =>
       ScatterNode.scatterOverGraph(innerGraph, scatterVariableSource, scatterItemInputNode)
     }
   }

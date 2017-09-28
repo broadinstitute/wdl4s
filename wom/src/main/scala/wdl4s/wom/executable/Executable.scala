@@ -1,5 +1,6 @@
 package wdl4s.wom.executable
 
+import ExecutableInputValidation._
 import cats.syntax.validated._
 import lenthall.Checked
 import lenthall.validation.ErrorOr._
@@ -49,11 +50,9 @@ final case class Executable(entryPoint: Callable, inputParsingFunction: InputPar
     * @param inputFile content of the input file as a string
     * @return Resolved inputs map
     */
-  def validateWorkflowInputs(inputFile: String): Checked[ResolvedExecutableInputs] = for {
-    validGraph <- graph.toEither
-    parsedInputs <- inputParsingFunction(inputFile)
-    validatedInputs <- parseGraphInputs(validGraph, parsedInputs).toEither
-  } yield validatedInputs
+  def validateExecutableInputs(inputFile: String): Checked[ResolvedExecutableInputs] = {
+    validateInputs(graph, inputParsingFunction, parseGraphInputs, inputFile)
+  }
 
   /**
     * Given the graph and the Map[String, DelayedCoercionFunction], attempts to find a value in the map for each ExternalGraphInputNode of the graph

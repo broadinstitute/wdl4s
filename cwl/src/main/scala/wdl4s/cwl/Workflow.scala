@@ -55,9 +55,9 @@ case class Workflow private(
 
     val graphFromInputs: Set[ExternalGraphInputNode] = inputs.map {
       // TODO WOM: need to be able to transform this default value to a WomExpression
-      case input @ InputParameter(id, _, _, _, _, _, _, Some(_), _) =>
-        val parsedInputId = WorkflowInputId(id).inputId
-        val womType = wdlTypeForInputParameter(input).get
+      case inputParameter if inputParameter.default.isDefined =>
+        val parsedInputId = WorkflowInputId(inputParameter.id).inputId
+        val womType = wdlTypeForInputParameter(inputParameter).get
 
         OptionalGraphInputNodeWithDefault(parsedInputId, womType, PlaceholderWomExpression(Set.empty, womType))
       case input =>

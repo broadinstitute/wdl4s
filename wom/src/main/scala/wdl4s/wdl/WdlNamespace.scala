@@ -4,7 +4,6 @@ import java.nio.file.{Path, Paths}
 
 import better.files._
 import lenthall.util.TryUtil
-import cats.syntax.either._
 import wdl4s.parser.WdlParser._
 import wdl4s.wdl.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl4s.wdl.command.ParameterCommandPart
@@ -13,7 +12,6 @@ import wdl4s.wdl.expression.{NoFunctions, WdlStandardLibraryFunctions, WdlStanda
 import wdl4s.wdl.types._
 import wdl4s.wdl.values._
 import wdl4s.wom.executable.Executable
-import wdl4s.wom.executable.Executable.{InputParsingFunction, ParsedInputMap}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -75,20 +73,7 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
                                     wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
                                     ast: Ast) extends WdlNamespace {
 
-  private lazy val inputCoercionFunction: InputParsingFunction = inputString => {
-    import spray.json._
-    import lenthall.validation.Validation._
-    import lenthall.validation.Checked._
-    
-    Try(inputString.parseJson).toErrorOr.toEither flatMap {
-      case JsObject(fields) => fields.mapValues(jsValue => { womType: WdlType =>
-        womType.coerceRawValue(jsValue).toErrorOr
-      }).validNelCheck
-      case other => s"WDL input file must be a valid Json object. Found a ${other.getClass.getSimpleName}".invalidNelCheck[ParsedInputMap]
-    }
-  }
-
-  lazy val womExecutable = workflow.womDefinition.map(Executable(_, inputCoercionFunction))
+  lazy val womExecutable = workflow.womDefinition.map(Executable(_, WdlInputParsing.inputCoercionFunction))
 
   override val workflows = Seq(workflow)
 

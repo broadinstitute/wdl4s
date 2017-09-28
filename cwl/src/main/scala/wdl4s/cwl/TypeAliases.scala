@@ -26,26 +26,20 @@ trait TypeAliases {
 
   // TODO WOM: Record Schema as well as Directories are not included because they're not supported yet, although they should eventually be.
   // Removing them saves some compile time when building decoders for this type (in CwlInputParsing)
-  type MyriadInputValue =
-    String :+:
+  type MyriadInputValuePrimitives = String :+:
     Int :+:
     Long :+:
     File :+:
     Float :+:
     Double :+:
     Boolean :+:
-      Array[
-        String :+:
-          Int :+:
-          Long :+:
-          File :+:
-          Float :+:
-          Double :+:
-          Boolean :+:
-          CNil
-        ] :+:
+    CNil
+
+  type MyriadInputValue =
+    MyriadInputValuePrimitives :+:
+      Array[MyriadInputValuePrimitives] :+:
       CNil
-  
+
   type MyriadInputType =
     CwlType :+:
       InputRecordSchema :+:

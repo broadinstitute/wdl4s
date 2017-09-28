@@ -47,7 +47,7 @@ class WdlInputValidationSpec extends FlatSpec with Matchers with BeforeAndAfterA
   val u2OutputPort = graph.externalInputNodes.find(_.fullyQualifiedIdentifier == "w.u.t2").getOrElse(fail("Failed to find an input node for u2")).singleOutputPort
 
   def validate(inputFile: String) = {
-    executable.validateWorkflowInputs(inputFile)
+    executable.validateExecutableInputs(inputFile)
   }
 
   it should "validate workflow inputs" in {
