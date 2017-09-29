@@ -19,4 +19,3 @@ private [wdl] object WdlInputParsing {
     }
   }
 }
-

@@ -11,6 +11,7 @@ import wom.callable.TaskDefinition
 import wom.expression.PlaceholderWomExpression
 import wom.graph.CallNode.{CallNodeAndNewNodes, CallNodeBuilder, InputDefinitionFold, InputDefinitionPointer}
 import wom.graph.GraphNodePort.OutputPort
+import wom.graph._
 
 class ScatterNodeSpec extends FlatSpec with Matchers {
   behavior of "ScatterNode"

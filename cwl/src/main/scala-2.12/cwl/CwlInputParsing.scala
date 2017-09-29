@@ -1,6 +1,5 @@
 package cwl
 
-import cats.syntax.validated._
 import io.circe._
 import io.circe.shapes._
 import io.circe.generic.auto._

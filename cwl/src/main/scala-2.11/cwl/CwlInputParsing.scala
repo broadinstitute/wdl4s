@@ -1,4 +1,4 @@
-package cwl.cwl
+package cwl
 
 import cats.syntax.validated._
 import cats.syntax.either._

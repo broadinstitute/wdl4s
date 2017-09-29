@@ -5,17 +5,17 @@ import lenthall.validation.Checked._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import shapeless.Coproduct
-import wdl4s.wdl.types.{WdlIntegerType, WdlStringType}
-import wdl4s.wdl.values.{WdlFile, WdlInteger, WdlOptionalValue, WdlString, WdlValue}
-import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
-import wdl4s.wom.executable.Executable.ResolvedExecutableInputs
-import wdl4s.wom.graph.Graph.ResolvedExecutableInput
+import wdl.types.{WdlIntegerType, WdlStringType}
+import wdl.values.{WdlFile, WdlInteger, WdlOptionalValue, WdlString, WdlValue}
+import wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
+import wom.executable.Executable.ResolvedExecutableInputs
+import wom.graph.Graph.ResolvedExecutableInput
 
 class WdlInputValidationSpec extends FlatSpec with Matchers with BeforeAndAfterAll with TableDrivenPropertyChecks {
 
   behavior of "WDL Wom executable"
 
-  val wdlWorkflow =
+  val wdlWorkflow: String =
     """
       |task t {
       |  String t1

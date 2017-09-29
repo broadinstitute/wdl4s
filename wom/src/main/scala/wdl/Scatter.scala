@@ -7,6 +7,7 @@ import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
 import wdl4s.parser.WdlParser.{Ast, Terminal}
 import wom.graph.ScatterNode.ScatterNodeWithNewNodes
 import wom.graph._
+import wdl.types.WdlArrayType
 
 /**
   * Scatter class.

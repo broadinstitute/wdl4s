@@ -2,6 +2,9 @@ package wdl
 
 import cats.syntax.either._
 import scala.util.Try
+import wom.executable.Executable.InputParsingFunction
+import wom.executable.Executable.ParsedInputMap
+import wdl.types.WdlType
 
 private [wdl] object WdlInputParsing {
 

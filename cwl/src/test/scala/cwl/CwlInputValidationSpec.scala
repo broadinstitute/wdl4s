@@ -1,7 +1,6 @@
-package cwl.cwl
+package cwl
 
 import better.files.{File => BFile}
-import cwl.Workflow
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import shapeless.Coproduct
