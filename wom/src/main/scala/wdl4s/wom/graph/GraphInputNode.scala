@@ -6,7 +6,7 @@ import wdl4s.wom.graph.GraphNodePort.GraphNodeOutputPort
 
 sealed trait GraphInputNode extends GraphNode {
   def womType: WdlType
-  val singleOutputPort: GraphNodeOutputPort = GraphNodeOutputPort(name, womType, this)
+  lazy val singleOutputPort: GraphNodeOutputPort = GraphNodeOutputPort(name, womType, this)
 
   override val inputPorts: Set[GraphNodePort.InputPort] = Set.empty
   override val outputPorts: Set[GraphNodePort.OutputPort] = Set(singleOutputPort)
@@ -37,6 +37,8 @@ sealed trait ExternalGraphInputNode extends GraphInputNode {
     * 
     */
   def fullyQualifiedIdentifier: String
+  
+  override lazy val singleOutputPort: GraphNodeOutputPort = GraphNodeOutputPort(fullyQualifiedIdentifier, womType, this)
 }
 
 object RequiredGraphInputNode {
