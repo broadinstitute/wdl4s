@@ -1,6 +1,7 @@
 package wdl4s.cwl
 
 import cats.data.Validated.Valid
+import cwl.{CommandLineTool, WomToCwl}
 import org.scalatest.{FlatSpec, Matchers}
 
 class WomToCwlSpec extends FlatSpec with Matchers {

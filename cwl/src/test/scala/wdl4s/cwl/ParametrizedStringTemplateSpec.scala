@@ -1,7 +1,8 @@
 package wdl4s.cwl
 
+import cwl.ParametrizedStringTemplate
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.cwl.ParametrizedStringTemplate.{CharElement, ParameterPart}
+import cwl.ParametrizedStringTemplate.{CharElement, ParameterPart}
 
 class ParametrizedStringTemplateSpec extends FlatSpec with Matchers {
 

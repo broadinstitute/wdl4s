@@ -1,6 +1,6 @@
-package wdl4s.cwl
+package cwl
 
-import wdl4s.cwl.ParametrizedStringTemplate._
+import cwl.ParametrizedStringTemplate.{CharElement, Element, ParameterPart, Part, StringPart}
 
 case class ParametrizedStringTemplate[P](parts: Seq[Part[P]], lengthSums: Seq[Int]) {
 

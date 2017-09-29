@@ -1,15 +1,15 @@
-package wdl4s.cwl
+package cwl
 
 import cats.data.Validated.Valid
 import cats.syntax.option.catsSyntaxOption
+import cwl.CommandLineTool.{Argument, BaseCommand}
+import cwl.CwlCmdTokenGrouper.Group
+import cwl.ParametrizedBashParser.Token
 import lenthall.validation.ErrorOr.{ErrorOr, ShortCircuitingFlatMap}
 import shapeless.Coproduct
-import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand}
-import wdl4s.cwl.CwlCmdTokenGrouper.Group
-import wdl4s.cwl.ParametrizedBashParser.Token
-import wdl4s.wdl.command.{ParameterCommandPart, StringCommandPart}
-import wdl4s.wom.CommandPart
-import wdl4s.wom.callable.TaskDefinition
+import wdl.command.{ParameterCommandPart, StringCommandPart}
+import wom.CommandPart
+import wom.callable.TaskDefinition
 
 object WomToCwl {
 

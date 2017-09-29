@@ -1,8 +1,8 @@
-package wdl4s.cwl
+package cwl
 
-import wdl4s.cwl.ParametrizedBashParser.Token.TokenType
-import wdl4s.cwl.ParametrizedStringTemplate.{CharElement, Element, ParameterPart}
-import wdl4s.cwl.ParametrizedBashParser.{ScanMark, Token}
+import cwl.ParametrizedBashParser.{ScanMark, Token}
+import cwl.ParametrizedBashParser.Token.TokenType
+import cwl.ParametrizedStringTemplate.{CharElement, Element, ParameterPart}
 
 class ParametrizedBashParser[RP, SRP <: RP, XRP <: RP](isRawStringPart: RP => Boolean,
                                                        rawPartToString: SRP => String) {

@@ -1,12 +1,12 @@
 package wdl4s.cwl
 
 import shapeless.Coproduct
-import wdl4s.cwl.CommandLineTool.{Argument, BaseCommand}
-import wdl4s.wdl.WdlExpression
-import wdl4s.wdl.command.{ParameterCommandPart, StringCommandPart}
-import wdl4s.wom.callable.{Callable, TaskDefinition}
-import wdl4s.wom.expression.WomExpression
-import wdl4s.wom.{CommandPart, RuntimeAttributes}
+import cwl.CommandLineTool.{Argument, BaseCommand}
+import wdl.WdlExpression
+import wdl.command.{ParameterCommandPart, StringCommandPart}
+import wom.callable.{Callable, TaskDefinition}
+import wom.expression.WomExpression
+import wom.{CommandPart, RuntimeAttributes}
 
 object WomToCwlExamples {
 

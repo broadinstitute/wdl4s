@@ -1,7 +1,8 @@
 package wdl4s.cwl
 
+import cwl.ParametrizedBashParser
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.cwl.ParametrizedBashParser.Token.TokenType
+import cwl.ParametrizedBashParser.Token.TokenType
 
 class ParametrizedBashParserSpec extends FlatSpec with Matchers {
 

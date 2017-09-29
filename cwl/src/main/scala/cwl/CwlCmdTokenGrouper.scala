@@ -1,11 +1,9 @@
-package wdl4s.cwl
+package cwl
 
 import cats.Apply
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
-import cats.syntax.option.catsSyntaxOption
 import lenthall.validation.ErrorOr.ErrorOr
-import wdl4s.cwl.ParametrizedBashParser.Token
 
 
 object CwlCmdTokenGrouper {
