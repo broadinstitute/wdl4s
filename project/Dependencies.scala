@@ -13,7 +13,7 @@ object Dependencies {
     "org.typelevel" %% "cats-core" % catsV,
     "com.github.benhutchison" %% "mouse" % "0.10-MF"
   )
-  
+
 
   val womDependencies = List(
     "org.broadinstitute" %% "lenthall" % lenthallV,
@@ -30,7 +30,7 @@ object Dependencies {
 
   val wdlDependencies = List() ++ womDependencies
 
-  private val circeYamlDependency = "io.circe" %% "circe-yaml" % "0.6.1"
+  private val circeYamlDependency = "io.circe" %% "circe-yaml" % "0.7.0-M1"
   private val circeDependencies = List(
     "core",
     "parser",
