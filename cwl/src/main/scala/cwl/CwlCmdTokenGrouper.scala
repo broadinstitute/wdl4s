@@ -3,6 +3,8 @@ package cwl
 import cats.Apply
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
+import cats.syntax.option.catsSyntaxOption
+import cwl.ParametrizedBashParser.Token
 import lenthall.validation.ErrorOr.ErrorOr
 
 

@@ -1,5 +1,6 @@
 package wdl4s.cwl
 
+import cwl.{CommandInputParameter, CommandLineBinding, CommandLineTool, StringOrExpression}
 import shapeless.Coproduct
 import cwl.CommandLineTool.{Argument, BaseCommand}
 import wdl.WdlExpression
