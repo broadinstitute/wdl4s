@@ -2,8 +2,8 @@ package wdl4s.cwl
 
 import cats.syntax.validated._
 import eu.timepit.refined._
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.string._
+//import eu.timepit.refined.api.Refined
+//import eu.timepit.refined.string._
 import lenthall.validation.ErrorOr.ErrorOr
 import shapeless.{:+:, CNil}
 import wdl4s.wdl.values.{WdlSingleFile, WdlValue}
@@ -23,7 +23,7 @@ object CwlType extends Enumeration {
 }
 
 case class File(
-  `class`: String Refined MatchesRegex[W.`"File"`.T],
+  `class`: W.`"File"`.T,
   location: Option[String], //TODO refine w/ regex  of IRI
   path: Option[String],
   basename: Option[String],
@@ -46,7 +46,7 @@ case class File(
 }
 
 case class Directory(
-  `class`: String Refined MatchesRegex[W.`"Directory"`.T],
+  `class`: W.`"Directory"`.T,
   location: Option[String],
   path: Option[String],
   basename: Option[String],
