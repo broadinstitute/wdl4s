@@ -2,8 +2,6 @@ package wdl4s.cwl
 
 import cats.syntax.validated._
 import eu.timepit.refined._
-//import eu.timepit.refined.api.Refined
-//import eu.timepit.refined.string._
 import lenthall.validation.ErrorOr.ErrorOr
 import shapeless.{:+:, CNil}
 import wdl4s.wdl.values.{WdlSingleFile, WdlValue}
