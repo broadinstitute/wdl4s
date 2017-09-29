@@ -12,7 +12,6 @@ import wdl4s.wom.expression.WomExpression
 import wdl4s.wom.{CommandPart, RuntimeAttributes}
 import lenthall.Checked
 import wdl4s.wdl.types.WdlFileType
-import wdl4s.wdl.values.WdlFile
 
 /**
   *
@@ -72,12 +71,8 @@ case class CommandLineTool private(
   }
 
   object ArgumentToId extends Poly1 {
-    implicit def ecmaScript = at[Expression] {
-      _.value
-    }
-
-    implicit def ecmaFunction = at[ECMAFunction] {
-      _.value
+    implicit def ecmaScript:Case.Aux[Expression, String] = at[Expression] {
+      _ => ???
     }
 
     implicit def commandLineBinding = at[CommandLineBinding] { _ => "" }

@@ -12,7 +12,7 @@ case class WorkflowStepInput(
   source: Option[InputSource] = None,
   linkMerge: Option[LinkMergeMethod] = None,
   default: Option[CwlAny] = None,
-  valueFrom: Option[Expression :+: ECMAFunction :+: String :+: CNil] = None)
+  valueFrom: Option[StringOrExpression] = None)
 
 object WorkflowStepInput {
   type InputSource = String :+: Array[String] :+: CNil
@@ -23,16 +23,16 @@ case class InputParameter(
                            label: Option[String] = None,
                            secondaryFiles:
                              Option[
-                               Expression :+: ECMAFunction :+:
+                               Expression :+:
                                String :+:
                                Array[
-                                 Expression :+: ECMAFunction :+:
+                                 Expression :+:
                                  String :+:
                                  CNil] :+:
                                CNil] = None,
                            format:
                              Option[
-                               Expression :+: ECMAFunction :+:
+                               Expression :+:
                                String :+:
                                Array[String] :+:
                                CNil] = None,
@@ -84,14 +84,14 @@ case class WorkflowOutputParameter(
                                     label: Option[String] = None,
                                     secondaryFiles:
                                       Option[
-                                        Expression :+: ECMAFunction :+:
+                                        Expression :+:
                                         String :+:
                                         Array[
-                                          Expression :+: ECMAFunction :+:
+                                          Expression :+:
                                           String :+:
                                           CNil] :+:
                                         CNil] = None,
-                                    format: Option[Expression :+: ECMAFunction :+: String :+: Array[String] :+: CNil] = None,
+                                    format: Option[Expression :+: String :+: Array[String] :+: CNil] = None,
                                     streamable: Option[Boolean] = None,
                                     doc: Option[String :+: Array[String] :+: CNil] = None,
                                     outputBinding: Option[CommandOutputBinding] = None,
@@ -128,9 +128,9 @@ case class OutputEnumSchema(
 case class CommandOutputBinding(
                                  glob: Option[Glob] = None,
                                  loadContents: Option[Boolean] = None,
-                                 outputEval: Option[Expression :+: ECMAFunction :+: String :+: CNil] = None)
+                                 outputEval: Option[StringOrExpression] = None)
 object CommandOutputBinding {
-  type Glob = Expression :+: ECMAFunction :+: String :+: Array[String] :+: CNil
+  type Glob = Expression :+: String :+: Array[String] :+: CNil
 
 }
 
@@ -182,11 +182,11 @@ case class InitialWorkDirRequirement(
       File :+:
       Directory :+:
       Dirent :+:
-      Expression :+: ECMAFunction :+:
+      Expression :+:
       String :+:
       CNil
     ] :+:
-    Expression :+: ECMAFunction :+:
+    Expression :+:
     String :+:
     CNil)
 
@@ -195,8 +195,8 @@ case class InitialWorkDirRequirement(
  *  @see <a href="http://www.commonwl.org/v1.0/CommandLineTool.html#Dirent">Dirent Specification</a>
  */
 case class Dirent(
-                   entry: Expression :+: ECMAFunction :+: String :+: CNil,
-                   entryName: Option[Expression :+: ECMAFunction :+: String :+: CNil],
+                   entry: Expression :+: String :+: CNil,
+                   entryName: Option[Expression :+: String :+: CNil],
                    writable: Option[Boolean])
 
 
@@ -221,14 +221,14 @@ case class ShellCommandRequirement(`class`: W.`"ShellCommandRequirement"`.T = "S
 
 case class ResourceRequirement(
                                 `class`: W.`"ResourceRequirement"`.T,
-                                coresMin: Long :+: Expression :+: ECMAFunction :+: String :+: CNil,
-                                coresMax: Int :+: Expression :+: ECMAFunction :+: String :+: CNil,
-                                ramMin: Long :+: Expression :+: ECMAFunction :+: String :+: CNil,
-                                ramMax: Long :+: Expression :+: ECMAFunction :+: String :+: CNil,
-                                tmpdirMin: Long :+: Expression :+: ECMAFunction :+: String :+: CNil,
-                                tmpdirMax: Long :+: Expression :+: ECMAFunction :+: String :+: CNil,
-                                outdirMin: Long :+: Expression :+: ECMAFunction :+: String :+: CNil,
-                                outdirMax: Long :+: Expression :+: ECMAFunction :+: String :+: CNil)
+                                coresMin: Long :+: Expression :+: String :+: CNil,
+                                coresMax: Int :+: Expression :+: String :+: CNil,
+                                ramMin: Long :+: Expression :+: String :+: CNil,
+                                ramMax: Long :+: Expression :+: String :+: CNil,
+                                tmpdirMin: Long :+: Expression :+: String :+: CNil,
+                                tmpdirMax: Long :+: Expression :+: String :+: CNil,
+                                outdirMin: Long :+: Expression :+: String :+: CNil,
+                                outdirMax: Long :+: Expression :+: String :+: CNil)
 
 case class SubworkflowFeatureRequirement(
   `class`: W.`"SubworkflowFeatureRequirement"`.T)

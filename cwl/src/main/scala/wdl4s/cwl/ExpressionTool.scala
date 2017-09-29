@@ -9,7 +9,6 @@ case class ExpressionTool(
                            `class`: String,
                            expression:
                              Expression :+:
-                             ECMAFunction :+:
                              String :+:
                              CNil,
                            id: Option[String] = None,
@@ -24,18 +23,15 @@ case class ExpressionToolOutputParameter(
                                           label: Option[String] = None,
                                           secondaryFiles:
                                             Option[Expression :+:
-                                            ECMAFunction :+:
                                             String :+:
                                             Array[
                                               Expression :+:
-                                              ECMAFunction :+:
                                               String :+:
                                               CNil] :+:
                                             CNil] = None,
                                           format:
                                             Option[
                                               Expression :+:
-                                              ECMAFunction :+:
                                               String :+:
                                               Array[String] :+:
                                               CNil] = None,

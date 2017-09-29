@@ -41,20 +41,9 @@ case class CommandOutputExpression(outputBinding: CommandOutputBinding,
   }
 }
 
-case class StringExpression(expression: String) extends CwlWomExpression {
-  override val cwlExpressionType = WdlStringType
-  override def evaluateValue(inputValues: Map[String, WdlValue], ioFunctionSet: IoFunctionSet) = {
-    val parameterContext = ParameterContext.Empty.withInputs(inputValues, ioFunctionSet)
-    // TODO: WOM: Instead of letting exceptions fly, catch and convert to ErrorOr
-    ExpressionEvaluator.evalExpression(expression, parameterContext).valid
-  }
-}
-
 object CwlWomExpression {
 
-  def apply(expression: String): WomExpression = {
-    StringExpression(expression)
-  }
+  def evaluateExpression(expr: Expression, inputsMap: Map[String, WdlValue], functions: IoFunctionSet):ErrorOr[WdlValue] = ???
 
   implicit class EnhancedParameterContextInputs(val parameterContext: ParameterContext) extends AnyVal {
     def withInputs(inputValues: Map[String, WdlValue], ioFunctionSet: IoFunctionSet): ParameterContext = {

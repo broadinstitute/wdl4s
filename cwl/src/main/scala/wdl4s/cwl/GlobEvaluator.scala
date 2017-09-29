@@ -21,8 +21,6 @@ object GlobEvaluator {
 
   type Glob[A] = String
 
-  //def applyGlob(in: String) : Glob[Set[better.files.File]]
-
   def globPaths(glob: CommandOutputBinding.Glob,
                 parameterContext: ParameterContext,
                 ioFunctionSet: IoFunctionSet): Seq[String] = {
@@ -47,27 +45,11 @@ object GlobEvaluator {
     implicit def caseECMAScript: Case.Aux[Expression, GlobHandler] = {
       at[Expression] { ecmaScript =>
         (parameterContext: ParameterContext) => {
-          val result = ExpressionEvaluator.evalExpression(ecmaScript.value, parameterContext)
-          result match {
+          ecmaScript.fold(EvaluateExpression).apply(parameterContext) match {
             case WdlArray(_, values) if values.isEmpty => Vector.empty
             case WdlString(value) => Vector(value)
             case WdlArray(WdlArrayType(WdlStringType), values) => values.map(_.valueString)
-            case _ =>
-              throw new RuntimeException(s"TODO: WOM: Placeholder exception: unexpected expression result: $result")
-          }
-        }
-      }
-    }
-
-    implicit def caseECMAFunction: Case.Aux[ECMAFunction, GlobHandler] = {
-      at[ECMAFunction] { ecmaFunction =>
-        (parameterContext: ParameterContext) => {
-          val result = ExpressionEvaluator.evalExpression(ecmaFunction.value, parameterContext)
-          result match {
-            case WdlArray(_, values) if values.isEmpty => Vector.empty
-            case WdlString(value) => Vector(value)
-            case WdlArray(WdlArrayType(WdlStringType), values) => values.map(_.valueString)
-            case _ =>
+            case result =>
               throw new RuntimeException(s"TODO: WOM: Placeholder exception: unexpected expression result: $result")
           }
         }
