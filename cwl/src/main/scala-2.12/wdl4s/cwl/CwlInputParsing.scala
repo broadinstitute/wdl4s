@@ -2,7 +2,6 @@ package wdl4s.cwl
 
 import io.circe._
 import io.circe.Decoder
-import io.circe.parser._
 import io.circe.shapes._
 import io.circe.generic.auto._
 import io.circe.refined._
@@ -18,12 +17,9 @@ object CwlInputParsing {
   // Decodes the input file, and build the ParsedInputMap
   private [cwl] lazy val inputCoercionFunction: InputParsingFunction =
     inputFile => {
-          yaml.
-            parser.
-            parse(inputFile).
-            flatMap(json => decode[Map[String, MyriadInputValue]](io.circe.Printer.noSpaces.pretty(json))) match {
-              case Left(error) => error.getMessage.invalidNelCheck[ParsedInputMap]
-              case Right(inputValue) => inputValue.mapValues(_.fold(CwlInputCoercion)).validNelCheck
-            }
+      yaml.parser.parse(inputFile).flatMap(_.as[Map[String, MyriadInputValue]]) match {
+          case Left(error) => error.getMessage.invalidNelCheck[ParsedInputMap]
+          case Right(inputValue) => inputValue.mapValues(_.fold(CwlInputCoercion)).validNelCheck
+      }
     }
 }
