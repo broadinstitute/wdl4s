@@ -1,6 +1,7 @@
 package cwl
 
 import lenthall.Checked
+import lenthall.validation.Checked._
 import shapeless.syntax.singleton._
 import shapeless.{:+:, CNil, Poly1, Witness, _}
 import cwl.CommandLineTool.BaseCommand
@@ -56,7 +57,7 @@ case class CommandLineTool private(
                                    permanentFailCodes: Option[Array[Int]]) {
 
   def womExecutable(inputFile: Option[String] = None): Checked[Executable] =
-    Executable.withInputs(taskDefinition, CwlExecutableValidation.inputCoercionFunction, inputFile)
+    CwlExecutableValidation.builWomExecutable(taskDefinition.validNelCheck, inputFile)
 
 
   object BaseCommandToString extends Poly1 {

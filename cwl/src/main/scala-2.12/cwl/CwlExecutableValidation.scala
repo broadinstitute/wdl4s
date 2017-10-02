@@ -9,6 +9,7 @@ import io.circe.yaml
 import io.circe.literal._
 import lenthall.Checked
 import lenthall.validation.Checked._
+import wom.callable.Callable
 import wom.executable.Executable
 import wom.executable.Executable.{InputParsingFunction, ParsedInputMap}
 
@@ -26,9 +27,9 @@ object CwlExecutableValidation {
       }
     }
 
-  def builWomExecutable(workflow: Workflow, inputFile: Option[String]): Checked[Executable] = {
+  def builWomExecutable(callable: Checked[Callable], inputFile: Option[String]): Checked[Executable] = {
     for {
-      womDefinition <- workflow.womDefinition
+      womDefinition <- callable
       executable <- Executable.withInputs(womDefinition, inputCoercionFunction, inputFile)
     } yield executable
   }
