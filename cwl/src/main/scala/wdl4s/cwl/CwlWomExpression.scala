@@ -43,8 +43,6 @@ case class CommandOutputExpression(outputBinding: CommandOutputBinding,
 
 object CwlWomExpression {
 
-  def evaluateExpression(expr: Expression, inputsMap: Map[String, WdlValue], functions: IoFunctionSet):ErrorOr[WdlValue] = ???
-
   implicit class EnhancedParameterContextInputs(val parameterContext: ParameterContext) extends AnyVal {
     def withInputs(inputValues: Map[String, WdlValue], ioFunctionSet: IoFunctionSet): ParameterContext = {
       val wdlValueType = inputValues.values.headOption.map(_.wdlType).getOrElse(WdlNothingType)

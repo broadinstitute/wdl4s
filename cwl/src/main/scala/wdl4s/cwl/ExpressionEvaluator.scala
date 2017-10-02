@@ -10,16 +10,21 @@ import wdl4s.wdl.values.WdlValue
 object ExpressionEvaluator {
   // A code fragment wrapped in the $(...) syntax must be evaluated as a ECMAScript expression.
   val ECMAScriptExpressionWitness = Witness("""\$\((.*)\)""")
+  type MatchesECMAScript = MatchesRegex[ECMAScriptExpressionWitness.T]
   type ECMAScriptExpression = String Refined MatchesRegex[ECMAScriptExpressionWitness.T]
+  val ECMAScriptExpressionRegex = ECMAScriptExpressionWitness.value.r
 
   // A code fragment wrapped in the ${...} syntax must be evaluated as a ECMAScript function body for an anonymous,
   // zero-argument function.
   val ECMAScriptFunctionWitness = Witness("""\$\{(.*)\}""")
   type ECMAScriptFunction = String Refined MatchesRegex[ECMAScriptFunctionWitness.T]
+  type MatchesECMAFunction = MatchesRegex[ECMAScriptFunctionWitness.T]
 
 
   def evalExpression(expression: ECMAScriptExpression, parameterContext: ParameterContext): WdlValue =
-    JsUtil.eval(expression.value, paramValues(parameterContext))
+    expression.value match {
+      case ECMAScriptExpressionRegex(script) => JsUtil.eval(script, paramValues(parameterContext))
+    }
 
   def evalFunction(function: ECMAScriptFunction, parameterContext: ParameterContext): WdlValue = {
     val functionExpression =

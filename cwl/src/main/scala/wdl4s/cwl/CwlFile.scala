@@ -120,6 +120,9 @@ case class CommandLineTool private(
     val outputs: List[Callable.OutputDefinition] = this.outputs.map {
       case CommandOutputParameter(id, _, _, _, _, _, Some(outputBinding), Some(tpe)) if tpe.select[CwlType].filter(_ == CwlType.File).isDefined =>
         OutputDefinition(RunId(id).variableId, WdlFileType, CommandOutputExpression(outputBinding, WdlFileType))
+      case CommandOutputParameter(id, _, _, _, _, _, Some(outputBinding), Some(tpe)) =>
+        val wdlType = tpe.select[CwlType].map(cwlTypeToWdlType).get //<-- here be `get` dragons
+        OutputDefinition(RunId(id).variableId, wdlType, CommandOutputExpression(outputBinding, wdlType))
     }.toList
 
     val inputs: List[_ <: Callable.InputDefinition] =

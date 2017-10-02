@@ -11,4 +11,7 @@ object ParameterContext {
   )
 }
 
-case class ParameterContext(inputs: WdlValue, self: WdlValue, runtime: WdlValue)
+case class ParameterContext(
+                             inputs: WdlValue = WdlOptionalValue(WdlNothingType, None),
+                             self: WdlValue = WdlOptionalValue(WdlNothingType, None),
+                             runtime: WdlValue = WdlOptionalValue(WdlNothingType, None))

@@ -4,19 +4,9 @@ import wdl4s.wdl.types._
 import wdl4s.wdl.values._
 import wdl4s.wom.expression.IoFunctionSet
 
-// TODO: WOM: We need a CWL file as defined by http://www.commonwl.org/v1.0/CommandLineTool.html#File
-case class CwlFile(path: String)
-
 object CwlFileEvaluator {
 
   def pathsToArrayOfCwlFileMaps(paths: Seq[String], ioFunctionSet: IoFunctionSet, loadContents: Boolean): WdlArray = {
-    cwlFilesToWdlArray(paths, ioFunctionSet, loadContents)
-  }
-
-  def cwlFilesToWdlArray(paths: Seq[String],
-                         ioFunctionSet: IoFunctionSet,
-                         loadContents: Boolean): WdlArray = {
-
     val wdlMapType = WdlMapType(WdlStringType, WdlStringType)
     val wdlMaps = paths map { path =>
       // TODO: WOM: basename/dirname/size/checksum/etc.
