@@ -7,11 +7,19 @@ object Dependencies {
   val circeVersion = "0.9.0-M1"
   val lenthallV = "0.28-9d9a747-SNAP"
 
+  lazy val akkaHttpV = "10.0.10"
+
+
   // Internal collections of dependencies
 
   private val catsDependencies = List(
     "org.typelevel" %% "cats-core" % catsV,
     "com.github.benhutchison" %% "mouse" % "0.10-MF"
+  )
+
+  val akkaHttpDependencies = List(
+    "com.typesafe.akka" %% "akka-http" % akkaHttpV,
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV % Test
   )
 
   val womDependencies = List(
@@ -25,7 +33,7 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % "3.0.2" % "test",
     "org.scala-graph" %% "graph-core" % "1.12.0",
     "com.chuusai" %% "shapeless" % "2.3.2"
-  ) ++ catsDependencies
+  ) ++ akkaHttpDependencies ++ catsDependencies
 
   val wdlDependencies = List() ++ womDependencies
 

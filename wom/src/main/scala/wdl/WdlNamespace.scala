@@ -2,6 +2,7 @@ package wdl
 
 import java.nio.file.{Path, Paths}
 
+import akka.actor.ActorSystem
 import wdl4s.parser.WdlParser._
 import wdl.AstTools.{AstNodeName, EnhancedAstNode}
 import wdl.command.ParameterCommandPart
@@ -16,12 +17,17 @@ import scala.collection.mutable
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.postfixOps
 
 // why is this necessary now?
 import lenthall.util.TryUtil
 import better.files.File
+
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import akka.stream.ActorMaterializer
+import akka.util.ByteString
 
 /**
   * Represents a parsed WDL file
@@ -207,6 +213,27 @@ object WdlNamespace {
           }
       }
     }
+
+//    def futureToFutureTry[T](f: Future[T]): Future[Try[T]] =
+//      f.map(Success(_)).recover({case e => Failure(e)})
+//
+//    def tryResolve2(str: String, resolvers: Seq[ImportResolver], errors: List[Throwable]): WorkflowSource = {
+//      val listOfFutureTrys = resolvers.map( _(str) ).map(futureToFutureTry(_))
+//
+//      val futureListOfTrys = Future.sequence(listOfFutureTrys)
+//
+//      // look for the first success, otherwise collect the exceptions
+//      val futureListOfSuccesses = futureListOfTrys.map(_.find(_.isSuccess))
+//
+//      futureListOfSuccesses match {
+//        case Some(Success(t)) => t
+//        case _ =>
+//      }
+//
+//
+//
+//    }
+//
 
     // Translates all import statements to sub-namespaces
     val namespaces: Seq[WdlNamespace] = for {
@@ -566,6 +593,7 @@ object WdlNamespace {
       throw new IllegalArgumentException(s"$str is not a valid import")
     }
   }
+
 }
 
 object WdlNamespaceWithWorkflow {
