@@ -1,7 +1,8 @@
 package wdl4s.cwl
 
+import cwl.ExpressionEvaluator.{ECMAScriptExpression, ECMAScriptFunction}
+import cwl.{ExpressionEvaluator, ParameterContext}
 import shapeless.Poly1
-import wdl4s.cwl.ExpressionEvaluator.{ECMAScriptExpression, ECMAScriptFunction}
 
 object EvaluateExpression extends Poly1 {
   implicit def script = at[ECMAScriptExpression] { e =>

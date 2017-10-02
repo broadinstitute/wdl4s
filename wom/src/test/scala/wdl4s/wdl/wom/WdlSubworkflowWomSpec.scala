@@ -1,10 +1,10 @@
-package wdl4s.wdl.wom
+package wdl.wom
 
 import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.wdl.types.{WdlArrayType, WdlIntegerType, WdlStringType}
-import wdl4s.wdl.{ImportResolver, WdlNamespace, WdlNamespaceWithWorkflow}
-import wdl4s.wom.graph.{ExpressionNode, Graph, TaskCallNode, WorkflowCallNode}
+import wdl.types.{WdlArrayType, WdlIntegerType, WdlStringType}
+import wdl.{ImportResolver, WdlNamespace, WdlNamespaceWithWorkflow}
+import wom.graph.{ExpressionNode, Graph, TaskCallNode, WorkflowCallNode}
 
 class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
 
@@ -51,8 +51,8 @@ class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
       resource = None,
       importResolver = Some(Seq(innerResolver))).get.asInstanceOf[WdlNamespaceWithWorkflow]
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
-
-    val outerWorkflowGraph = namespace.womExecutable.flatMap(_.graph)
+    
+    val outerWorkflowGraph = namespace.workflow.womDefinition.flatMap(_.graph)
 
     outerWorkflowGraph match {
       case Valid(g) => validateOuter(g)
@@ -141,7 +141,7 @@ class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
       importResolver = Some(Seq(innerResolver))).get.asInstanceOf[WdlNamespaceWithWorkflow]
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
 
-    val outerWorkflowGraph = namespace.womExecutable.flatMap(_.graph)
+    val outerWorkflowGraph = namespace.workflow.womDefinition.flatMap(_.graph)
 
     outerWorkflowGraph match {
       case Valid(g) => validateOuter(g)

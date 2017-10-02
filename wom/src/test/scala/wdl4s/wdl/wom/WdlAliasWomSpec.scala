@@ -1,10 +1,10 @@
-package wdl4s.wdl.wom
+package wdl.wom
 
 import cats.data.Validated.{Invalid, Valid}
 import lenthall.collections.EnhancedCollections._
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
-import wdl4s.wom.graph._
+import wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
+import wom.graph._
 
 class WdlAliasWomSpec extends FlatSpec with Matchers {
 
@@ -27,7 +27,7 @@ class WdlAliasWomSpec extends FlatSpec with Matchers {
 
     val namespace = WdlNamespace.loadUsingSource(conditionalTest, None, None).get.asInstanceOf[WdlNamespaceWithWorkflow]
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
-    val conditionalTestGraph = namespace.womExecutable.flatMap(_.graph)
+    val conditionalTestGraph = namespace.workflow.womDefinition.flatMap(_.graph)
 
     conditionalTestGraph match {
       case Valid(g) => validateGraph(g)
@@ -36,8 +36,9 @@ class WdlAliasWomSpec extends FlatSpec with Matchers {
 
     def validateGraph(workflowGraph: Graph) = {
 
-      val inputNodes: Set[GraphInputNode] = workflowGraph.nodes.filterByType[GraphInputNode]
-      inputNodes.map(_.name) should be(Set("conditional_test.foo1.i", "conditional_test.foo2.i"))
+      val inputNodes: Set[ExternalGraphInputNode] = workflowGraph.nodes.filterByType[ExternalGraphInputNode]
+      inputNodes.map(_.name) should be(Set("foo1.i", "foo2.i"))
+      inputNodes.map(_.fullyQualifiedIdentifier) should be(Set("conditional_test.foo1.i", "conditional_test.foo2.i"))
 
       val callNodes: Set[CallNode] = workflowGraph.nodes.filterByType[CallNode]
       callNodes.map(_.name) should be(Set("foo1", "foo2"))

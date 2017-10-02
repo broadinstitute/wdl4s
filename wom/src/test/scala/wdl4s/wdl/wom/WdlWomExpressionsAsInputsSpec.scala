@@ -1,11 +1,11 @@
-package wdl4s.wdl.wom
+package wdl.wom
 
 import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{FlatSpec, Matchers}
-import wdl4s.wdl.wom.WdlWomExpressionsAsInputsSpec.Wdl
-import wdl4s.wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
-import wdl4s.wom.graph.GraphNodePort.OutputPort
-import wdl4s.wom.graph.{ExpressionNode, TaskCallNode}
+import wdl.wom.WdlWomExpressionsAsInputsSpec.Wdl
+import wdl.{WdlNamespace, WdlNamespaceWithWorkflow}
+import wom.graph.GraphNodePort.OutputPort
+import wom.graph.{ExpressionNode, TaskCallNode}
 
 import scala.language.postfixOps
 
@@ -55,8 +55,7 @@ class WdlWomExpressionsAsInputsSpec extends FlatSpec with Matchers {
 
     val namespace = WdlNamespace.loadUsingSource(Wdl, None, None).get.asInstanceOf[WdlNamespaceWithWorkflow]
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
-
-    val workflowGraph = namespace.womExecutable.flatMap(_.graph) match {
+    val workflowGraph = namespace.workflow.womDefinition.flatMap(_.graph) match {
       case Valid(g) => g
       case Invalid(errors) => fail(s"Unable to build wom graph from WDL: ${errors.toList.mkString("\n", "\n", "\n")}")
     }
