@@ -24,7 +24,7 @@ case class Workflow private(
                      outputs: Array[WorkflowOutputParameter],
                      steps: Array[WorkflowStep]) {
   def womExecutable(inputFile: Option[String] = None): Checked[Executable] = {
-    CwlInputParsing.builWomExecutable(this, inputFile)
+    CwlExecutableValidation.builWomExecutable(this, inputFile)
   }
 
   val fileNames: List[String] = steps.toList.flatMap(_.run.select[String].toList)

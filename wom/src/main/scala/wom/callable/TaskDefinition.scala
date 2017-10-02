@@ -6,11 +6,8 @@ import wdl.expression.WdlFunctions
 import wdl.util.StringUtil
 import wdl.values.WdlValue
 import wom.expression.IoFunctionSet
-import wom.graph.Graph
-import wom.graph.TaskCall
-import wom.CommandPart
-import wom.RuntimeAttributes
-import wom.WomEvaluatedCallInputs
+import wom.graph.{Graph, TaskCall}
+import wom.{CommandPart, RuntimeAttributes, WomEvaluatedCallInputs}
 
 import scala.util.Try
 

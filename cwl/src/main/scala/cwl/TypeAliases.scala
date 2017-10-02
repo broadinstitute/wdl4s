@@ -46,11 +46,13 @@ trait TypeAliases {
       InputRecordSchema :+:
       InputEnumSchema :+:
       InputArraySchema :+:
+      String :+:
       Array[
         CwlType :+:
           InputRecordSchema :+:
           InputEnumSchema :+:
           InputArraySchema :+:
+          String :+:
           CNil
         ] :+:
       CNil

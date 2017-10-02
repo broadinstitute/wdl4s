@@ -12,12 +12,13 @@ import lenthall.validation.Checked._
 import wom.executable.Executable
 import wom.executable.Executable.{InputParsingFunction, ParsedInputMap}
 
-object CwlInputParsing {
+// See explanation as to why there are 2 versions of this in ExecutableValidation
+object CwlExecutableValidation {
 
   implicit val f = implicitly[Decoder[File]]
 
   // Decodes the input file, and build the ParsedInputMap
-  private [cwl] lazy val inputCoercionFunction: InputParsingFunction =
+  private val inputCoercionFunction: InputParsingFunction =
     inputFile => {
       yaml.parser.parse(inputFile).flatMap(_.as[Map[String, MyriadInputValue]]) match {
         case Left(error) => error.getMessage.invalidNelCheck[ParsedInputMap]

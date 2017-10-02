@@ -14,14 +14,13 @@ import lenthall.validation.Checked._
 import wom.executable.Executable
 import wom.executable.Executable.{InputParsingFunction, ParsedInputMap}
 
-// scala 2.11 doesn't have flatMap on Either, so we need to import cats.syntax.either._
-// However it does in scala 2.12 which would make this import unused and fail compilation
-// This is the reason why there are 2 versions of this file
-object CwlInputParsing {
+// See explanation as to why there are 2 versions of this in ExecutableValidation
+object CwlExecutableValidation {
 
-  implicit val x = implicitly[Decoder[File]]
+  implicit val f = implicitly[Decoder[File]]
 
-  private [cwl] val inputCoercionFunction: InputParsingFunction =
+  // Decodes the input file, and build the ParsedInputMap
+  private val inputCoercionFunction: InputParsingFunction =
     inputFile => {
       yaml.parser.parse(inputFile).flatMap(_.as[Map[String, MyriadInputValue]]) match {
         case Left(error) => error.getMessage.invalidNelCheck[ParsedInputMap]
