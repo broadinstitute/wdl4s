@@ -55,8 +55,8 @@ case class CommandLineTool private(
                                    temporaryFailCodes: Option[Array[Int]],
                                    permanentFailCodes: Option[Array[Int]]) {
 
-  def womExecutable: Checked[Executable] =
-    Right(Executable(taskDefinition, CwlInputParsing.inputCoercionFunction))
+  def womExecutable(inputFile: Option[String] = None): Checked[Executable] =
+    Executable.withInputs(taskDefinition, CwlInputParsing.inputCoercionFunction, inputFile)
 
 
   object BaseCommandToString extends Poly1 {

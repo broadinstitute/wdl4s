@@ -9,16 +9,16 @@ import wom.graph.GraphNodePort.{ConditionalOutputPort, InputPort, OutputPort}
   *
   * @param innerGraph Imagine that the contents of the conditional block were a self-contained workflow. That's this Graph
   * @param condition The (boolean) expression on which the conditional is predicated.
-  * @param outputMapping Output ports for the conditional node which link back to GraphOutputNodes of the inner graph.
+  * @param conditionalOutputPorts Output ports for the conditional node which link back to GraphOutputNodes of the inner graph.
   */
 final case class ConditionalNode private(innerGraph: Graph,
                                          condition: ExpressionNode,
-                                         outputMapping: Set[ConditionalOutputPort]) extends GraphNode {
+                                         conditionalOutputPorts: Set[ConditionalOutputPort]) extends GraphNode {
 
   override val name: String = "ConditionalNode"
 
   override val inputPorts: Set[InputPort] = condition.inputPorts
-  override val outputPorts: Set[GraphNodePort.OutputPort] = outputMapping.toSet[OutputPort]
+  override val outputPorts: Set[GraphNodePort.OutputPort] = conditionalOutputPorts.toSet[OutputPort]
 }
 
 object ConditionalNode  {

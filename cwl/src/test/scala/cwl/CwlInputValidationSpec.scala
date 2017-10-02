@@ -48,14 +48,10 @@ class CwlInputValidationSpec extends FlatSpec with Matchers with TableDrivenProp
     _.select[Workflow].get
   }.value.unsafeRunSync.fold(error => throw new RuntimeException(s"broken parse! msg was $error"), identity)
 
-  // A getOrElse would be better but it doesn't compile on scala 2.11 (which doesn't have getOrElse on Either)
-  // So it's either this or 2 versions of this test...
-  lazy val womExecutable = cwlWorkflow.womExecutable match {
-    case Left(errors) => fail(s"Failed to build a wom executable: ${errors.toList.mkString(", ")}")
-    case Right(executable) => executable
+  lazy val graph = cwlWorkflow.womDefinition match {
+    case Left(errors) => fail(s"Failed to build wom definition: ${errors.toList.mkString(", ")}")
+    case Right(womDef) => womDef.graph.getOrElse(fail("Failed to build wom graph"))
   }
-  
-  lazy val graph = womExecutable.graph.getOrElse(fail("Failed to build wom graph"))
 
   lazy val w0OutputPort = graph.inputNodes.find(_.name == "w0").getOrElse(fail("Failed to find an input node for w0")).singleOutputPort
   lazy val w1OutputPort = graph.inputNodes.find(_.name == "w1").getOrElse(fail("Failed to find an input node for w1")).singleOutputPort
@@ -67,9 +63,9 @@ class CwlInputValidationSpec extends FlatSpec with Matchers with TableDrivenProp
   lazy val w7OutputPort = graph.inputNodes.find(_.name == "w7").getOrElse(fail("Failed to find an input node for w7")).singleOutputPort
   
   def validate(inputFile: String): Map[GraphNodePort.OutputPort, ResolvedExecutableInput] = {
-    womExecutable.validateExecutableInputs(inputFile) match {
-      case Left(errors) => fail(s"Failed to validate inputs: ${errors.toList.mkString(", ")}")
-      case Right(resolvedInputs) => resolvedInputs
+    cwlWorkflow.womExecutable(Option(inputFile)) match {
+      case Left(errors) => fail(s"Failed to build a wom executable: ${errors.toList.mkString(", ")}")
+      case Right(executable) => executable.resolvedExecutableInputs
     }
   }
 
@@ -107,7 +103,7 @@ class CwlInputValidationSpec extends FlatSpec with Matchers with TableDrivenProp
         w2: hello !
       """.stripMargin
 
-    womExecutable.validateExecutableInputs(inputFile) match {
+    cwlWorkflow.womExecutable(Option(inputFile)) match {
       case Right(booh) => fail(s"Expected failed validation but got valid input map: $booh")
       case Left(errors) => errors.toList.toSet shouldBe Set(
         "Required workflow input 'w1' not specified",

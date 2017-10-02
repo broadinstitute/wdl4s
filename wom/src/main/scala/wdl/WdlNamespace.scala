@@ -3,6 +3,7 @@ package wdl
 import java.nio.file.{Path, Paths}
 
 import better.files._
+import lenthall.Checked
 import lenthall.util.TryUtil
 import wdl4s.parser.WdlParser._
 import wdl.AstTools.{AstNodeName, EnhancedAstNode}
@@ -73,7 +74,9 @@ case class WdlNamespaceWithWorkflow(importedAs: Option[String],
                                     wdlSyntaxErrorFormatter: WdlSyntaxErrorFormatter,
                                     ast: Ast) extends WdlNamespace {
 
-  lazy val womExecutable = workflow.womDefinition.map(Executable(_, WdlInputParsing.inputCoercionFunction))
+  def womExecutable(inputFile: Option[String] = None): Checked[Executable] = {
+    WdlInputParsing.buildWomExecutable(workflow, inputFile)
+  }
 
   override val workflows = Seq(workflow)
 

@@ -27,7 +27,7 @@ class WdlAliasWomSpec extends FlatSpec with Matchers {
 
     val namespace = WdlNamespace.loadUsingSource(conditionalTest, None, None).get.asInstanceOf[WdlNamespaceWithWorkflow]
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
-    val conditionalTestGraph = namespace.womExecutable.flatMap(_.graph)
+    val conditionalTestGraph = namespace.workflow.womDefinition.flatMap(_.graph)
 
     conditionalTestGraph match {
       case Valid(g) => validateGraph(g)

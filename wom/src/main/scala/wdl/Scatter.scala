@@ -39,7 +39,7 @@ object Scatter {
     // Convert the scatter collection WdlExpression to a WdlWomExpression 
     val scatterCollectionExpression = WdlWomExpression(scatter.collection, Option(scatter))
     // Generate an ExpressionNode from the WdlWomExpression
-    val scatterVariableSourceValidation = WdlWomExpression.toExpressionNode(scatter.item, scatterCollectionExpression, localLookup, Map.empty)
+    val scatterCollectionExpressionNode = WdlWomExpression.toExpressionNode(scatter.item, scatterCollectionExpression, localLookup, Map.empty)
     // Validate the collection evaluates to a traversable type
     val scatterItemTypeValidation = scatterCollectionExpression.evaluateType(localLookup.map { case (k, v) => k -> v.womType }) flatMap {
       case WdlArrayType(itemType) => Valid(itemType) // Covers maps because this is a custom unapply (see WdlArrayType)
@@ -48,13 +48,13 @@ object Scatter {
 
     val innerGraphAndScatterItemInputValidation: ErrorOr[(Graph, GraphInputNode)] = for {
       _ <- scatterItemTypeValidation
-      expressionNode <- scatterVariableSourceValidation
+      expressionNode <- scatterCollectionExpressionNode
       // Graph input node for the scatter variable in the inner graph
       womInnerGraphScatterVariableInput = OuterGraphInputNode(scatter.item, expressionNode.singleExpressionOutputPort)
       g <- WdlGraphNode.buildWomGraph(scatter, Set(womInnerGraphScatterVariableInput), localLookup)
     } yield (g, womInnerGraphScatterVariableInput)
 
-    (scatterVariableSourceValidation, innerGraphAndScatterItemInputValidation) mapN { case (scatterVariableSource, (innerGraph, scatterItemInputNode)) =>
+    (scatterCollectionExpressionNode, innerGraphAndScatterItemInputValidation) mapN { case (scatterVariableSource, (innerGraph, scatterItemInputNode)) =>
       ScatterNode.scatterOverGraph(innerGraph, scatterVariableSource, scatterItemInputNode)
     }
   }

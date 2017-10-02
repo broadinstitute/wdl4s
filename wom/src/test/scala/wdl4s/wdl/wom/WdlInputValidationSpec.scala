@@ -1,6 +1,7 @@
 package wdl4s.wdl.wom
 
 import cats.syntax.either._
+import lenthall.Checked
 import lenthall.validation.Checked._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
@@ -36,8 +37,9 @@ class WdlInputValidationSpec extends FlatSpec with Matchers with BeforeAndAfterA
     """.stripMargin
 
   val namespace = WdlNamespace.loadUsingSource(wdlWorkflow, None, None).get.asInstanceOf[WdlNamespaceWithWorkflow]
-  val executable = namespace.womExecutable.getOrElse(fail("Failed to build a wom executable"))
-  val graph = executable.graph.getOrElse(fail("Failed to build a wom graph"))
+  val graph = namespace.workflow.womDefinition
+    .getOrElse(fail("Failed to build a wom definition"))
+    .graph.valueOr(errors => fail(s"Failed to build a wom graph: ${errors.toList.mkString(", ")}"))
 
   val w1OutputPort = graph.externalInputNodes.find(_.fullyQualifiedIdentifier == "w.w1").getOrElse(fail("Failed to find an input node for w1")).singleOutputPort
   val w2OutputPort = graph.externalInputNodes.find(_.fullyQualifiedIdentifier == "w.w2").getOrElse(fail("Failed to find an input node for w2")).singleOutputPort
@@ -46,8 +48,12 @@ class WdlInputValidationSpec extends FlatSpec with Matchers with BeforeAndAfterA
   val u1OutputPort = graph.externalInputNodes.find(_.fullyQualifiedIdentifier == "w.u.t1").getOrElse(fail("Failed to find an input node for u1")).singleOutputPort
   val u2OutputPort = graph.externalInputNodes.find(_.fullyQualifiedIdentifier == "w.u.t2").getOrElse(fail("Failed to find an input node for u2")).singleOutputPort
 
-  def validate(inputFile: String) = {
-    executable.validateExecutableInputs(inputFile)
+  def validate(inputFile: String): Checked[ResolvedExecutableInputs] = {
+    import lenthall.validation.Checked._
+    namespace.womExecutable(Option(inputFile)) match {
+      case Left(errors) => Left(errors)
+      case Right(e) => e.resolvedExecutableInputs.validNelCheck
+    }
   }
 
   it should "validate workflow inputs" in {

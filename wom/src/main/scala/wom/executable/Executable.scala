@@ -1,6 +1,5 @@
 package wom.executable
 
-import ExecutableInputValidation._
 import cats.syntax.validated._
 import lenthall.Checked
 import lenthall.validation.ErrorOr._
@@ -8,7 +7,8 @@ import shapeless.Coproduct
 import wdl.types.WdlType
 import wdl.values.WdlValue
 import wom.callable.Callable
-import wom.executable.Executable.{DelayedCoercionFunction, InputParsingFunction, ResolvedExecutableInputs}
+import wom.executable.Executable.ResolvedExecutableInputs
+import wom.executable.ExecutableInputValidation._
 import wom.graph.Graph.ResolvedExecutableInput
 import wom.graph.GraphNodePort.OutputPort
 import wom.graph._
@@ -32,32 +32,15 @@ object Executable {
     * Maps output ports from graph input nodes to ResolvedExecutableInput
    */
   type ResolvedExecutableInputs = Map[OutputPort, ResolvedExecutableInput]
-}
 
-/**
-  * Closely related to the WdlNamespace, contains a set of Workflows and Tasks with a single Callable selected as the
-  * entry point.
-  * @param entryPoint callable that this executable wraps
-  * @param inputParsingFunction function that can parse an input file content and return a Checked[ParsedInputMap]
-  */
-final case class Executable(entryPoint: Callable, inputParsingFunction: InputParsingFunction) {
-  val graph: ErrorOr[Graph] = entryPoint.graph
-
-  /**
-    * Takes in the raw input file for the executable, validates it, and returns either a validation error or a
-    * Map[OutputPort, ResolvedExecutableInput] where keys are output ports from the ExternalGraphInputNodes of this executable,
-    * and keys are either WdlValues or WomExpressions.
-    * @param inputFile content of the input file as a string
-    * @return Resolved inputs map
-    */
-  def validateExecutableInputs(inputFile: String): Checked[ResolvedExecutableInputs] = {
-    validateInputs(graph, inputParsingFunction, parseGraphInputs, inputFile)
+  def withInputs(entryPoint: Callable, inputParsingFunction: InputParsingFunction, inputFile: Option[String]): Checked[Executable] = {
+    validateExecutable(entryPoint, inputParsingFunction, parseGraphInputs, inputFile)
   }
 
   /**
     * Given the graph and the Map[String, DelayedCoercionFunction], attempts to find a value in the map for each ExternalGraphInputNode of the graph
     */
-  private def parseGraphInputs(graph: Graph, inputCoercionMap: Map[String, DelayedCoercionFunction]): ErrorOr[Map[OutputPort, ResolvedExecutableInput]] = {
+  private def parseGraphInputs(graph: Graph, inputCoercionMap: Map[String, DelayedCoercionFunction]): ErrorOr[ResolvedExecutableInputs] = {
     def fromInputMapping(gin: ExternalGraphInputNode): Option[ErrorOr[ResolvedExecutableInput]] = {
       inputCoercionMap.get(gin.fullyQualifiedIdentifier).map(_(gin.womType).map(Coproduct[ResolvedExecutableInput](_)))
     }
@@ -74,4 +57,13 @@ final case class Executable(entryPoint: Callable, inputParsingFunction: InputPar
         (gin.singleOutputPort: OutputPort) -> fromInputMapping(gin).getOrElse(fallBack(gin))
     }).toMap.sequence
   }
+}
+
+/**
+  * Wraps an callable in an executable object. An executable 
+  * @param entryPoint callable that this executable wraps
+  * @param resolvedExecutableInputs Resolved values for the ExternalGraphInputNodes of the entryPoint's graph
+  */
+final case class Executable(entryPoint: Callable, resolvedExecutableInputs: ResolvedExecutableInputs) {
+  val graph: ErrorOr[Graph] = entryPoint.graph
 }

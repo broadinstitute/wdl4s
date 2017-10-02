@@ -31,7 +31,7 @@ class WdlConditionalWomSpec extends FlatSpec with Matchers {
 
     val namespace = WdlNamespace.loadUsingSource(conditionalTest, None, None).get.asInstanceOf[WdlNamespaceWithWorkflow]
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
-    val conditionalTestGraph = namespace.womExecutable.flatMap(_.graph)
+    val conditionalTestGraph = namespace.workflow.womDefinition.flatMap(_.graph)
 
     conditionalTestGraph match {
       case Valid(g) => validateGraph(g)
@@ -84,7 +84,7 @@ class WdlConditionalWomSpec extends FlatSpec with Matchers {
 
       def validateConnections(validatedOuterGraph: OuterGraphValidations, validatedInnerGraph: InnerGraphValidations) = {
         // The ConditionalNode's output port is correctly associated with the inner graph's GraphOutputNode:
-        validatedOuterGraph.conditionalNode.outputMapping.toList match {
+        validatedOuterGraph.conditionalNode.conditionalOutputPorts.toList match {
           case ConditionalOutputPort(name, womType, outputToGather, _) :: Nil =>
             name should be("foo.out")
             womType should be(WdlOptionalType(WdlStringType))

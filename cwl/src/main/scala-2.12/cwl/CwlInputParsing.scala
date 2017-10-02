@@ -7,7 +7,9 @@ import io.circe.generic.auto._
 import io.circe.refined._
 import io.circe.yaml
 import io.circe.literal._
+import lenthall.Checked
 import lenthall.validation.Checked._
+import wom.executable.Executable
 import wom.executable.Executable.{InputParsingFunction, ParsedInputMap}
 
 object CwlInputParsing {
@@ -19,7 +21,14 @@ object CwlInputParsing {
     inputFile => {
       yaml.parser.parse(inputFile).flatMap(_.as[Map[String, MyriadInputValue]]) match {
         case Left(error) => error.getMessage.invalidNelCheck[ParsedInputMap]
-        case Right(inputValue) => inputValue.mapValues(_.fold(CwlInputCoercion)).validNelCheck
+        case Right(inputValue) => inputValue.map({ case (key, value) => key -> value.fold(CwlInputCoercion) }).validNelCheck
       }
     }
+
+  def builWomExecutable(workflow: Workflow, inputFile: Option[String]): Checked[Executable] = {
+    for {
+      womDefinition <- workflow.womDefinition
+      executable <- Executable.withInputs(womDefinition, inputCoercionFunction, inputFile)
+    } yield executable
+  }
 }
