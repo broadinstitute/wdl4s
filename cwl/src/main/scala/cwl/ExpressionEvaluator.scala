@@ -12,7 +12,6 @@ object ExpressionEvaluator {
   val ECMAScriptExpressionWitness = Witness("""\$\((.*)\)""")
   type MatchesECMAScript = MatchesRegex[ECMAScriptExpressionWitness.T]
   type ECMAScriptExpression = String Refined MatchesRegex[ECMAScriptExpressionWitness.T]
-  val ECMAScriptExpressionRegex = ECMAScriptExpressionWitness.value.r
 
   // A code fragment wrapped in the ${...} syntax must be evaluated as a ECMAScript function body for an anonymous,
   // zero-argument function.
@@ -21,19 +20,27 @@ object ExpressionEvaluator {
   type MatchesECMAFunction = MatchesRegex[ECMAScriptFunctionWitness.T]
 
 
-  def evalExpression(expression: ECMAScriptExpression, parameterContext: ParameterContext): WdlValue =
+  def evalExpression(expression: ECMAScriptExpression, parameterContext: ParameterContext): WdlValue = {
+    val ECMAScriptExpressionRegex = ECMAScriptExpressionWitness.value.r
     expression.value match {
       case ECMAScriptExpressionRegex(script) => JsUtil.eval(script, paramValues(parameterContext))
+      case _ => throw new RuntimeException(s"Expression was unable to be matched to Regex. This is never supposed to happen thanks to our JSON parsing library")
     }
+  }
 
   def evalFunction(function: ECMAScriptFunction, parameterContext: ParameterContext): WdlValue = {
-    val functionExpression =
-      s"""|(function() {
-          |FUNCTION_BODY
-          |})();
-          |""".stripMargin.replaceAll("FUNCTION_BODY", function.value)
+    val ECMAScriptFunctionRegex = ECMAScriptFunctionWitness.value.r
+    function.value match {
+      case ECMAScriptFunctionRegex(script) =>
+        val functionExpression =
+          s"""|(function() {
+              |FUNCTION_BODY
+              |})();
+              |""".stripMargin.replaceAll("FUNCTION_BODY", script)
 
-    JsUtil.eval(functionExpression, paramValues(parameterContext))
+        JsUtil.eval(functionExpression, paramValues(parameterContext))
+      case _ => throw new RuntimeException(s"Expression was unable to be matched to Regex. This is never supposed to happen thanks to our JSON parsing library")
+    }
   }
 
   def paramValues(parameterContext: ParameterContext) =
