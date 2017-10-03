@@ -13,19 +13,11 @@ sealed trait CwlWomExpression extends WomExpression {
   def cwlExpressionType: WdlType
 
   override def evaluateType(inputTypes: Map[String, WdlType]): ErrorOr[WdlType] = cwlExpressionType.validNel
-
-  override def evaluateFiles(inputTypes: Map[String, WdlValue],
-                             ioFunctionSet: IoFunctionSet,
-                             coerceTo: WdlType): ErrorOr[Set[WdlFile]] = {
-    ???
-  }
-
-  // TODO WOM oh geez
-  override def inputs: Set[String] = ???
 }
 
 case class CommandOutputExpression(outputBinding: CommandOutputBinding,
                                    override val cwlExpressionType: WdlType) extends CwlWomExpression {
+
   override def evaluateValue(inputValues: Map[String, WdlValue], ioFunctionSet: IoFunctionSet): ErrorOr[WdlValue] = {
     val parameterContext = ParameterContext.Empty.withInputs(inputValues, ioFunctionSet)
 
@@ -39,6 +31,10 @@ case class CommandOutputExpression(outputBinding: CommandOutputBinding,
         cwlExpressionType.coerceRawValue(wdlValue).toErrorOr
     }
   }
+
+  override def inputs: Set[String] = ???
+
+  override def evaluateFiles(inputTypes: Map[String, WdlValue], ioFunctionSet: IoFunctionSet, coerceTo: WdlType): ErrorOr[Set[WdlFile]] = ???
 }
 
 object CwlWomExpression {
