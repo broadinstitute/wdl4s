@@ -34,7 +34,7 @@ case class CommandOutputExpression(outputBinding: CommandOutputBinding,
       case WdlMap(WdlMapType(WdlStringType, WdlStringType), map) =>
         val path = map(WdlString("location")).valueString
         Valid(Set(WdlGlobFile(path)))
-      case other =>s":( we saw $other and coulnd't convert to a globfile".invalidNel[Set[WdlFile]]
+      case other =>s":( we saw $other and coulnd't convert to a globfile type: ${other.wdlType}".invalidNel[Set[WdlFile]]
     }
     //coerceTo.coerceRawValue(wdlValue).toErrorOr
     /*
@@ -53,8 +53,4 @@ case class CommandOutputExpression(outputBinding: CommandOutputBinding,
     Valid(Set(WdlFile()))
     */
   }
-}
-
-object CwlWomExpression {
-
 }
