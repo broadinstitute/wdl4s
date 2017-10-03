@@ -47,6 +47,13 @@ class TaskDefinitionSpec extends FlatSpec with Matchers {
       case Invalid(l) => fail(s"Failed to construct a one-input TaskCall graph: ${l.toList.mkString(", ")}")
     }
   }
+  
+  it should "fail to build a graph with duplicates fqns" in {
+    duplicateFqns.graph match {
+      case Valid(_) => fail("The graph should be invalid")
+      case Invalid(_) =>
+    }
+  }
 }
 
 object TaskDefinitionSpec {
@@ -77,4 +84,14 @@ object TaskDefinitionSpec {
     parameterMeta = Map.empty,
     outputs = List(Callable.OutputDefinition("bar", WdlStringType, null)),
     inputs = List.empty)
+  
+  val duplicateFqns = TaskDefinition(
+    name = "foo",
+    commandTemplate = Seq.empty,
+    runtimeAttributes = null,
+    meta = Map.empty,
+    parameterMeta = Map.empty,
+    outputs = List(Callable.OutputDefinition("bar", WdlStringType, null)),
+    inputs = List(Callable.RequiredInputDefinition("bar", WdlStringType))
+  )
 }

@@ -80,12 +80,12 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers with TableDrivenProperty
           untarUpstream should have size 2
           untarUpstream.collectFirst({
             case exprNode: ExpressionNode if exprNode.name == s"file://$rootPath/1st-workflow.cwl#untar/extractfile" =>
-              exprNode.inputPorts.head.upstream.graphNode shouldBe RequiredGraphInputNode("ex", WdlStringType)
+              exprNode.inputPorts.head.upstream.graphNode shouldBe RequiredGraphInputNode(WomIdentifier("ex"), WdlStringType)
           }).getOrElse(fail("Can't find expression node for ex"))
           
           untarUpstream.collectFirst({
             case exprNode: ExpressionNode if exprNode.name == s"file://$rootPath/1st-workflow.cwl#untar/tarfile" =>
-              exprNode.inputPorts.head.upstream.graphNode shouldBe RequiredGraphInputNode("inp", WdlFileType)
+              exprNode.inputPorts.head.upstream.graphNode shouldBe RequiredGraphInputNode(WomIdentifier("inp"), WdlFileType)
           }).getOrElse(fail("Can't find expression node for inp"))
 
           val compileUpstreamExpressionPort = nodes.collectFirst {

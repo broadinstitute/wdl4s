@@ -21,7 +21,7 @@ object GraphNodePort {
   }
 
   sealed trait OutputPort extends GraphNodePort {
-
+    def identifier: WomIdentifier = graphNode.identifier.combine(name)
     // TODO: Might end up wanting a backwards link to the InputPorts that use this (eg def downstream: Set[InputPort])?
   }
 
@@ -44,10 +44,14 @@ object GraphNodePort {
   /**
     * Represents the gathered output from a call/declaration in a ScatterNode.
     */
-  final case class ScatterGathererPort(name: String, womType: WdlArrayType, outputToGather: PortBasedGraphOutputNode, g: Unit => GraphNode) extends OutputPort with DelayedGraphNodePort
+  final case class ScatterGathererPort(name: String, womType: WdlArrayType, outputToGather: PortBasedGraphOutputNode, g: Unit => GraphNode) extends OutputPort with DelayedGraphNodePort {
+    override def identifier: WomIdentifier = outputToGather.identifier
+  }
 
   /**
     * Represents the conditional output from a call or declaration in a ConditionalNode
     */
-  final case class ConditionalOutputPort(name: String, womType: WdlOptionalType, outputToExpose: PortBasedGraphOutputNode, g: Unit => GraphNode) extends OutputPort with DelayedGraphNodePort
+  final case class ConditionalOutputPort(name: String, womType: WdlOptionalType, outputToExpose: PortBasedGraphOutputNode, g: Unit => GraphNode) extends OutputPort with DelayedGraphNodePort {
+    override def identifier: WomIdentifier = outputToExpose.identifier
+  }
 }

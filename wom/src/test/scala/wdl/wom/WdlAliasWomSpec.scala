@@ -38,13 +38,15 @@ class WdlAliasWomSpec extends FlatSpec with Matchers {
 
       val inputNodes: Set[ExternalGraphInputNode] = workflowGraph.nodes.filterByType[ExternalGraphInputNode]
       inputNodes.map(_.name) should be(Set("foo1.i", "foo2.i"))
-      inputNodes.map(_.fullyQualifiedIdentifier) should be(Set("conditional_test.foo1.i", "conditional_test.foo2.i"))
+      inputNodes.map(_.identifier.fullyQualifiedName.asString) should be(Set("conditional_test.foo1.i", "conditional_test.foo2.i"))
 
       val callNodes: Set[CallNode] = workflowGraph.nodes.filterByType[CallNode]
       callNodes.map(_.name) should be(Set("foo1", "foo2"))
+      callNodes.map(_.identifier.fullyQualifiedName.asString) should be(Set("conditional_test.foo1", "conditional_test.foo2"))
 
       val outputNodes: Set[GraphOutputNode] = workflowGraph.nodes.filterByType[GraphOutputNode]
       outputNodes.map(_.name) should be(Set("foo1.out", "foo2.out"))
+      outputNodes.map(_.identifier.fullyQualifiedName.asString) should be(Set("conditional_test.foo1.out", "conditional_test.foo2.out"))
 
       workflowGraph.nodes.size should be(6)
     }

@@ -61,7 +61,7 @@ case class WorkflowStep(
                      workflowInputs: Map[String, GraphNodeOutputPort]): Checked[Set[GraphNode]] = {
 
     // To avoid duplicating nodes, return immediately if we've already covered this node
-    val haveWeSeenThisStep: Boolean = knownNodes.collect { case TaskCallNode(name, _, _, _) => name }.contains(unqualifiedStepId)
+    val haveWeSeenThisStep: Boolean = knownNodes.collect { case TaskCallNode(name, _, _, _) => name.localName.asString }.contains(unqualifiedStepId)
 
     if (haveWeSeenThisStep) Right(knownNodes)
     else {
@@ -210,7 +210,7 @@ case class WorkflowStep(
       for {
         stepInputFold <- in.foldLeft(WorkflowStepInputFold.emptyRight)(foldStepInput)
         inputDefinitionFold <- taskDefinition.inputs.foldMap(foldInputDefinition(stepInputFold.stepInputMapping)).toEither
-        callAndNodes = callNodeBuilder.build(unqualifiedStepId, taskDefinition, inputDefinitionFold)
+        callAndNodes = callNodeBuilder.build(WomIdentifier(unqualifiedStepId), taskDefinition, inputDefinitionFold)
       } yield stepInputFold.generatedNodes ++ callAndNodes.nodes ++ knownNodes
     }
   }
@@ -246,7 +246,8 @@ object WorkflowStep {
   implicit class EnhancedWorkflowStepInput(val workflowStepInput: WorkflowStepInput) extends AnyVal {
     def toExpressionNode(sourceMappings: Map[String, OutputPort]): ErrorOr[ExpressionNode] = {
       val womExpression = PlaceholderWomExpression(sourceMappings.keySet, WdlAnyType)
-      ExpressionNode.linkWithInputs(workflowStepInput.id, womExpression, sourceMappings)
+      val identifier = WomIdentifier(workflowStepInput.id)
+      ExpressionNode.linkWithInputs(identifier, womExpression, sourceMappings)
     }
   }
 

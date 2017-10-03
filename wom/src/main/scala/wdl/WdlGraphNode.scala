@@ -108,9 +108,16 @@ object WdlGraphNode {
 
     def withDefaultOutputs(g: Graph): Graph = if (g.nodes.exists(_.isInstanceOf[GraphOutputNode])) { g } else {
       Graph(g.nodes.union((g.nodes collect {
-          case node: CallNode => node.outputPorts.map(op => PortBasedGraphOutputNode(s"${node.name}.${op.name}", op.womType, op))
-          case node: ScatterNode => node.outputPorts.map(op => PortBasedGraphOutputNode(op.name, op.womType, op))
-          case node: ConditionalNode => node.outputPorts.map(op => PortBasedGraphOutputNode(op.name, op.womType, op))
+          case node: CallNode => node.outputPorts.map(op => {
+            val identifier = node.identifier.combine(op.name)
+            PortBasedGraphOutputNode(identifier, op.womType, op)
+          })
+          case node: ScatterNode => node.outputMapping.map(op => {
+            PortBasedGraphOutputNode(op.identifier, op.womType, op)
+          })
+          case node: ConditionalNode => node.conditionalOutputPorts.map(op => {
+            PortBasedGraphOutputNode(op.identifier, op.womType, op)
+          })
         }).flatten))
     }
 

@@ -67,18 +67,18 @@ class WdlNamespaceWomSpec extends FlatSpec with Matchers {
     graphInputNodes should have size 1
     val patternInputNode = graphInputNodes.head
     patternInputNode.name should be("cgrep.pattern")
-    patternInputNode.fullyQualifiedIdentifier should be("three_step.cgrep.pattern")
+    patternInputNode.identifier.fullyQualifiedName.asString should be("three_step.cgrep.pattern")
 
     workflowGraph.nodes collect { case gon: PortBasedGraphOutputNode => gon.name } should be(Set("wc.count", "cgrep.count", "ps.procs"))
 
     val ps: TaskCallNode = workflowGraph.nodes.collectFirst({ case ps: TaskCallNode if ps.name == "ps" => ps }).get
     val cgrep: TaskCallNode = workflowGraph.nodes.collectFirst({ case cgrep: TaskCallNode if cgrep.name == "cgrep" => cgrep }).get
     val cgrepInFileExpression = {
-      workflowGraph.nodes.collectFirst({ case cgrepInFile: ExpressionNode if cgrepInFile.name == "three_step.cgrep.in_file" => cgrepInFile }).get
+      workflowGraph.nodes.collectFirst({ case cgrepInFile: ExpressionNode if cgrepInFile.name == "cgrep.in_file" => cgrepInFile }).get
     }
     val wc: TaskCallNode = workflowGraph.nodes.collectFirst({ case wc: TaskCallNode if wc.name == "wc" => wc }).get
     val wcInFileExpression = {
-      workflowGraph.nodes.collectFirst({ case wcInFile: ExpressionNode if wcInFile.name == "three_step.wc.in_file" => wcInFile }).get
+      workflowGraph.nodes.collectFirst({ case wcInFile: ExpressionNode if wcInFile.name == "wc.in_file" => wcInFile }).get
     }
 
     workflowGraph.nodes.filterByType[CallNode] should be(Set(ps, cgrep, wc))

@@ -1,5 +1,6 @@
 package wom.graph
 
+import cats.data.NonEmptyList
 import cats.instances.list._
 import cats.syntax.apply._
 import cats.syntax.functor._
@@ -58,6 +59,20 @@ object Graph {
       node.inputPorts.toList.traverse(goodLink).void
     }
 
-    nodes.toList.traverse(validateNode).map(_ => Graph(nodes))
+    def fqnUniqueness: ErrorOr[Unit] = nodes
+      .toList // Important since nodes is a Set, we don't want duplicates to disappear automatically when mapping to FQN
+      .map(_.identifier.fullyQualifiedName)
+      .groupBy(identity)
+      .collect({
+        case (fqn, list) if list.lengthCompare(1) > 0 => fqn
+      }).toList match {
+      case Nil => ().validNel
+      case head :: tail =>
+        NonEmptyList.of(head, tail: _*).map(fqn => s"Two or more nodes have the same FullyQualifiedName: ${fqn.asString}").invalid
+    }
+
+    (fqnUniqueness, nodes.toList.traverse(validateNode)) mapN { case (_, _) =>
+      Graph(nodes)
+    }
   }
 }

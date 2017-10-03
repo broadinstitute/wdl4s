@@ -15,7 +15,7 @@ final case class ConditionalNode private(innerGraph: Graph,
                                          condition: ExpressionNode,
                                          conditionalOutputPorts: Set[ConditionalOutputPort]) extends GraphNode {
 
-  override val name: String = "ConditionalNode"
+  override val identifier: WomIdentifier = WomIdentifier("ConditionalNode")
 
   override val inputPorts: Set[InputPort] = condition.inputPorts
   override val outputPorts: Set[GraphNodePort.OutputPort] = conditionalOutputPorts.toSet[OutputPort]

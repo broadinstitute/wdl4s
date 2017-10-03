@@ -25,8 +25,8 @@ class ExpressionNodeSpec extends FlatSpec with Matchers {
     */
   it should "construct an ExpressionNode if inputs are available" in {
     // Two inputs:
-    val iInputNode = RequiredGraphInputNode("i", WdlIntegerType)
-    val jInputNode = RequiredGraphInputNode("j", WdlIntegerType)
+    val iInputNode = RequiredGraphInputNode(WomIdentifier("i"), WdlIntegerType)
+    val jInputNode = RequiredGraphInputNode(WomIdentifier("j"), WdlIntegerType)
 
     // Declare an expression that needs both an "i" and a "j":
     val ijExpression = PlaceholderWomExpression(Set("i", "j"), WdlIntegerType)
@@ -34,8 +34,8 @@ class ExpressionNodeSpec extends FlatSpec with Matchers {
     // Declare the expression node using both i and j:
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
     val graph = for {
-      xDeclarationNode <- ExpressionNode.linkWithInputs("x", ijExpression, Map("i" -> iInputNode.singleOutputPort, "j" -> jInputNode.singleOutputPort))
-      xOutputNode = PortBasedGraphOutputNode("x_out", WdlIntegerType, xDeclarationNode.singleExpressionOutputPort)
+      xDeclarationNode <- ExpressionNode.linkWithInputs(WomIdentifier("x"), ijExpression, Map("i" -> iInputNode.singleOutputPort, "j" -> jInputNode.singleOutputPort))
+      xOutputNode = PortBasedGraphOutputNode(WomIdentifier("x_out"), WdlIntegerType, xDeclarationNode.singleExpressionOutputPort)
       g <- Graph.validateAndConstruct(Set(iInputNode, jInputNode, xDeclarationNode, xOutputNode))
     } yield g
 

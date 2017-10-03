@@ -55,6 +55,7 @@ class WdlConditionalWomSpec extends FlatSpec with Matchers {
           case gon: GraphOutputNode if gon.name == "foo.out" => gon
         }.getOrElse(fail("Resulting graph did not contain the 'foo.out' GraphOutputNode"))
         foo_out_output.womType should be(WdlOptionalType(WdlStringType))
+        foo_out_output.identifier.fullyQualifiedName.asString shouldBe "conditional_test.foo.out"
         
         val expressionNode = workflowGraph.nodes.collectFirst {
           case expr: ExpressionNode if expr.name == "conditional" => expr
@@ -67,12 +68,14 @@ class WdlConditionalWomSpec extends FlatSpec with Matchers {
       case class InnerGraphValidations(foo_out_innerOutput: GraphOutputNode)
       def validateInnerGraph(validatedOuterGraph: OuterGraphValidations): InnerGraphValidations = {
         val foo_i_innerInput = validatedOuterGraph.conditionalNode.innerGraph.nodes.collectFirst {
-          case gin: ExternalGraphInputNode if gin.fullyQualifiedIdentifier == "conditional_test.foo.i" => gin
+          case gin: ExternalGraphInputNode if gin.identifier.fullyQualifiedName.asString == "conditional_test.foo.i" => gin
         }.getOrElse(fail("Conditional inner graph did not contain a GraphInputNode 'foo.i'"))
 
         val foo_callNode = validatedOuterGraph.conditionalNode.innerGraph.nodes.collectFirst {
           case c: TaskCallNode if c.name == "foo" => c
         }.getOrElse(fail("Conditional inner graph did not contain a call to 'foo'"))
+
+        foo_callNode.identifier.fullyQualifiedName.asString shouldBe "conditional_test.foo"
 
         val foo_out_innerOutput = validatedOuterGraph.conditionalNode.innerGraph.nodes.collectFirst {
           case gon: GraphOutputNode if gon.name == "foo.out" => gon

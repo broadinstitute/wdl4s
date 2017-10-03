@@ -2,7 +2,7 @@ package wom.graph
 
 import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{FlatSpec, Matchers}
-import wdl.types.WdlIntegerType
+import wdl.types.{WdlIntegerType, WdlStringType}
 import wom.expression._
 
 class GraphOutputNodeSpec extends FlatSpec with Matchers {
@@ -11,17 +11,17 @@ class GraphOutputNodeSpec extends FlatSpec with Matchers {
 
   it should "construct an ExpressionBasedGraphOutputNode node if inputs are available" in {
     // Two inputs:
-    val iInputNode = RequiredGraphInputNode("i", WdlIntegerType)
-    val jInputNode = RequiredGraphInputNode("j", WdlIntegerType)
+    val iInputNode = RequiredGraphInputNode(WomIdentifier("i"), WdlIntegerType)
+    val jInputNode = RequiredGraphInputNode(WomIdentifier("j"), WdlIntegerType)
 
     // Declare a port output from i:
-    val jOutput = PortBasedGraphOutputNode("j_out", WdlIntegerType, jInputNode.singleOutputPort)
+    val jOutput = PortBasedGraphOutputNode(WomIdentifier("j_out"), WdlIntegerType, jInputNode.singleOutputPort)
 
     // Declare an expression that needs both an "i" and a "j":
     val ijExpression = PlaceholderWomExpression(Set("i", "j"), WdlIntegerType)
 
     // Declare the expression output using both i and j:
-    val xOutputValidation = ExpressionBasedGraphOutputNode.linkWithInputs("x_out", ijExpression, Map(
+    val xOutputValidation = ExpressionBasedGraphOutputNode.linkWithInputs(WomIdentifier("x_out"), WdlStringType, ijExpression, Map(
       "i" -> iInputNode.singleOutputPort,
       "j" -> jInputNode.singleOutputPort))
 
