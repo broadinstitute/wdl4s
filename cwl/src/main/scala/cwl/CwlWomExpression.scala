@@ -1,13 +1,12 @@
 package cwl
 
+import cats.data.Validated.Valid
 import cats.syntax.validated._
 import lenthall.validation.ErrorOr.ErrorOr
 import lenthall.validation.Validation._
 import wdl.types._
-import wdl.values.{WdlFile, WdlString, WdlValue}
+import wdl.values.{WdlFile, WdlGlobFile, WdlMap, WdlString, WdlValue}
 import wom.expression.{IoFunctionSet, WomExpression}
-
-import scala.util.{Failure, Try}
 
 sealed trait CwlWomExpression extends WomExpression {
 
@@ -31,10 +30,12 @@ case class CommandOutputExpression(outputBinding: CommandOutputBinding,
   override def evaluateFiles(inputTypes: Map[String, WdlValue], ioFunctionSet: IoFunctionSet, coerceTo: WdlType): ErrorOr[Set[WdlFile]] ={
     val pc = ParameterContext.Empty.withInputs(inputTypes, ioFunctionSet)
     val wdlValue = outputBinding.commandOutputBindingToWdlValue(pc, ioFunctionSet)
-    WdlFileType.coerceRawValue(wdlValue).flatMap{
-      case WdlString(value) => println("got wdl string"); Try(Set(WdlFile(value, true)))
-      case other: WdlValue => Failure(new RuntimeException(s":( we saw $other and coulnd't convert to a globfile"))
-    }.toErrorOr
+    wdlValue match {
+      case WdlMap(WdlMapType(WdlStringType, WdlStringType), map) =>
+        val path = map(WdlString("location")).valueString
+        Valid(Set(WdlGlobFile(path)))
+      case other =>s":( we saw $other and coulnd't convert to a globfile".invalidNel[Set[WdlFile]]
+    }
     //coerceTo.coerceRawValue(wdlValue).toErrorOr
     /*
     outputBinding match {
