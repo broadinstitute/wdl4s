@@ -31,6 +31,7 @@ object JsUtil {
     * @return The result of the expression.
     */
   def eval(expr: String, values: Map[String, WdlValue] = Map.empty): WdlValue = {
+    println(s"evaluating $expr")
     val engine = ScriptEngineFactory.getScriptEngine(nashornStrictArgs, getNashornClassLoader, noJavaClassFilter)
 
     val bindings = engine.createBindings()

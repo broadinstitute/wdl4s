@@ -1,12 +1,12 @@
 package cwl
 
 import eu.timepit.refined._
-import shapeless.{:+:, CNil, Witness}
+import shapeless.{:+:, CNil, Inl, Inr, Witness}
 import shapeless.syntax.singleton._
 import cwl.CommandOutputBinding.Glob
 import cwl.LinkMergeMethod.LinkMergeMethod
 import cwl.WorkflowStepInput.InputSource
-import wdl.types.{WdlArrayType, WdlMapType, WdlStringType}
+import wdl.types.{WdlArrayType, WdlMapType, WdlMaybeEmptyArrayType, WdlStringType}
 import wdl.values.{WdlArray, WdlMap, WdlString, WdlValue}
 import wom.expression.IoFunctionSet
 
@@ -144,6 +144,16 @@ case class CommandOutputBinding(
    */
   def commandOutputBindingToWdlValue(parameterContext: ParameterContext,
                                      ioFunctionSet: IoFunctionSet): WdlValue = {
+
+    (glob, this.loadContents, outputEval) match {
+        //There is no expression to worry about.  just simple file paths
+      case (Some(Inr(Inl(path))), None, None) => WdlString(path)
+      case (Some(Inr(Inr(Inl(paths)))), None, None) => WdlArray(WdlMaybeEmptyArrayType(WdlStringType), paths.toSeq.map(WdlString.apply))
+
+        //
+      case (Some(Inr(expression)), Some(true))
+
+    }
 
     val paths: Seq[String] = glob map { globValue =>
       GlobEvaluator.globPaths(globValue, parameterContext, ioFunctionSet)
