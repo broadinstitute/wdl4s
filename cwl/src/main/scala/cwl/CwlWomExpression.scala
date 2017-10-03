@@ -5,7 +5,7 @@ import cats.syntax.validated._
 import lenthall.validation.ErrorOr.ErrorOr
 import lenthall.validation.Validation._
 import wdl.types._
-import wdl.values.{WdlFile, WdlGlobFile, WdlMap, WdlString, WdlValue}
+import wdl.values.{WdlArray, WdlFile, WdlGlobFile, WdlMap, WdlString, WdlValue}
 import wom.expression.{IoFunctionSet, WomExpression}
 
 sealed trait CwlWomExpression extends WomExpression {
@@ -27,30 +27,15 @@ case class CommandOutputExpression(outputBinding: CommandOutputBinding,
 
   override def inputs: Set[String] = ???
 
+  //TODO: coerceTo is ignored?? we have to return wdlfiles so...
   override def evaluateFiles(inputTypes: Map[String, WdlValue], ioFunctionSet: IoFunctionSet, coerceTo: WdlType): ErrorOr[Set[WdlFile]] ={
     val pc = ParameterContext.Empty.withInputs(inputTypes, ioFunctionSet)
     val wdlValue = outputBinding.commandOutputBindingToWdlValue(pc, ioFunctionSet)
     wdlValue match {
-      case WdlMap(WdlMapType(WdlStringType, WdlStringType), map) =>
+      case WdlArray(WdlMaybeEmptyArrayType(WdlMapType(WdlStringType, WdlStringType)), Seq(WdlMap(WdlMapType(WdlStringType, WdlStringType), map))) =>
         val path = map(WdlString("location")).valueString
         Valid(Set(WdlGlobFile(path)))
-      case other =>s":( we saw $other and coulnd't convert to a globfile type: ${other.wdlType}".invalidNel[Set[WdlFile]]
+      case other =>s":( we saw $other and couldn't convert to a globfile type: ${other.wdlType} coerceTo: $coerceTo".invalidNel[Set[WdlFile]]
     }
-    //coerceTo.coerceRawValue(wdlValue).toErrorOr
-    /*
-    outputBinding match {
-      case CommandOutputBinding(Some(glob), Some(true), Some(Inl(expression))) =>
-        expression.fold(ExpressionEvaluator).apply(pc)
-
-    }
-
-    val glob: Option[Glob] = outputBinding.glob.flatMap(_.select[String])
-    outputBinding.loadContents
-    outputBinding.outputEval
-
-    val function: (String, String) => Seq[String] = ioFunctionSet.glob _
-
-    Valid(Set(WdlFile()))
-    */
   }
 }
