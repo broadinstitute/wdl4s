@@ -59,6 +59,7 @@ object Graph {
       node.inputPorts.toList.traverse(goodLink).void
     }
 
+    // from https://stackoverflow.com/a/24729587/1498572
     def fqnUniqueness: ErrorOr[Unit] = nodes
       .toList // Important since nodes is a Set, we don't want duplicates to disappear automatically when mapping to FQN
       .map(_.identifier.fullyQualifiedName)
