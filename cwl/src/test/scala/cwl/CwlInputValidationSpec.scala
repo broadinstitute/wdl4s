@@ -1,10 +1,10 @@
 package cwl
 
 import better.files.{File => BFile}
+import cwl.CwlDecoder.decodeAllCwl
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import shapeless.Coproduct
-import cwl.CwlDecoder.decodeAllCwl
 import wdl.values.{WdlBoolean, WdlFile, WdlFloat, WdlInteger, WdlString, WdlValue}
 import wom.expression.WomExpression
 import wom.graph.Graph.ResolvedExecutableInput
@@ -14,7 +14,7 @@ class CwlInputValidationSpec extends FlatSpec with Matchers with TableDrivenProp
   behavior of "CWL Wom executable"
 
   var cwlFile: BFile = _
-  
+
   override def beforeAll(): Unit = {
     cwlFile = BFile.newTemporaryFile().write(
       """
@@ -38,7 +38,7 @@ class CwlInputValidationSpec extends FlatSpec with Matchers with TableDrivenProp
       """.stripMargin
     )
   }
-  
+
   override def afterAll(): Unit = {
     cwlFile.delete()
     ()
@@ -61,7 +61,7 @@ class CwlInputValidationSpec extends FlatSpec with Matchers with TableDrivenProp
   lazy val w5OutputPort = graph.inputNodes.find(_.name == "w5").getOrElse(fail("Failed to find an input node for w5")).singleOutputPort
   lazy val w6OutputPort = graph.inputNodes.find(_.name == "w6").getOrElse(fail("Failed to find an input node for w6")).singleOutputPort
   lazy val w7OutputPort = graph.inputNodes.find(_.name == "w7").getOrElse(fail("Failed to find an input node for w7")).singleOutputPort
-  
+
   def validate(inputFile: String): Map[GraphNodePort.OutputPort, ResolvedExecutableInput] = {
     cwlWorkflow.womExecutable(Option(inputFile)) match {
       case Left(errors) => fail(s"Failed to build a wom executable: ${errors.toList.mkString(", ")}")
@@ -83,18 +83,20 @@ class CwlInputValidationSpec extends FlatSpec with Matchers with TableDrivenProp
         w7: true
       """.stripMargin
 
-    val validInputs = validate(inputFile)
+    val validInputs = validate(inputFile).map {
+      case (port, resolvedInput) => (port.name, resolvedInput)
+    }
 
     // w0 has no input value in the input file, so it should fallback to the default value
     // TODO WOM: when we have string value for wom expression, check that it's "hi !"
-    validInputs(w0OutputPort).select[WomExpression].isDefined shouldBe true
-    validInputs(w1OutputPort) shouldBe Coproduct[ResolvedExecutableInput](WdlFile("my_file.txt"): WdlValue)
-    validInputs(w2OutputPort) shouldBe Coproduct[ResolvedExecutableInput](WdlString("hello !"): WdlValue)
-    validInputs(w3OutputPort) shouldBe Coproduct[ResolvedExecutableInput](WdlInteger(3): WdlValue)
-    validInputs(w4OutputPort) shouldBe Coproduct[ResolvedExecutableInput](WdlInteger(4): WdlValue)
-    validInputs(w5OutputPort) shouldBe Coproduct[ResolvedExecutableInput](WdlFloat(5.1F): WdlValue)
-    validInputs(w6OutputPort) shouldBe Coproduct[ResolvedExecutableInput](WdlFloat(6.1F): WdlValue)
-    validInputs(w7OutputPort) shouldBe Coproduct[ResolvedExecutableInput](WdlBoolean(true): WdlValue)
+    validInputs(w0OutputPort.name).select[WomExpression].isDefined shouldBe true
+    validInputs(w1OutputPort.name) shouldBe Coproduct[ResolvedExecutableInput](WdlFile("my_file.txt"): WdlValue)
+    validInputs(w2OutputPort.name) shouldBe Coproduct[ResolvedExecutableInput](WdlString("hello !"): WdlValue)
+    validInputs(w3OutputPort.name) shouldBe Coproduct[ResolvedExecutableInput](WdlInteger(3): WdlValue)
+    validInputs(w4OutputPort.name) shouldBe Coproduct[ResolvedExecutableInput](WdlInteger(4): WdlValue)
+    validInputs(w5OutputPort.name) shouldBe Coproduct[ResolvedExecutableInput](WdlFloat(5.1F): WdlValue)
+    validInputs(w6OutputPort.name) shouldBe Coproduct[ResolvedExecutableInput](WdlFloat(6.1F): WdlValue)
+    validInputs(w7OutputPort.name) shouldBe Coproduct[ResolvedExecutableInput](WdlBoolean(true): WdlValue)
   }
 
   it should "not validate when required inputs are missing" in {
