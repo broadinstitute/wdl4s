@@ -11,6 +11,10 @@ trait GraphNode {
 
   def name: String
 
+  final override def equals(other: Any): Boolean = super.equals(other)
+
+  final override def hashCode: Int = super.hashCode()
+
   /**
     * Inputs that must be available before this graph node can be run.
     */
