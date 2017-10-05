@@ -7,7 +7,7 @@ echo "TRAVIS_PULL_REQUEST='$TRAVIS_PULL_REQUEST'"
 
 # For now, obfuscate SNAPSHOTs from sbt's developers: https://github.com/sbt/sbt/issues/2687#issuecomment-236586241
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-    if [ "$TRAVIS_BRANCH" == "develop" ]; then
+    if [ "$TRAVIS_BRANCH" == "wdl4s-193-publish" ]; then
         sbt \
             'set test in Test := {}' \
             'set resolvers in ThisBuild += Resolver.url("bintray-sbt-plugin-releases", url("http://dl.bintray.com/content/sbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)' \
