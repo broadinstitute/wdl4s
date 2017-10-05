@@ -203,7 +203,7 @@ case class WdlExpression(ast: AstNode) extends WdlValue {
   *             conditionals (wrapped in optionals) or scatters (wrapped in arrays).
   */
 final case class WdlWomExpression(wdlExpression: WdlExpression, from: Option[Scope]) extends WomExpression {
-
+  override def sourceString = wdlExpression.valueString
   override def inputs: Set[String] = wdlExpression.variableReferences map { _.fullVariableReferenceString } toSet
 
   override def evaluateValue(variableValues: Map[String, WdlValue], ioFunctionSet: IoFunctionSet): ErrorOr[WdlValue] = {
