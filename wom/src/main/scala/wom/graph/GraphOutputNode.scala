@@ -25,7 +25,7 @@ final case class PortBasedGraphOutputNode(override val identifier: WomIdentifier
   */
 final case class ExpressionBasedGraphOutputNode private(override val identifier: WomIdentifier, womType: WdlType, instantiatedExpression: InstantiatedExpression) extends GraphOutputNode {
   override val inputPorts = instantiatedExpression.inputPorts
-  val singleOutputPort = GraphNodeOutputPort(identifier.localName.asString, womType, this)
+  val singleOutputPort = GraphNodeOutputPort(identifier, womType, this)
   override val outputPorts: Set[GraphNodePort.OutputPort] = Set(singleOutputPort)
 }
 
