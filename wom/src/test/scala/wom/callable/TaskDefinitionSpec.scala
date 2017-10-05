@@ -3,7 +3,7 @@ package wom.callable
 import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.{FlatSpec, Matchers}
 import wdl.types.{WdlIntegerType, WdlStringType}
-import wom.graph.{CallNode, GraphInputNode, PortBasedGraphOutputNode}
+import wom.graph.{CallNode, GraphInputNode, LocalName, PortBasedGraphOutputNode}
 import wom.callable.TaskDefinitionSpec._
 
 class TaskDefinitionSpec extends FlatSpec with Matchers {
@@ -74,7 +74,7 @@ object TaskDefinitionSpec {
     meta = Map.empty,
     parameterMeta = Map.empty,
     outputs = List.empty,
-    inputs = List(Callable.RequiredInputDefinition("bar", WdlIntegerType)))
+    inputs = List(Callable.RequiredInputDefinition(LocalName("bar"), WdlIntegerType)))
 
   val oneOutputTask = TaskDefinition(
     name = "foo",
@@ -82,7 +82,7 @@ object TaskDefinitionSpec {
     runtimeAttributes = null,
     meta = Map.empty,
     parameterMeta = Map.empty,
-    outputs = List(Callable.OutputDefinition("bar", WdlStringType, null)),
+    outputs = List(Callable.OutputDefinition(LocalName("bar"), WdlStringType, null)),
     inputs = List.empty)
   
   val duplicateFqns = TaskDefinition(
@@ -91,7 +91,7 @@ object TaskDefinitionSpec {
     runtimeAttributes = null,
     meta = Map.empty,
     parameterMeta = Map.empty,
-    outputs = List(Callable.OutputDefinition("bar", WdlStringType, null)),
-    inputs = List(Callable.RequiredInputDefinition("bar", WdlStringType))
+    outputs = List(Callable.OutputDefinition(LocalName("bar"), WdlStringType, null)),
+    inputs = List(Callable.RequiredInputDefinition(LocalName("bar"), WdlStringType))
   )
 }

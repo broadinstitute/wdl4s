@@ -48,10 +48,10 @@ object TaskCall {
     // Creates an identifier for an input or an output
     // The localName is the name of the input or output
     // The FQN combines the name of the task to the name of the input or output
-    def identifier(name: String) = WomIdentifier(LocalName(name), taskDefinitionLocalName.combineToFullyQualifiedName(name))
+    def identifier(name: LocalName) = WomIdentifier(name, taskDefinitionLocalName.combineToFullyQualifiedName(name))
 
     def linkOutput(call: GraphNode)(output: OutputDefinition): ErrorOr[GraphNode] = call.outputByName(output.name).map(out => PortBasedGraphOutputNode(
-      identifier(output.name), output.womType, out
+      identifier(output.localName), output.womType, out
     ))
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
 

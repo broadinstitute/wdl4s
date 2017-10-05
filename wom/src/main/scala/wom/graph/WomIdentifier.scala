@@ -7,7 +7,8 @@ package wom.graph
 case class LocalName(private val value: String) {
   def asString: String = value
   def combineToLocalName(other: String) = LocalName(s"$value.$other")
-  def combineToFullyQualifiedName(other: String) = FullyQualifiedName(s"$value.$other")
+  def combineToFullyQualifiedName(other: String): FullyQualifiedName = FullyQualifiedName(s"$value.$other")
+  def combineToFullyQualifiedName(other: LocalName): FullyQualifiedName = combineToFullyQualifiedName(other.asString)
 }
 
 /**
@@ -28,6 +29,7 @@ object WomIdentifier {
 }
 
 case class WomIdentifier(localName: LocalName, fullyQualifiedName: FullyQualifiedName) {
+  def combine(other: LocalName): WomIdentifier = combine(other.asString)
   def combine(other: String): WomIdentifier = {
     WomIdentifier(localName.combineToLocalName(other), fullyQualifiedName.combine(other))
   }

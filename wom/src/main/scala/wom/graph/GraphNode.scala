@@ -72,7 +72,7 @@ object GraphNode {
       */
     def inputDefinitions: Set[_ <: Callable.InputDefinition] = nodes collect {
       // TODO: FIXME: They might not be required!!
-      case gin: GraphInputNode => RequiredInputDefinition(gin.name, gin.womType)
+      case gin: GraphInputNode => RequiredInputDefinition(gin.identifier.localName, gin.womType)
     }
   }
 

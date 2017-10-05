@@ -14,8 +14,7 @@ import wom.callable.Callable
 import wom.callable.Callable._
 import wom.graph.CallNode._
 import wom.graph.GraphNodePort.OutputPort
-import wom.graph.{ExpressionNode, _}
-
+import wom.graph._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
@@ -66,11 +65,11 @@ object WdlCall {
       *   input3 = other_task.out + 2   -> ExpressionNode with an input port pointing to the output port of other_task.out
       * }
      */
-    def expressionNodeMappings: ErrorOr[Map[String, ExpressionNode]] = wdlCall.inputMappings traverse {
+    def expressionNodeMappings: ErrorOr[Map[LocalName, ExpressionNode]] = wdlCall.inputMappings traverse {
       case (inputName, wdlExpression) =>
         val identifier = wdlCall.womIdentifier.combine(inputName)
         WdlWomExpression.toExpressionNode(identifier, WdlWomExpression(wdlExpression, None), localLookup, outerLookup) map {
-          inputName -> _
+          LocalName(inputName) -> _
         }
     }
 
@@ -81,7 +80,7 @@ object WdlCall {
       * 
       * The InputDefinitionFold accumulates the input definition mappings, the create graph input nodes, and the expression nodes.
      */
-    def foldInputDefinitions(expressionNodes: Map[String, ExpressionNode], callable: Callable): InputDefinitionFold = {
+    def foldInputDefinitions(expressionNodes: Map[LocalName, ExpressionNode], callable: Callable): InputDefinitionFold = {
       // Updates the fold with a new graph input node. Happens when an optional or required undefined input without an
       // expression node mapping is found
       def withGraphInputNode(inputDefinition: InputDefinition, graphInputNode: GraphInputNode) = {
@@ -94,8 +93,8 @@ object WdlCall {
 
       callable.inputs.foldMap {
         // If there is an input mapping for this input definition, use that
-        case inputDefinition if expressionNodes.contains(inputDefinition.name) =>
-          val expressionNode = expressionNodes(inputDefinition.name)
+        case inputDefinition if expressionNodes.contains(inputDefinition.localName) =>
+          val expressionNode = expressionNodes(inputDefinition.localName)
           InputDefinitionFold(
             mappings = Map(inputDefinition -> expressionNode.inputDefinitionPointer),
             callInputPorts = Set(callNodeBuilder.makeInputPort(inputDefinition, expressionNode.singleExpressionOutputPort)),
