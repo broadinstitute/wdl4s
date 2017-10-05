@@ -95,8 +95,8 @@ class WdlScatterWomSpec extends FlatSpec with Matchers {
 
         // The ScatterNode's output port links to the inner graph's GraphOutputNode:
         validatedOuterGraph.scatterNode.outputMapping.toList match {
-          case ScatterGathererPort(name, womType, outputToGather, _) :: Nil =>
-            name should be("foo.out")
+          case (port @ ScatterGathererPort(womType, outputToGather, _)) :: Nil =>
+            port.name should be("foo.out")
             womType should be(WdlArrayType(WdlStringType))
             outputToGather eq validatedInnerGraph.foo_out_innerOutput should be(true)
           case other => fail("Expected exactly one output to be gathered in this scatter but got:" + other.mkString("\n", "\n", "\n"))

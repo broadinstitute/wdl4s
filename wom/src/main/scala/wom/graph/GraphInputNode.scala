@@ -37,7 +37,7 @@ sealed trait ExternalGraphInputNode extends GraphInputNode {
     * 
     */
   
-  override lazy val singleOutputPort: GraphNodeOutputPort = GraphNodeOutputPort(identifier.fullyQualifiedName.asString, womType, this)
+  override lazy val singleOutputPort: GraphNodeOutputPort = GraphNodeOutputPort(identifier, womType, this)
 }
 
 final case class RequiredGraphInputNode(override val identifier: WomIdentifier,

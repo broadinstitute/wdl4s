@@ -49,7 +49,7 @@ object ScatterNode {
     val graphNodeSetter = new GraphNode.GraphNodeSetter()
 
     val outputPorts: Set[ScatterGathererPort] = innerGraph.nodes.collect { case gon: PortBasedGraphOutputNode =>
-      ScatterGathererPort(gon.name, WdlArrayType(gon.womType), gon, graphNodeSetter.get)
+      ScatterGathererPort(WdlArrayType(gon.womType), gon, graphNodeSetter.get)
     }
 
     val scatterNode = ScatterNode(
