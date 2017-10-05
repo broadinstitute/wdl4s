@@ -12,11 +12,12 @@ case class LocalName(private val value: String) {
 }
 
 /**
-  * Identifies a node uniquely in its graph.
+  * Identifies a node in its graph.
+  * It must be unique for all CallNodes, GraphInputNodes and GraphOutputNodes within a graph.
+  * Otherwise the Graph won't validate.
   * This *can* be the same as local name.
   * It is not required by WOM strictly speaking but rather useful to implementations
   * for serializing or reporting.
-  * A graph will fail to construct if two or more nodes share the same FullyQualifiedName
   */
 case class FullyQualifiedName(private val value: String) {
   def asString: String = value

@@ -61,6 +61,11 @@ object Graph {
 
     // from https://stackoverflow.com/a/24729587/1498572
     def fqnUniqueness: ErrorOr[Unit] = nodes
+      .collect({
+        case callNode: CallNode => callNode
+        case gin: GraphInputNode => gin
+        case gon: GraphOutputNode => gon
+      })  
       .toList // Important since nodes is a Set, we don't want duplicates to disappear automatically when mapping to FQN
       .map(_.identifier.fullyQualifiedName)
       .groupBy(identity)
