@@ -1,6 +1,5 @@
 package cwl
 
-import cats.data.Validated.Valid
 import cats.syntax.validated._
 import lenthall.validation.ErrorOr.ErrorOr
 import lenthall.validation.Validation._
@@ -27,14 +26,23 @@ case class CommandOutputExpression(outputBinding: CommandOutputBinding,
 
   override def inputs: Set[String] = ???
 
-  //TODO: coerceTo is ignored?? we have to return wdlfiles so...
+  /*
+  TODO:
+   DB: It doesn't make sense to me that this function returns type WdlFile but accepts a type to which it coerces.
+   Wouldn't coerceTo always == WdlFileType, and if not then what?
+   */
   override def evaluateFiles(inputTypes: Map[String, WdlValue], ioFunctionSet: IoFunctionSet, coerceTo: WdlType): ErrorOr[Set[WdlFile]] ={
+
     val pc = ParameterContext.Empty.withInputs(inputTypes, ioFunctionSet)
     val wdlValue = outputBinding.commandOutputBindingToWdlValue(pc, ioFunctionSet)
+
     wdlValue match {
-      case WdlArray(WdlMaybeEmptyArrayType(WdlMapType(WdlStringType, WdlStringType)), Seq(WdlMap(WdlMapType(WdlStringType, WdlStringType), map))) =>
-        val path = map(WdlString("location")).valueString
-        Valid(Set(WdlGlobFile(path)))
+
+      case WdlArray(WdlMaybeEmptyArrayType(WdlMapType(WdlStringType, WdlStringType)), seq: Seq[WdlValue]) =>
+        seq.map {
+          case WdlMap(WdlMapType(WdlStringType, WdlStringType), map) => WdlGlobFile(map(WdlString("location")).valueString): WdlFile
+        }.toSet.validNel
+
       case other =>s":( we saw $other and couldn't convert to a globfile type: ${other.wdlType} coerceTo: $coerceTo".invalidNel[Set[WdlFile]]
     }
   }
