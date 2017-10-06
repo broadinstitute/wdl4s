@@ -5,7 +5,6 @@ import shapeless._
 import wdl.values._
 import wdl4s.cwl.EvaluateExpression
 
-
 object OutputEvalToWdlValue extends Poly1 {
 
   type OutputEvalHandler = ParameterContext => WdlValue
