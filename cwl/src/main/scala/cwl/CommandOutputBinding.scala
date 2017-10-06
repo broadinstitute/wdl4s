@@ -1,8 +1,8 @@
 package cwl
 
 import cwl.CommandOutputBinding.Glob
-import shapeless.{:+:, CNil, Inl, Inr}
-import wdl.types.{WdlArrayType, WdlMapType, WdlMaybeEmptyArrayType, WdlStringType}
+import shapeless.{:+:, CNil}
+import wdl.types.{WdlArrayType, WdlMapType,  WdlStringType}
 import wdl.values.{WdlArray, WdlMap, WdlString, WdlValue}
 import wom.expression.IoFunctionSet
 
@@ -23,12 +23,6 @@ case class CommandOutputBinding(
    */
   def commandOutputBindingToWdlValue(parameterContext: ParameterContext,
                                      ioFunctionSet: IoFunctionSet): WdlValue = {
-
-    (glob, this.loadContents, outputEval) match {
-      case (Some(Inr(Inl(path: String))), None, None) => WdlString(path)
-      case (Some(Inr(Inr(Inl(paths: Array[String])))), None, None) => WdlArray(WdlMaybeEmptyArrayType(WdlStringType), paths.toSeq.map(WdlString.apply))
-      case _ => ??? : WdlValue
-    }
 
     val paths: Seq[String] = glob map { globValue =>
       GlobEvaluator.globPaths(globValue, parameterContext, ioFunctionSet)
