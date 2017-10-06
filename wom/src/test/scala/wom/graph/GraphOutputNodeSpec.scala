@@ -35,7 +35,7 @@ class GraphOutputNodeSpec extends FlatSpec with Matchers {
 
     def validate(graph: Graph) = {
       val expressionOutput = graph.nodes.find {
-        case g: GraphOutputNode => g.name == "x_out"
+        case g: GraphOutputNode => g.localName == "x_out"
         case _ => false
       }
 
@@ -43,7 +43,7 @@ class GraphOutputNodeSpec extends FlatSpec with Matchers {
       expressionOutput.get.upstream should be(Set(iInputNode, jInputNode))
 
       val portOutput = graph.nodes.find {
-        case g: GraphOutputNode => g.name == "j_out"
+        case g: GraphOutputNode => g.localName == "j_out"
         case _ => false
       }
 

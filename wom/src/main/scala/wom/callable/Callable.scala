@@ -22,7 +22,7 @@ object Callable {
     /**
       * Alias for localName.asString
       */
-    def name = localName.asString
+    def name = localName.value
   }
 
   object RequiredInputDefinition {
@@ -55,6 +55,6 @@ object Callable {
     /**
       * Alias for localName.asString
       */
-    lazy val name = localName.asString
+    lazy val name = localName.value
   }
 }

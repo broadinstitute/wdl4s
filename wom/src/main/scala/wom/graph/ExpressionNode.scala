@@ -10,7 +10,7 @@ import wom.graph.GraphNodePort.{GraphNodeOutputPort, OutputPort}
 final case class ExpressionNode(override val identifier: WomIdentifier, instantiatedExpression: InstantiatedExpression) extends GraphNode {
 
   val womType = instantiatedExpression.womReturnType
-  val singleExpressionOutputPort = GraphNodeOutputPort(name, womType, this)
+  val singleExpressionOutputPort = GraphNodeOutputPort(localName, womType, this)
 
   lazy val inputDefinitionPointer = Coproduct[InputDefinitionPointer](singleExpressionOutputPort: OutputPort)
 

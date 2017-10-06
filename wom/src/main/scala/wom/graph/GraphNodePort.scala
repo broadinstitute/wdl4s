@@ -26,7 +26,7 @@ object GraphNodePort {
     /**
       * Alias for identifier.localName.asString
       */
-    override def name = identifier.localName.asString
+    override def name = identifier.localName.value
     // TODO: Might end up wanting a backwards link to the InputPorts that use this (eg def downstream: Set[InputPort])?
   }
 

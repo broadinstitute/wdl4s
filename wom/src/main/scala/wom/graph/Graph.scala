@@ -23,7 +23,7 @@ final case class Graph private(nodes: Set[GraphNode]) {
   lazy val calls: Set[CallNode] = nodes.filterByType[CallNode]
   lazy val scatters: Set[ScatterNode] = nodes.filterByType[ScatterNode]
 
-  def outputByName(name: String): Option[GraphOutputNode] = outputNodes.find(_.name == name)
+  def outputByName(name: String): Option[GraphOutputNode] = outputNodes.find(_.localName == name)
 }
 
 object Graph {
@@ -40,7 +40,7 @@ object Graph {
 
     def upstreamNodeInGraph(port: InputPort): ErrorOr[Unit] = {
       val upstreamOutputPort = port.upstream
-      boolToErrorOr(nodes.exists(_ eq upstreamOutputPort.graphNode), s"The input link ${port.name} on ${port.graphNode.name} is linked to a node outside the graph set (${upstreamOutputPort.name})")
+      boolToErrorOr(nodes.exists(_ eq upstreamOutputPort.graphNode), s"The input link ${port.name} on ${port.graphNode.localName} is linked to a node outside the graph set (${upstreamOutputPort.name})")
     }
 
     def portProperlyEmbedded(port: GraphNodePort, portFinder: GraphNode => Set[_ <: GraphNodePort]): ErrorOr[Unit] = {
@@ -74,7 +74,7 @@ object Graph {
       }).toList match {
       case Nil => ().validNel
       case head :: tail =>
-        NonEmptyList.of(head, tail: _*).map(fqn => s"Two or more nodes have the same FullyQualifiedName: ${fqn.asString}").invalid
+        NonEmptyList.of(head, tail: _*).map(fqn => s"Two or more nodes have the same FullyQualifiedName: ${fqn.value}").invalid
     }
 
     (fqnUniqueness, nodes.toList.traverse(validateNode)) mapN { case (_, _) =>

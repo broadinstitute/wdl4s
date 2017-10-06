@@ -13,7 +13,7 @@ sealed trait GraphOutputNode extends GraphNode {
   * Exposes an existing output port as a graph output.
   */
 final case class PortBasedGraphOutputNode(override val identifier: WomIdentifier, womType: WdlType, source: OutputPort) extends GraphOutputNode {
-  val singleInputPort = ConnectedInputPort(name, womType, source, _ => this)
+  val singleInputPort = ConnectedInputPort(localName, womType, source, _ => this)
   override val inputPorts: Set[GraphNodePort.InputPort] = Set(singleInputPort)
   override val outputPorts: Set[GraphNodePort.OutputPort] = Set(source)
 }

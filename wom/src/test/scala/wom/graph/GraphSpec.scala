@@ -103,9 +103,9 @@ class GraphSpec extends FlatSpec with Matchers {
   it should "be able to represent three step" in {
     val workflowGraph = makeThreeStep
 
-    workflowGraph.nodes collect { case gin: GraphInputNode => gin.name } should be(Set("cgrep.pattern"))
-    workflowGraph.nodes collect { case gon: PortBasedGraphOutputNode => gon.name } should be(Set("wc.count", "cgrep.count", "ps.procs"))
-    workflowGraph.nodes collect { case cn: CallNode => cn.name } should be(Set("wc", "cgrep", "ps"))
+    workflowGraph.nodes collect { case gin: GraphInputNode => gin.localName } should be(Set("cgrep.pattern"))
+    workflowGraph.nodes collect { case gon: PortBasedGraphOutputNode => gon.localName } should be(Set("wc.count", "cgrep.count", "ps.procs"))
+    workflowGraph.nodes collect { case cn: CallNode => cn.localName } should be(Set("wc", "cgrep", "ps"))
   }
 
   it should "be able to represent calls to sub-workflows" in {
@@ -132,9 +132,9 @@ class GraphSpec extends FlatSpec with Matchers {
       case Invalid(errors) => fail(s"Unable to validate graph: ${errors.toList.mkString("\n", "\n", "\n")}")
     }
 
-    workflowGraph.nodes collect { case gin: GraphInputNode => gin.name } should be(Set("three_step.cgrep.pattern"))
-    workflowGraph.nodes collect { case gon: GraphOutputNode => gon.name } should be(Set("three_step.wc.count", "three_step.cgrep.count", "three_step.ps.procs"))
-    workflowGraph.nodes collect { case cn: CallNode => cn.name } should be(Set("three_step"))
+    workflowGraph.nodes collect { case gin: GraphInputNode => gin.localName } should be(Set("three_step.cgrep.pattern"))
+    workflowGraph.nodes collect { case gon: GraphOutputNode => gon.localName } should be(Set("three_step.wc.count", "three_step.cgrep.count", "three_step.ps.procs"))
+    workflowGraph.nodes collect { case cn: CallNode => cn.localName } should be(Set("three_step"))
   }
   
   it should "fail to validate a Graph with duplicate identifiers" in {

@@ -13,7 +13,7 @@ case class CwlExpressionCommandPart(expr: Expression) extends CommandPart {
                            functions: IoFunctionSet,
                            valueMapper: (WdlValue) => WdlValue): String = {
 
-    val pc = ParameterContext.Empty.withInputs(inputsMap.map({ case (key, value) => key.asString -> value }), functions)
+    val pc = ParameterContext.Empty.withInputs(inputsMap.map({ case (LocalName(localName), value) => localName -> value }), functions)
 
     val wdlValue: WdlValue = expr.fold(EvaluateExpression).apply(pc)
 

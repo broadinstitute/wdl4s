@@ -96,9 +96,9 @@ class ScatterNodeSpec extends FlatSpec with Matchers {
       * WDL -> WOM conversion has succeeded, now let's check we built it right!
       */
     def validate(workflowGraph: Graph, scatterNode: ScatterNode) = {
-      workflowGraph.nodes collect { case gin: GraphInputNode => gin.name } should be(Set("xs"))
-      workflowGraph.nodes collect { case gon: PortBasedGraphOutputNode => gon.name } should be(Set("z"))
-      workflowGraph.nodes collect { case cn: CallNode => cn.name } should be(Set.empty)
+      workflowGraph.nodes collect { case gin: GraphInputNode => gin.localName } should be(Set("xs"))
+      workflowGraph.nodes collect { case gon: PortBasedGraphOutputNode => gon.localName } should be(Set("z"))
+      workflowGraph.nodes collect { case cn: CallNode => cn.localName } should be(Set.empty)
       (workflowGraph.nodes collect { case sn: ScatterNode => sn }).size should be(1)
 
       // The output links back to the scatter:
@@ -113,7 +113,7 @@ class ScatterNodeSpec extends FlatSpec with Matchers {
       innerGraphFooOutNode.womType should be(WdlStringType)
       innerGraphFooOutNode.upstream.size should be(1)
       innerGraphFooOutNode.upstream.head match {
-        case c: CallNode => c.name should be("foo")
+        case c: CallNode => c.localName should be("foo")
         case _ => fail("Expected the inner graph to have a Call Node!")
       }
     }

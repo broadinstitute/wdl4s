@@ -4,11 +4,10 @@ package wom.graph
   * Identifies a node in its local context.
   * Used in during graph construction to link nodes together and validate the graph.
   */
-case class LocalName(private val value: String) {
-  def asString: String = value
+case class LocalName(value: String) {
   def combineToLocalName(other: String) = LocalName(s"$value.$other")
   def combineToFullyQualifiedName(other: String): FullyQualifiedName = FullyQualifiedName(s"$value.$other")
-  def combineToFullyQualifiedName(other: LocalName): FullyQualifiedName = combineToFullyQualifiedName(other.asString)
+  def combineToFullyQualifiedName(other: LocalName): FullyQualifiedName = combineToFullyQualifiedName(other.value)
 }
 
 /**
@@ -19,8 +18,7 @@ case class LocalName(private val value: String) {
   * It is not required by WOM strictly speaking but rather useful to implementations
   * for serializing or reporting.
   */
-case class FullyQualifiedName(private val value: String) {
-  def asString: String = value
+case class FullyQualifiedName(value: String) {
   def combine(other: String) = FullyQualifiedName(s"$value.$other")
 }
 
@@ -30,7 +28,7 @@ object WomIdentifier {
 }
 
 case class WomIdentifier(localName: LocalName, fullyQualifiedName: FullyQualifiedName) {
-  def combine(other: LocalName): WomIdentifier = combine(other.asString)
+  def combine(other: LocalName): WomIdentifier = combine(other.value)
   def combine(other: String): WomIdentifier = {
     WomIdentifier(localName.combineToLocalName(other), fullyQualifiedName.combine(other))
   }

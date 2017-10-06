@@ -61,19 +61,19 @@ class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
 
     def validateOuter(workflowGraph: Graph) = {
       // One input, x
-      workflowGraph.inputNodes.map(_.name) should be(Set("x"))
+      workflowGraph.inputNodes.map(_.localName) should be(Set("x"))
       val calls = workflowGraph.calls
-      calls.map(_.name) should be(Set("inner"))
+      calls.map(_.localName) should be(Set("inner"))
 
       // One workflow call, "inner"
       val innerCall = calls.head.asInstanceOf[WorkflowCallNode]
-      innerCall.name should be("inner")
-      innerCall.identifier.fullyQualifiedName.asString should be("outer.inner")
+      innerCall.localName should be("inner")
+      innerCall.identifier.fullyQualifiedName.value should be("outer.inner")
       innerCall.upstream.head.asInstanceOf[ExpressionNode].inputPorts.map(_.upstream.graphNode) should be(Set(workflowGraph.inputNodes.head))
 
       // One output, "out"
-      workflowGraph.outputNodes.map(_.name) should be(Set("out"))
-      workflowGraph.outputNodes.map(_.identifier.fullyQualifiedName.asString) should be(Set("outer.out"))
+      workflowGraph.outputNodes.map(_.localName) should be(Set("out"))
+      workflowGraph.outputNodes.map(_.identifier.fullyQualifiedName.value) should be(Set("outer.out"))
       workflowGraph.outputNodes.head.womType should be(WdlMaybeEmptyArrayType(WdlStringType))
       workflowGraph.outputNodes.foreach(_.upstream should be(Set(innerCall)))
 
@@ -81,17 +81,17 @@ class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
     }
 
     def validateInner(innerGraph: Graph) = {
-      innerGraph.inputNodes.map(_.name) should be(Set("i"))
+      innerGraph.inputNodes.map(_.localName) should be(Set("i"))
       val calls = innerGraph.calls
-      calls.map(_.name) should be(Set("foo"))
+      calls.map(_.localName) should be(Set("foo"))
 
       val fooCall = calls.head.asInstanceOf[TaskCallNode]
       fooCall.upstream.head.asInstanceOf[ExpressionNode].inputPorts.map(_.upstream.graphNode) should be(Set(innerGraph.inputNodes.head))
 
-      innerGraph.outputNodes.map(_.name) should be(Set("out", "x"))
-      innerGraph.outputNodes.map(_.identifier.fullyQualifiedName.asString) should be(Set("inner.out", "inner.x"))
-      val outOutput = innerGraph.outputNodes.find(_.name == "out").get
-      val xOutput = innerGraph.outputNodes.find(_.name == "x").get
+      innerGraph.outputNodes.map(_.localName) should be(Set("out", "x"))
+      innerGraph.outputNodes.map(_.identifier.fullyQualifiedName.value) should be(Set("inner.out", "inner.x"))
+      val outOutput = innerGraph.outputNodes.find(_.localName == "out").get
+      val xOutput = innerGraph.outputNodes.find(_.localName == "x").get
 
       outOutput.womType should be(WdlStringType)
       outOutput.upstream should be(Set(fooCall))
@@ -152,15 +152,15 @@ class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
     }
 
     def validateOuter(workflowGraph: Graph) = {
-      workflowGraph.inputNodes.map(_.name) should be(Set("xs"))
+      workflowGraph.inputNodes.map(_.localName) should be(Set("xs"))
 
       val scatter = workflowGraph.scatters.head
       scatter.upstream should be(Set(workflowGraph.inputNodes.head))
       scatter.outputPorts.map(_.name) should be(Set("inner.out"))
       scatter.outputPorts.head.womType should be(WdlArrayType(WdlStringType))
 
-      workflowGraph.outputNodes.map(_.name) should be(Set("outs"))
-      workflowGraph.outputNodes.map(_.identifier.fullyQualifiedName.asString) should be(Set("outer.outs"))
+      workflowGraph.outputNodes.map(_.localName) should be(Set("outs"))
+      workflowGraph.outputNodes.map(_.identifier.fullyQualifiedName.value) should be(Set("outer.outs"))
       workflowGraph.outputNodes.head.womType should be(WdlArrayType(WdlStringType))
       workflowGraph.outputNodes.foreach(_.upstream should be(Set(scatter)))
     }
@@ -217,16 +217,16 @@ class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
       // One input, x
       workflowGraph.inputNodes shouldBe empty
       val calls = workflowGraph.calls
-      calls.map(_.name) should be(Set("twin"))
+      calls.map(_.localName) should be(Set("twin"))
 
       // One workflow call, "twin"
       val innerCall = calls.head.asInstanceOf[WorkflowCallNode]
-      innerCall.name should be("twin")
-      innerCall.identifier.fullyQualifiedName.asString should be("twin.twin")
+      innerCall.localName should be("twin")
+      innerCall.identifier.fullyQualifiedName.value should be("twin.twin")
 
       // One output, "out"
-      workflowGraph.outputNodes.map(_.name) should be(Set("outs"))
-      workflowGraph.outputNodes.map(_.identifier.fullyQualifiedName.asString) should be(Set("twin.outs"))
+      workflowGraph.outputNodes.map(_.localName) should be(Set("outs"))
+      workflowGraph.outputNodes.map(_.identifier.fullyQualifiedName.value) should be(Set("twin.outs"))
       workflowGraph.outputNodes.head.womType should be(WdlStringType)
       workflowGraph.outputNodes.foreach(_.upstream should be(Set(innerCall)))
 
@@ -234,16 +234,16 @@ class WdlSubworkflowWomSpec extends FlatSpec with Matchers {
     }
 
     def validateInner(innerGraph: Graph) = {
-      innerGraph.inputNodes.map(_.name) should be(Set("i"))
+      innerGraph.inputNodes.map(_.localName) should be(Set("i"))
       val calls = innerGraph.calls
-      calls.map(_.name) should be(Set("foo"))
+      calls.map(_.localName) should be(Set("foo"))
 
       val fooCall = calls.head.asInstanceOf[TaskCallNode]
       fooCall.upstream.head.asInstanceOf[ExpressionNode].inputPorts.map(_.upstream.graphNode) should be(Set(innerGraph.inputNodes.head))
 
-      innerGraph.outputNodes.map(_.name) should be(Set("out"))
-      innerGraph.outputNodes.map(_.identifier.fullyQualifiedName.asString) should be(Set("twin.out"))
-      val outOutput = innerGraph.outputNodes.find(_.name == "out").get
+      innerGraph.outputNodes.map(_.localName) should be(Set("out"))
+      innerGraph.outputNodes.map(_.identifier.fullyQualifiedName.value) should be(Set("twin.out"))
+      val outOutput = innerGraph.outputNodes.find(_.localName == "out").get
 
       outOutput.womType should be(WdlStringType)
       outOutput.upstream should be(Set(fooCall))

@@ -78,18 +78,18 @@ object WdlGraphNode {
       // The output ports from the new node
       val newCallOutputPorts = (gnani.node.outputPorts map { p => s"$outputPortPrefix${p.name}" -> p }).toMap
       // The output ports from newly created GraphInputNodes:
-      val newInputOutputPorts = (gnani.newInputs map { i => i.name -> i.singleOutputPort }).toMap
+      val newInputOutputPorts = (gnani.newInputs map { i => i.localName -> i.singleOutputPort }).toMap
 
       FoldState(acc.nodes + gnani.node ++ gnani.newInputs ++ gnani.newExpressions, acc.availableInputs ++ newCallOutputPorts ++ newInputOutputPorts)
     }
 
     def buildNode(acc: FoldState, node: WdlGraphNode): ErrorOr[FoldState] = node match {
       case wdlCall: WdlCall => WdlCall.buildWomNodeAndInputs(wdlCall, acc.availableInputs, outerLookup) map { case cnani @ CallNodeAndNewNodes(call, _, _) =>
-        foldInGeneratedNodeAndNewInputs(acc, call.name + ".")(cnani)
+        foldInGeneratedNodeAndNewInputs(acc, call.localName + ".")(cnani)
       }
 
       case decl: DeclarationInterface => Declaration.buildWomNode(decl, acc.availableInputs, outerLookup) map { declNode =>
-        FoldState(acc.nodes + declNode.toGraphNode, acc.availableInputs ++ declNode.singleOutputPort.collect { case sop: OutputPort => declNode.toGraphNode.name -> sop })
+        FoldState(acc.nodes + declNode.toGraphNode, acc.availableInputs ++ declNode.singleOutputPort.collect { case sop: OutputPort => declNode.toGraphNode.localName -> sop })
       }
 
       case scatter: Scatter => Scatter.womScatterNode(scatter, acc.availableInputs) map { foldInGeneratedNodeAndNewInputs(acc, "")(_) }

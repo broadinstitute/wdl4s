@@ -46,13 +46,13 @@ class ExpressionNodeSpec extends FlatSpec with Matchers {
 
     def validate(graph: Graph) = {
       val x_outGraphOutputNode = graph.nodes.find {
-        case g: GraphOutputNode => g.name == "x_out"
+        case g: GraphOutputNode => g.localName == "x_out"
         case _ => false
       }.getOrElse(fail("No 'x_out' GraphOutputNode in the graph"))
 
       x_outGraphOutputNode.upstream.size should be(1)
       val xExpressionNode = x_outGraphOutputNode.upstream.head.asInstanceOf[ExpressionNode]
-      xExpressionNode.name should be("x")
+      xExpressionNode.localName should be("x")
       xExpressionNode.womType should be(WdlIntegerType)
 
       xExpressionNode.upstream should be(Set(iInputNode, jInputNode))

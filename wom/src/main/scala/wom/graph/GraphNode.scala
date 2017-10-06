@@ -11,9 +11,14 @@ trait GraphNode {
   def identifier: WomIdentifier
 
   /**
-    * Alias for identifier.localName.asString
+    * Alias for identifier.localName.value
     */
-  final def name: String = identifier.localName.asString
+  final def localName: String = identifier.localName.value
+
+  /**
+    * Alias for identifier.fullyQualifiedName.value
+    */
+  final def fullyQualifiedName: String = identifier.fullyQualifiedName.value
 
   /**
     * Inputs that must be available before this graph node can be run.

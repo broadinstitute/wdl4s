@@ -249,7 +249,7 @@ object WdlWomExpression {
         case (Some(port), None) => Valid(name -> port)
         case (None, Some(port)) => Valid(name -> OuterGraphInputNode(WomIdentifier(name), port).singleOutputPort)
         case (None, None) => s"No input $name found evaluating inputs for expression ${expression.wdlExpression.toWdlString}".invalidNel
-        case (Some(innerPort), Some(outerPort)) => s"Two inputs called '$name' found evaluating inputs for expression ${expression.wdlExpression.toWdlString}: on ${innerPort.graphNode.name} and ${outerPort.graphNode.name}".invalidNel
+        case (Some(innerPort), Some(outerPort)) => s"Two inputs called '$name' found evaluating inputs for expression ${expression.wdlExpression.toWdlString}: on ${innerPort.graphNode.localName} and ${outerPort.graphNode.localName}".invalidNel
       }
     }
 
@@ -264,7 +264,7 @@ object WdlWomExpression {
                        outerLookup: Map[String, GraphNodePort.OutputPort]) = {
     import lenthall.validation.ErrorOr.ShortCircuitingFlatMap
     
-    findInputsforExpression(nodeIdentifier.localName.asString, expression, innerLookup, outerLookup) flatMap {
+    findInputsforExpression(nodeIdentifier.localName.value, expression, innerLookup, outerLookup) flatMap {
       case GraphNodeInputExpression(_, _, resolvedVariables) => 
         ExpressionNode.linkWithInputs(nodeIdentifier, expression, resolvedVariables)
     }

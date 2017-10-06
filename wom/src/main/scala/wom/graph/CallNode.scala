@@ -37,7 +37,7 @@ final case class WorkflowCallNode private(override val identifier: WomIdentifier
                                           inputDefinitionMappings: InputDefinitionMappings) extends CallNode {
   val callType: String = "workflow"
   override val outputPorts: Set[GraphNodePort.OutputPort] = {
-    callable.innerGraph.nodes.collect { case gon: GraphOutputNode => GraphNodeOutputPort(gon.name, gon.womType, this) }
+    callable.innerGraph.nodes.collect { case gon: GraphOutputNode => GraphNodeOutputPort(gon.localName, gon.womType, this) }
   }
 }
 

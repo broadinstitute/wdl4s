@@ -17,6 +17,6 @@ trait WdlCommandPart extends CommandPart {
                   functions: IoFunctionSet,
                   valueMapper: WdlValue => WdlValue): String = {
     val wdlFunctions = WdlStandardLibraryFunctions.fromIoFunctionSet(functions)
-    instantiate(Seq.empty, inputsMap.map({case (localName, value) => localName.asString -> value}), wdlFunctions, valueMapper)
+    instantiate(Seq.empty, inputsMap.map({case (localName, value) => localName.value -> value}), wdlFunctions, valueMapper)
   }
 }

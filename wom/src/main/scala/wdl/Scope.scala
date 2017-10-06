@@ -108,10 +108,11 @@ trait Scope {
   }
   
   lazy val womIdentifier = {
-    // Limit the fully qualified name to the parent workflow, if it exists.
-    // The reason for this is if this scope comes from an imported namespace,
-    // the name of the namespace will be part of the FQN. While useful to construct the hierarchy and dependencies,
-    // this is not desirable when being used by underlying engines.
+    /* Limit the fully qualified name to the parent workflow, if it exists.
+     * The reason for this is if this scope comes from an imported namespace,
+     * the name of the namespace will be part of the FQN. While useful to construct the hierarchy and dependencies,
+     * this is not desirable when being used by underlying engines.
+    */
     val womFullyQualifiedName = ancestry.collectFirst {
       case workflow: WdlWorkflow => locallyQualifiedName(workflow)
     } getOrElse fullyQualifiedName

@@ -71,7 +71,7 @@ case class Workflow private(
     val workflowInputs: Map[String, GraphNodeOutputPort] =
       graphFromInputs.map {
         workflowInput =>
-          workflowInput.name -> workflowInput.singleOutputPort
+          workflowInput.localName -> workflowInput.singleOutputPort
       }.toMap
 
     val graphFromSteps: Checked[Set[GraphNode]] =
@@ -89,7 +89,7 @@ case class Workflow private(
           def lookupOutputSource(outputId: WorkflowOutputId): Checked[OutputPort] =
             for {
               set <- graphFromSteps
-              call <- set.collectFirst { case callNode: CallNode if callNode.name == outputId.stepId => callNode }.
+              call <- set.collectFirst { case callNode: CallNode if callNode.localName == outputId.stepId => callNode }.
                 toRight(NonEmptyList.one(s"Call Node by name ${outputId.stepId} was not found in set $set"))
               output <- call.outputPorts.find(_.name == outputId.outputId).
                           toRight(NonEmptyList.one(s"looking for ${outputId.outputId} in call $call output ports ${call.outputPorts}"))
