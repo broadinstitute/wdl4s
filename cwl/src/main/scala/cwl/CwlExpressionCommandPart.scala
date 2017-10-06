@@ -3,7 +3,6 @@ package cwl
 import wdl.values.WdlValue
 import wom.CommandPart
 import wom.expression.IoFunctionSet
-import CwlWomExpression._
 import wdl4s.cwl.EvaluateExpression
 import wom.graph.LocalName
 
