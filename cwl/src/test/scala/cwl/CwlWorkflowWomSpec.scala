@@ -62,7 +62,7 @@ class CwlWorkflowWomSpec extends FlatSpec with Matchers with TableDrivenProperty
     def shouldBeRequiredGraphInputNode(node: GraphNode, name: String, wdlType: WdlType): Unit = {
       node.isInstanceOf[RequiredGraphInputNode] shouldBe true
       val requiredGraphInputNode = node.asInstanceOf[RequiredGraphInputNode]
-      requiredGraphInputNode.name shouldBe name
+      requiredGraphInputNode.localName shouldBe name
       requiredGraphInputNode.womType shouldBe wdlType
       ()
     }
