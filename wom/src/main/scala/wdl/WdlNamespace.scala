@@ -455,13 +455,18 @@ object WdlNamespace {
     invalidVariableReferences ++ typeMismatches
   }
 
-  private def lookupType(from: Scope)(n: String): WdlType = {
+  def lookupType(from: Scope)(n: String): WdlType = {
     val resolved = from.resolveVariable(n)
     resolved match {
       case Some(d: DeclarationInterface) => d.relativeWdlType(from)
       case Some(c: WdlCall) => WdlCallOutputsObjectType(c)
       case Some(s: Scatter) => s.collection.evaluateType(lookupType(s), new WdlStandardLibraryFunctionsType, Option(from)) match {
-        case Success(a: WdlArrayType) => a.memberType
+        case Success(a: WdlArrayType) =>
+          // Collection is an array
+          a.memberType
+        case Success(WdlMapType(kType,vType)) =>
+          // Collection is a map
+          WdlPairType(kType, vType)
         case _ => throw new VariableLookupException(s"Variable $n references a scatter block ${s.fullyQualifiedName}, but the collection does not evaluate to an array")
       }
       case Some(_: WdlNamespace) => WdlNamespaceType
