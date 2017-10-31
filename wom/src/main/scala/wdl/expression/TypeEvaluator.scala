@@ -83,10 +83,13 @@ case class TypeEvaluator(override val lookup: String => WdlType, override val fu
           evaluate(a.getAttribute("lhs")).flatMap {
             case o: WdlCallOutputsObjectType =>
               o.call.outputs.find(_.unqualifiedName == rhs.getSourceString) match {
-                case Some(taskOutput) => 
-                  from map { source =>
-                    evaluate(taskOutput.requiredExpression.ast) map { t => DeclarationInterface.relativeWdlType(source, taskOutput, t) }
-                  } getOrElse evaluate(taskOutput.requiredExpression.ast)
+                case Some(taskOutput) =>
+                  val t = taskOutput.wdlType
+                  val relative = from match {
+                    case None => t
+                    case Some(scope) => DeclarationInterface.relativeWdlType(scope, taskOutput, t)
+                  }
+                  Success(relative)
                 case None => Failure(new WdlExpressionException(s"Could not find key ${rhs.getSourceString}"))
               }
             case WdlPairType(leftType, rightType) =>
@@ -130,4 +133,3 @@ case class TypeEvaluator(override val lookup: String => WdlType, override val fu
     }
   }
 }
-
