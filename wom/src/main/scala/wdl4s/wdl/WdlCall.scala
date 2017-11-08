@@ -1,8 +1,9 @@
 package wdl4s.wdl
 
+import lenthall.util.TryUtil
 import wdl4s.parser.WdlParser.{Ast, SyntaxError, Terminal}
 import wdl4s.wdl.AstTools.EnhancedAstNode
-import wdl4s.wdl.exception.{ValidationException, VariableLookupException, VariableNotFoundException}
+import wdl4s.wdl.exception.{VariableLookupException, VariableNotFoundException}
 import wdl4s.wdl.expression.WdlFunctions
 import wdl4s.wdl.types.WdlOptionalType
 import wdl4s.wdl.values.{WdlOptionalValue, WdlValue}
@@ -129,10 +130,11 @@ sealed abstract class WdlCall(val alias: Option[String],
     * not the call's, as they will be used later for command instantiation
     * as well as output evaluation, which will both be performed by the task.
     */
-  def evaluateTaskInputs(inputs: WorkflowCoercedInputs,
-                         wdlFunctions: WdlFunctions[WdlValue],
-                         outputResolver: OutputResolver = NoOutputResolver,
-                         shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): Try[EvaluatedTaskInputs] = {
+  def evaluateCallDeclarations(inputs: WorkflowCoercedInputs,
+                               wdlFunctions: WdlFunctions[WdlValue],
+                               index: Option[Int] = None,
+                               outputResolver: OutputResolver = NoOutputResolver,
+                               shards: Map[Scatter, Int] = Map.empty[Scatter, Int]): Try[EvaluatedTaskInputs] = {
 
     type EvaluatedDeclarations = Map[Declaration, Try[WdlValue]]
     def doDeclaration(currentInputs: EvaluatedDeclarations, declaration: Declaration): EvaluatedDeclarations = {
@@ -153,19 +155,11 @@ sealed abstract class WdlCall(val alias: Option[String],
       currentInputs + (declaration -> coercedDeclaration)
     }
 
-    val declarationAttempts = callable.declarations.foldLeft[EvaluatedDeclarations](Map.empty)(doDeclaration)
-
-    val (success, errors) = declarationAttempts partition {
-      case (_, Success(_)) => true
-      case _ => false
-    }
-
-    if (errors.nonEmpty) {
-      val throwables = errors.toList map { _._2.failed.get }
-      Failure(ValidationException(s"Input evaluation for Call $fullyQualifiedName failed.", throwables))
-    } else {
-      Success(success map { case (d, v) => d -> v.get })
-    }
+    for {
+      requiredDecls <- requiredCallDeclarations(index)
+      declarationAttempts = requiredDecls.foldLeft[EvaluatedDeclarations](Map.empty)(doDeclaration)
+      evaluatedCallInputs <- TryUtil.sequenceMap(declarationAttempts, s"Input evaluation for Call $fullyQualifiedName failed.")
+    } yield evaluatedCallInputs
   }
 
   /**
@@ -231,11 +225,39 @@ sealed abstract class WdlCall(val alias: Option[String],
 
     lookup
   }
+
+  def requiredCallDeclarations(index: Option[Int]): Try[Seq[Declaration]]
 }
 
 case class WdlTaskCall(override val alias: Option[String], task: WdlTask, override val inputMappings: Map[String, WdlExpression], override val ast: Ast) extends WdlCall(alias, task, inputMappings, ast) {
   override val callType = "call"
+  override def requiredCallDeclarations(index: Option[Int]): Try[Seq[Declaration]] = Success(task.declarations)
+
 }
 case class WdlWorkflowCall(override val alias: Option[String], calledWorkflow: WdlWorkflow, override val inputMappings: Map[String, WdlExpression], override val ast: Ast) extends WdlCall(alias, calledWorkflow, inputMappings, ast) {
   override val callType = "workflow"
+  override def requiredCallDeclarations(index: Option[Int]): Try[Seq[Declaration]] = {
+    // Declarations in a workflow that are not initialized to any expression *require* input values.
+    // This identifies those declarations.
+    val declarationsRequiringInputs = declarations filter { _.expression.isEmpty} toSet
+    val namesOfDeclarationsRequiringInputs = declarationsRequiringInputs map { _.unqualifiedName }
+    val suppliedInputNames = inputMappings.keys.toSet
+    // Determine if any workflow declarations requiring inputs don't have matching inputs:
+    val missingInputNames = namesOfDeclarationsRequiringInputs -- suppliedInputNames
+
+    missingInputNames.toList match {
+      case x :: xs =>
+        val names = (x :: xs) mkString ", "
+        Failure[Seq[Declaration]](new VariableLookupException(
+          s"Missing inputs for subworkflow call $fullyQualifiedName at index $index: $names."))
+      case Nil =>
+        // Workflow declarations that are initialized can also be overridden by inputs in the `input:` block of a
+        // subworkflow call. These overrides must be identified so the overriding expressions can be evaluated.
+        val overriddenDeclarations = declarations filter {
+          d => d.expression.isDefined && suppliedInputNames.contains(d.unqualifiedName)
+        }
+        Success((declarationsRequiringInputs ++ overriddenDeclarations).toSeq)
+    }
+  }
+
 }

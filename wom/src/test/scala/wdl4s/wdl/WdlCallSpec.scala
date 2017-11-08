@@ -1,7 +1,7 @@
 package wdl4s.wdl
 
+import lenthall.exception.AggregatedException
 import org.scalatest.{Matchers, WordSpec}
-import wdl4s.wdl.exception.ValidationException
 import wdl4s.wdl.expression.{NoFunctions, PureStandardLibraryFunctionsLike}
 import wdl4s.wdl.types.{WdlArrayType, WdlFileType, WdlIntegerType, WdlStringType}
 import wdl4s.wdl.values._
@@ -32,7 +32,7 @@ class WdlCallSpec extends WordSpec with Matchers {
     
     val shardMap = Map(namespace.scatters.head -> 2)
 
-    val declarations = callV.evaluateTaskInputs(inputs, NoFunctions, outputResolver, shardMap).get
+    val declarations = callV.evaluateCallDeclarations(inputs, NoFunctions, outputResolver = outputResolver, shards = shardMap).get
     declarations.size shouldBe 12
     declarations.find(_._1.unqualifiedName == "a").get._2 shouldBe WdlString("a")
     declarations.find(_._1.unqualifiedName == "b").get._2 shouldBe WdlString("b")
@@ -64,8 +64,8 @@ class WdlCallSpec extends WordSpec with Matchers {
     
     val namespace = WdlNamespace.loadUsingSource(wdl, None, None).get
     val callT = namespace.calls.find(_.unqualifiedName == "t").get
-    val exception = the[ValidationException] thrownBy {
-      callT.evaluateTaskInputs(Map.empty, NoFunctions).get
+    val exception = the[AggregatedException] thrownBy {
+      callT.evaluateCallDeclarations(Map.empty, NoFunctions).get
     }
     exception.getMessage shouldBe "Input evaluation for Call w.t failed.:\ns1:\n\tCould not find s1 in input section of call w.t\ns2:\n\tCould not find s2 in input section of call w.t"
   }
@@ -156,8 +156,8 @@ class WdlCallSpec extends WordSpec with Matchers {
     }
 
     val ns = WdlNamespaceWithWorkflow.load(wdl, Seq.empty).get
-    val exception = intercept[ValidationException] {
-        ns.workflow.findCallByName("hello2").get.evaluateTaskInputs(Map("wf_hello.wf_hello_input" -> WdlFile("/do/not/exist")), functionsWithRead).get
+    val exception = intercept[AggregatedException] {
+        ns.workflow.findCallByName("hello2").get.evaluateCallDeclarations(Map("wf_hello.wf_hello_input" -> WdlFile("/do/not/exist")), functionsWithRead).get
     }
     exception.getMessage shouldBe "Input evaluation for Call wf_hello.hello2 failed.:\naddressee:\n\tFile not found /do/not/exist"
 

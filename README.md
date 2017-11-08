@@ -273,12 +273,12 @@ Each `Task`'s command needs to be instantiated from the abstract form in the WDL
 Example `src/main/scala/wdl4s/examples/ex7.scala`
 
 ```scala
-val wdl = """
+val wdl = s"""
   |task a {
   |  String prefix
   |  Array[Int] ints
   |  command {
-  |    python script.py ${write_lines(ints)} > ${prefix + ".out"}
+  |    python script.py $${write_lines(ints)} > $${prefix + ".out"}
   |  }
   |}
   |workflow wf {
@@ -288,7 +288,7 @@ val wdl = """
 val ns = WdlNamespaceWithWorkflow.load(wdl, Seq.empty).get
 val inputs = Map(
   "prefix" -> WdlString("some_prefix"),
-  "ints" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(1,2,3,4,5).map(WdlInteger(_)))
+  "ints" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(1,2,3,4,5).map(WdlInteger.apply))
 )
 
 class CustomFunctions extends WdlFunctions[WdlValue] {
@@ -300,7 +300,7 @@ class CustomFunctions extends WdlFunctions[WdlValue] {
 
 ns.taskCalls.find( _.unqualifiedName == "a") foreach { call =>
   val wdlFunctions: CustomFunctions = new CustomFunctions
-  val evaluatedInputs = call.evaluateTaskInputs(inputs, wdlFunctions).get
+  val evaluatedInputs = call.evaluateCallDeclarations(inputs, wdlFunctions).get
   println(call.task.instantiateCommand(evaluatedInputs, wdlFunctions).get)
 }
 ```

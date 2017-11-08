@@ -24,7 +24,7 @@ object ex7 {
     val ns = WdlNamespaceWithWorkflow.load(wdl, Seq.empty).get
     val inputs = Map(
       "prefix" -> WdlString("some_prefix"),
-      "ints" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(1,2,3,4,5).map(WdlInteger(_)))
+      "ints" -> WdlArray(WdlArrayType(WdlIntegerType), Seq(1,2,3,4,5).map(WdlInteger.apply))
     )
 
     class CustomFunctions extends WdlFunctions[WdlValue] {
@@ -36,7 +36,7 @@ object ex7 {
 
     ns.taskCalls.find( _.unqualifiedName == "a") foreach { call =>
       val wdlFunctions: CustomFunctions = new CustomFunctions
-      val evaluatedInputs = call.evaluateTaskInputs(inputs, wdlFunctions).get
+      val evaluatedInputs = call.evaluateCallDeclarations(inputs, wdlFunctions).get
       println(call.task.instantiateCommand(evaluatedInputs, wdlFunctions).get)
     }
   }

@@ -35,7 +35,7 @@ class AdvancedInterpolationSpec extends FlatSpec with Matchers {
     val testCall = namespace.workflow.taskCalls.find(_.unqualifiedName == "test") getOrElse {
       fail("call 'test' not found")
     }
-    val inputs = testCall.evaluateTaskInputs(Map("testWF.test.eval_this" -> WdlString("${var}")), NoFunctions)
+    val inputs = testCall.evaluateCallDeclarations(Map("testWF.test.eval_this" -> WdlString("${var}")), NoFunctions)
     val testCmd = testCall.task.instantiateCommand(inputs.get, NoFunctions)
     testCmd shouldEqual Try("echo 'inside inside inside'")
   }
