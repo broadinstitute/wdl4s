@@ -1,3 +1,8 @@
+# The WDL4S repository is now under the Cromwell repository. [Click here for the Cromwell repo](https://github.com/broadinstitute/cromwell). 
+
+----
+----
+
 [![Build Status](https://travis-ci.org/broadinstitute/wdl4s.svg?branch=develop)](https://travis-ci.org/broadinstitute/wdl4s?branch=develop)
 [![Coverage Status](https://coveralls.io/repos/broadinstitute/wdl4s/badge.svg?branch=develop)](https://coveralls.io/r/broadinstitute/wdl4s?branch=develop)
 
